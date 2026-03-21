@@ -1,0 +1,1514 @@
+@extends('layouts.app')
+
+
+
+
+
+
+
+@section('content') 
+
+
+
+
+
+
+
+<!-- Header start --> 
+
+@php
+    // Define the selected values
+
+    if(isset($locations_vals)) {
+
+        $selected = $locations_vals;
+
+       
+    }
+        if(isset($search_vals)) {
+
+        $searchselected = $search_vals;
+
+       
+    }
+
+
+
+@endphp
+
+
+
+
+
+
+@include('includes.header') 
+
+
+<style>
+
+    
+.savelocation{
+                height: 55px;
+                border: 1px solid #cbcbcb;
+                background-image: none!important;
+            }
+
+            #ui-id-1 :is(li.ui-menu-item:hover, li.ui-menu-item.active ) {
+        background-color: #e3eaf2;
+    }
+
+
+      .date-in{
+
+            height: 36px !important;
+
+    }
+    
+    
+        .boxing.v-icon.stick_label::after { 
+
+            content: 'Recruiter Verified';
+            position: absolute;
+            font-size: 12px;
+            background: #59a2f3;
+            color: #fff;
+            top: 5px;
+            right: -120px;
+            font-family: 'Proximanova-Regular';
+            padding: 2px 10px;
+            border-radius: 30px;
+             width: 117px;
+
+        }
+        
+  
+
+    .joblist{
+        position: absolute;
+        right: 0px;
+        top: -2px;
+    }
+
+
+    .list-inline-item-1.layoff-cv {
+        background-color: #3998de;
+        color: #fff !important;
+        padding: 2px 7px;
+        border-radius:  0 5px 0 10px;
+        line-height: 19px;
+        font-size: 13px;
+        display: inline-block;
+    }
+
+
+
+    .list-inline-item-1.express-job-1 {
+
+        background-color: #3998de;
+
+        color: #fff !important;
+
+        padding: 2px 7px;
+
+        border-radius:  5px 0 10px;
+
+        position: absolute;
+
+        line-height: 19px;
+
+        font-size: 13px;
+
+        right: 116px;
+
+        top: 0px;
+
+    }
+
+        .notice-period .dropdown-menu {
+            height: 96px!important;
+
+        }
+
+        .serach-icon .tokenfield{
+                width: 499.172px!important;
+                    min-height: 55px!important;
+        }
+
+        .location_cus .tokenfield .token{
+                border-radius: 30px!important;               
+                background-color: #f6faff!important;
+                padding: 0px 10px;
+                height: 26px!important;
+        }
+
+        .notice-period .btn-group{
+                width: 100% !important;
+
+        }
+
+
+        .notice-period button.multiselect.dropdown-toggle.btn.btn-default{
+               padding: 7px 35px 5px 15px !important;
+               height: 36px !important;
+        }
+
+        .date-in{
+            height: 40px !important;
+        }
+
+        .location_cus .tokenfield {
+            min-height: 55px;
+        }
+
+        #search_data {
+            background-image: unset !important;
+            min-height: 55px !important;
+            border: 1px solid #ced4da;
+        }
+        .tokenfield .token .close {
+            line-height: 1.1em !important;
+
+        }
+        
+         .default-size{
+            font-size:15px !important;
+        }
+
+
+
+
+</style>
+
+
+
+
+<!-- Header end --> 
+
+
+
+
+
+
+
+<!-- Inner Page Title start --> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Inner Page Title end -->
+
+
+
+
+
+
+
+<section class="contact_bg-color">
+
+
+
+    <div class="container contact_bg-color">
+
+
+
+        <div class="row">
+
+
+
+            <div class="col-lg-12 text-center py-5">
+
+
+
+                <div class="contact_head-color py-1">
+
+
+
+                    Unlocked Resumes
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+</section>
+
+
+
+
+
+
+
+<!-- candidate profile -->
+
+
+
+
+
+
+
+
+
+
+
+<section class="section_search-box  pt-4">
+
+
+
+    <div class="container">
+
+
+
+            {{-- <form class="col-lg form-inline serach-icon px-2" action="{{route('unlocked.search')}}" method="post">
+
+
+
+                @csrf
+
+
+
+                <input class="form_control-1 rounded pl-3 pr-5" type="text" placeholder="Search" aria-label="Search" name="search">
+
+
+
+                <button class="filter_search-button" type="submit"><img class="search_icon-input pr-0"
+
+
+
+                        src="asset/images/loupe.png"></button>
+
+
+
+            </form> --}}
+
+
+
+            <form class="row px-2 mt-sm-5" action="{{ route('candidate.unlocked.filter.page') }}" method="post">
+
+                <div class="col-lg-5 form-inline serach-icon location_cus  px-2">
+
+                    @csrf
+
+                    <input class="form_control-1 select-skill rounded pl-3 pr-5" type="text" placeholder="Search" aria-label="Search"
+
+                        name="search[]" value="" id="searchvalue">
+
+                    <button class="filter_search-button" type="submit"><img class="search_icon-input pr-0" src="{{ asset('asset/images/loupe.png') }}"></button>
+
+                </div>
+            
+                
+                <div class="col-lg-5 position_lit px-2 notice-period location_cus">
+
+                    <input id="tags" value="{{ $store_locations??'' }}"  name="location" class="form_control rounded pl-3 pr-5 w-100 savelocation" placeholder="Search Location">
+
+                </div>
+
+                <div class="col-lg-2">
+
+                    <button type="submit" class="btn btn_submit w-100 text-light">Apply</button>
+
+                </div>
+             
+
+            </form>
+
+
+        </div>
+
+
+
+</section>
+
+
+
+
+
+
+
+<!-- second section -->
+
+
+
+
+
+
+
+<section class="section_candidate-list py-4">
+
+
+
+    <div class="container">
+
+
+
+        <div class="row">
+
+
+
+            <div class="col-lg-3 col-12 scrollbar candidate_filter-sub">
+
+
+
+                <div class="candidate_filter-inner">
+
+
+
+                    <div class="row d-block d-lg-none">
+
+
+
+                        <div class="col-lg candidate_filter-header">
+
+
+
+                            <div class="candidate_filter-body candidate_filter-hide py-3 px-2">
+
+
+
+                                All Filters
+
+
+
+                                <a id="filter_hide-button" class="close_icon-algin" href="javascript:void(0);">
+
+
+
+                                    <img class="close_img-icon" src="asset/images/cancel.png">
+
+
+
+                                </a>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+
+                    <div class="candidate_list-filter mb-4 mb-md-0 px-0">
+
+
+
+                        <div class="accordion" id="accordionExample">
+
+
+
+                            <div class="candidate_list mt-2 pt-3">
+
+
+
+                                <div class="candidate_head mb-1 px-lg-1" id="headingOne">
+
+
+
+                                    <button class="btn_candidate-box btn_candidate-arrow px-3 py-4" type="button"
+
+
+
+                                        data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
+
+
+
+                                        aria-controls="collapseOne">
+
+
+
+                                        Sub Filters
+
+
+
+                                    </button>
+
+
+
+                                </div>
+
+
+
+                                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne"
+
+
+
+                                    data-parent="#accordionExample">
+
+
+
+                                    <div class="candidate_body px-lg-3 py-2">
+
+
+
+                                        <div class="form-check pb-2 pl-0 w-100">
+
+
+
+                                            <form action="{{route('candidate.unlocked.filter1.page')}}" method="post">
+
+
+                                                    @csrf
+
+
+
+                                                    <label class="mb-1 pt-0 sign_fontsize">Total Experience (In Years)<span
+
+                                                                class="text-danger px-1"> </span></label>
+
+
+
+                                                    <div class="row py-1">
+
+
+
+                                                        <div class="col">
+
+                                                            <input type="number" name="min_exp" placeholder="Min" min="0"
+
+                                                                max="50"  @if(isset($min_exp)) @if($min_exp == 0) @else value="{{ $min_exp }}" @endif @else value="" @endif
+
+                                                                onkeyup=imposeMinMax(this)
+
+                                                                class="w-100 signup_input rounded pl-2 py-1 default-size min_exp" id="save_min_exp">
+
+                                                        </div>
+
+                                                        <div class="col-1 text-center px-0 pt-1">-</div>
+
+                                                        <div class="col">
+
+                                                            <input type="number" name="max_exp" placeholder="Max" min="0"
+
+                                                                max="50" @if(isset($max_exp)) @if($max_exp == 0) @else value="{{ $max_exp }}" @endif @else value="" @endif
+
+                                                                onkeyup=imposeMinMax(this)
+
+                                                                class="w-100 signup_input rounded pl-2 py-1 default-size max_exp" id="save_max_exp">
+
+                                                        </div>
+
+                                                    </div>
+                                                    
+                                                    @if($errors->has('max_exp'))
+
+                                                            <p class="text-danger">{{ $errors->first('max_exp') }}</p>
+
+                                                    @endif
+
+
+
+                                                    <label class="mb-1 pt-0 sign_fontsize mt-2">Salary Range (In Lakhs)<span
+
+                                                                class="text-danger px-1"> </span></label>
+
+
+
+                                                    <div class="row py-1">
+
+
+
+                                                        <div class="col">
+
+                                                            <input type="number" name="min_salary" placeholder="Min" min="0" max="100"
+
+                                                        onkeyup=imposeMinMax(this) @if(isset($min)) @if($min == 0) @else value="{{ $min }}" @endif @else value="" @endif
+
+                                                        class="w-100 signup_input rounded px-1 py-1 default-size min_salary" id="save_min_salary">
+
+                                                                            </div>
+
+                                                                            <div class="col-1 text-center px-0 pt-1">-</div>
+
+                                                                            <div class="col">
+
+                                                                                <input type="number" name="max_salary" placeholder="Max" min="0" max="100"
+
+                                                        onkeyup=imposeMinMax(this) @if(isset($max)) @if($max == 0) @else value="{{ $max }}" @endif @else value="" @endif
+
+                                                        class="w-100 signup_input rounded default-size px-1 py-1 max_salary" id="save_max_salary">
+
+                                                                            
+
+
+
+                                                                                
+                                                                            </div>
+
+                                                                        </div>
+                                                                        
+                                                                        
+                                                                        @if($errors->has('max_salary'))
+
+                                                                                    <p class="text-danger">{{ $errors->first('max_salary') }}</p>
+
+                                                                                @endif
+
+                                            </div>
+
+
+                                            <label class="mb-1 pt-0 sign_fontsize">Interview Availability<span
+
+                                                        class="text-danger px-1"> </span></label>
+
+
+                                        <div class="row py-1">
+
+
+
+                                                <div class="col">
+
+                                                    <input type="text" name="previous_start_date" class="form_action date-in rounded pl-2 mb-3 previous_start_date" id="previous_start_date" value="{{ isset($s_date) ? $s_date : '' }}" placeholder="Start Date">
+
+
+                                                </div>
+
+
+
+                                                <div class="col">
+
+                                                    <input type="text" name="previous_end_date" class="form_action date-in rounded pl-2 mb-3 previous_end_date" id="previous_end_date" value="{{ isset($e_date) ? $e_date : '' }}" placeholder= "End Date">
+
+
+                                                    @if($errors->has('previous_end_date'))
+
+                                                        <span class="text-danger">{{ $errors->first('previous_end_date') }}</span>
+
+                                                    @endif
+
+                                                </div>
+
+                                            </div>
+                                            @if($errors->has('previous_end_date'))
+
+                                                        <p class="text-danger">{{ $errors->first('previous_end_date') }}</p>
+
+                                                    @endif
+
+
+                                <div class="row py-1 notice-period" style="    margin-left: 0px;
+                                    width: 100%;
+                                    padding-bottom: 15px!important;">
+
+                                                                            <select id="multiple-select-notice" class="form_control  noticeperiodvalue  form_action rounded pl-3 pr-5 mb-3" multiple="multiple" name="notice_period[]">
+
+                                                                            <option value="1" @if (isset($notice_period)) @if (in_array(1, $notice_period)) selected @endif @endif>
+
+
+
+                                                                                Immediately Available </option>
+
+                                                                            <option value="2" @if (isset($notice_period)) @if (in_array(2, $notice_period)) selected @endif @endif>Serving
+
+                                                                                Notice Period</option>
+
+
+
+                                                                        </select>
+                                    </div>
+
+                                        
+
+                                            <?php
+
+
+
+                                            $profile_education = isset($profileEducation) ? $profileEducation->degree_title : null;
+
+
+
+                                            $educationn = \App\Education::find($profile_education);
+
+
+
+                                            $educations = \App\Education::all();
+
+
+
+                                            $education = isset($education) ? $education : null;
+
+
+
+                                            $education1 = \App\Education::where('id', $education)->first();
+
+
+
+                                            ?>
+
+
+
+                                            <select class="form_control form_action rounded pl-3 pr-5 mb-3 dynamic "
+
+                                                    name="education" style="height: 35px!important;" id="save_education">
+
+
+
+                                            
+
+                                                <option value="" >Select Education</option>
+
+                                                <!--<option value="">All</option>-->
+
+                                                @foreach ($educations as $edu)
+
+                                                    <option value="{{ $edu->id }}" @isset($education)  {{ ($edu->id == $education) ? 'selected' : '' }} @endisset> {{ $edu->education }} </option>
+
+                                                @endforeach
+
+                                            </select>
+
+
+
+
+
+                                            <?php
+
+
+
+                                            $organization = isset($course) ? $course : null;
+
+
+
+                                            $specilation = isset($specilation) ? $specilation : null;
+
+
+
+                                            $course = \App\Course::where('id', $organization)->first();
+
+
+
+                                            $spec = \App\specs::where('id', $specilation)->first();
+
+
+
+                                            ?>
+
+
+
+                                
+                                            <select class="form_control form_action rounded pl-3 pr-5 mb-3 gender" name="gender"
+
+                                                    style="height: 35px!important;" id="save_gender">
+
+                                                <!--<option Selected Disabled>Gender</option>-->
+
+                                                <option value="" >Gender</option>
+
+                                                <option value="2" @if (isset($gender)) @if ($gender=='2' ) selected @endif
+
+                                                        @endif>Male</option>
+
+                                                <option value="1" @if (isset($gender)) @if ($gender=='1' ) selected @endif
+
+                                                        @endif>Female</option>
+
+                                                <option value="3" @if (isset($gender)) @if ($gender=='3' ) selected @endif
+
+                                                        @endif>Don't wish to specify</option>
+
+                                            </select>
+
+
+
+                                            <select class="form_control form_action job_type rounded pl-3 pr-5 mb-3"
+
+                                                    name="job_type" style="height: 35px!important;" id="save_job_type">
+
+                                                <!--<option Selected Disabled>Job Type</option>-->
+
+                                                <option value="" >Job Type</option>
+
+                                                <option value="Contract" @if (isset($job_type)) @if ($job_type=='Contract' )
+
+                                                    selected @endif @endif>Contract</option>
+
+                                                <option value="Permanent" @if (isset($job_type)) @if ($job_type=='Permanent'
+
+                                                    ) selected @endif @endif>Permanent</option>
+
+                                                <option  value="Flexible" @if (isset($job_type)) @if ($job_type=='Flexible'
+
+                                                ) selected @endif @endif>Flexible</option>
+
+                                            </select>
+
+
+
+                                        </div>
+
+
+
+                                        <div class="col-lg-12 box d-block px-0 px-lg-3 mb-1 pb-2 text-center">
+
+                                            <button type="submit" class="btn btn_submit w-100 text-light">Apply</button>
+                                            
+
+                                        </div>
+                                       
+
+                                        </form>
+                                </div>
+
+
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+                    </div>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <!-- candidate listing left part -->
+
+
+
+
+            @include('company.unlocked-search') 
+
+
+
+           
+
+
+
+        </div>
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+
+
+@include('includes.footer')
+
+
+
+
+
+
+
+@endsection
+
+
+
+@push('scripts')
+
+
+
+
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tokenfield/0.12.0/css/bootstrap-tokenfield.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-tokenfield/0.12.0/bootstrap-tokenfield.js"></script>
+
+
+<script>
+
+
+document.addEventListener("keydown", function(event) {
+  const items = document.querySelectorAll(".ui-menu-item");
+  const activeIndex = Array.from(items).findIndex(item => item.classList.contains("active"));
+  
+  if (event.key === "ArrowDown") {
+    event.preventDefault(); // Prevent default scrolling behavior
+    
+    if (activeIndex !== -1) {
+      items[activeIndex].classList.remove("active");
+      const newIndex = (activeIndex + 1) % items.length;
+      items[newIndex].classList.add("active");
+    } else {
+      items[0].classList.add("active");
+    }
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault(); // Prevent default scrolling behavior
+    
+    if (activeIndex !== -1) {
+      items[activeIndex].classList.remove("active");
+      const newIndex = (activeIndex - 1 + items.length) % items.length;
+      items[newIndex].classList.add("active");
+    } else {
+      items[items.length - 1].classList.add("active");
+    }
+  }
+});
+
+
+
+
+$(function() {
+  function split(val) {
+    return val.split(/,\s*/);
+  }
+
+  function extractLast(term) {
+    console.log("Search Keywords:", term); 
+    return split(term).pop();
+  }
+
+  $("#tags")
+    .on("keydown", function(event) {
+      if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active) {
+        event.preventDefault();
+      }
+    })
+    .on("input", function() {
+        this.value = this.value.replace(/[^\w\s,\/]/gi, '');
+    })
+    .autocomplete({
+      minLength: 0,
+      source: function(request, response) {
+        $.ajax({
+          url: "{{ url('autocomplete/cvlocations') }}",
+          dataType: "json",
+          data: {
+            query: extractLast(request.term)
+          },
+          success: function(data) {
+            response($.map(data, function(item) {
+              return {
+                label: item,
+                value: item
+              };
+            }));
+          }
+        });
+      },
+      focus: function() {
+        return false;
+      },
+      select: function(event, ui) {
+        var terms = split(this.value);
+        terms.pop();
+        terms.push(ui.item.value);
+        terms.push("");
+        this.value = terms.join(", ");
+
+        // Trigger typing after a value is selected
+        
+        document.getElementById("tags").blur()
+        document.getElementById("tags").focus()
+
+        
+        return false;
+      },
+      open: function(event, ui) {
+        var term = extractLast(this.value);
+        var autocomplete = $(this).data("ui-autocomplete");
+        autocomplete.menu.element.find("li").each(function() {
+          var item = $(this).data("ui-autocomplete-item");
+          var highlightedItem = item.label.replace(new RegExp($.ui.autocomplete.escapeRegex(term), "gi"), '<span class="highlight">$&</span>');
+          $(this).html(highlightedItem);
+        });
+      }
+
+
+      
+    });
+
+
+
+    $("#locationFilter3")
+    .on("keydown", function(event) {
+      if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete("instance").menu.active) {
+        event.preventDefault();
+      }
+    })
+    .on("input", function() {
+      this.value = this.value.replace(/[^\w\s,]/gi, '');
+    })
+    .autocomplete({
+      minLength: 0,
+      source: function(request, response) {
+        $.ajax({
+          url: "{{ url('autocomplete/search-location-job1') }}",
+          dataType: "json",
+          data: {
+            query: request.term
+          },
+          success: function(data) {
+            response($.map(data, function(item) {
+              return {
+                label: item,
+                value: item
+              };
+            }));
+          }
+        });
+      },
+      focus: function() {
+        return false;
+      },
+      select: function(event, ui) {
+        this.value = ui.item.value;
+        return false;
+      },
+      open: function(event, ui) {
+        var term = this.value;
+        var autocomplete = $(this).data("ui-autocomplete");
+        autocomplete.menu.element.find("li").each(function() {
+          var item = $(this).data("ui-autocomplete-item");
+          var highlightedItem = item.label.replace(new RegExp($.ui.autocomplete.escapeRegex(term), "gi"), '<span class="highlight">$&</span>');
+          $(this).html(highlightedItem);
+        });
+      }
+    });
+
+
+
+});
+
+
+$.ajaxSetup({
+
+
+
+headers: {
+
+
+
+    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+
+
+
+}
+
+
+
+});
+
+
+
+$('.dynamic').change(function(){
+
+
+
+var degree_id = $(this).val(); 
+
+
+
+
+
+
+
+//     alert(degree_id);
+
+
+
+
+
+
+
+if(degree_id){
+
+
+
+
+
+
+
+  $.ajax({
+
+
+
+    type:"POST",
+
+
+
+    url:"{{url('gety')}}",
+
+
+
+    _token: '{{ csrf_token() }}',
+
+
+
+    data: {
+
+
+
+       degree:degree_id,
+
+
+
+    },
+
+
+
+    dataType: "json",
+
+
+
+    
+
+
+
+    success:function(res){        
+
+
+
+    if(res){
+
+
+
+      $(".dynamiccourse").empty();
+
+
+
+      $(".dynamiccourse").append('<option>Select course</option>');
+
+      $("#newcourse123 option:first").attr("disabled", "disabled");
+
+
+
+      $.each(res,function(key,value){
+
+
+
+        $(".dynamiccourse").append('<option value="'+value.id+'">'+value.course+'</option>');
+
+
+
+      });
+
+
+
+    
+
+
+
+    }else{
+
+
+
+      $(".dynamiccourse").empty();
+
+
+
+    }
+
+
+
+    }
+
+
+
+  });
+
+
+
+}else{
+
+
+
+
+
+
+
+}   
+
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+$('.dynamiccourse').on('change',function(){
+
+
+
+
+
+
+
+var course_id = $(this).val();  
+
+
+
+
+
+
+
+if(course_id){
+
+
+
+ $.ajax({
+
+
+
+   type:"POST",
+
+
+
+   url:"{{url('getspecs')}}",
+
+
+
+   _token: '{{ csrf_token() }}',
+
+
+
+   data: {
+
+
+
+      course:course_id,
+
+
+
+   },
+
+
+
+   dataType:"json",
+
+
+
+   success:function(res){        
+
+
+
+   if(res){
+
+
+
+     $(".dynamicspecs").empty();
+
+
+
+     $(".dynamicspecs").append('<option>Select Specilization</option>');
+
+    
+
+
+
+$("#specs123 option:first").attr("disabled", "disabled");
+
+
+
+     $.each(res,function(key,value){
+
+
+
+       $(".dynamicspecs").append('<option value="'+value.id+'">'+value.specs+'</option>');
+
+
+
+     });
+
+
+
+   
+
+
+
+   }else{
+
+
+
+     $(".dynamicspecs").empty();
+
+
+
+   }
+
+
+
+   }
+
+
+
+ });
+
+
+
+}else{
+
+
+
+ $(".dynamicspecs").empty();
+
+
+
+}
+
+
+
+ 
+
+
+
+});
+
+
+
+
+
+$('#multiple-select-notice').multiselect({
+
+    includeSelectAllOption: false,
+
+    nonSelectedText: 'Notice Period',
+
+    numberDisplayed: 2,
+
+});
+
+
+
+function getSelectedValues() {
+
+    var selectedVal = $("#multiple-select-notice").val();
+
+    for (var i = 0; i < selectedVal.length; i++) {
+
+        function innerFunc(i) {
+
+            setTimeout(function() {
+
+                location.href = selectedVal[i];
+
+            }, i * 2000);
+
+        }
+
+        innerFunc(i);
+
+    }
+
+}
+
+
+
+function show() {
+
+
+
+}
+
+
+
+$('#multiple-select-notice-responsive').multiselect({
+
+    includeSelectAllOption: false,
+
+    nonSelectedText: 'Choose by Notice Periods',
+
+});
+
+
+
+function getSelectedValues() {
+
+    var selectedVal = $("#multiple-select-notice-responsive").val();
+
+    for (var i = 0; i < selectedVal.length; i++) {
+
+        function innerFunc(i) {
+
+            setTimeout(function() {
+
+                location.href = selectedVal[i];
+
+            }, i * 2000);
+
+        }
+
+        innerFunc(i);
+
+    }
+
+}
+
+
+
+          // Location multiselect
+
+
+
+          $(document).ready(function() {
+
+
+
+    //multiselect Location
+
+    $('#location-multi-select').multiselect({
+
+        includeSelectAllOption: true,
+
+       selectAllText: 'Any Location',
+
+        enableFiltering: false,
+
+        enableClickableOptGroups: true,
+
+        enableCollapsibleOptGroups: true,
+
+        nonSelectedText: 'Choose by Location',
+
+        numberDisplayed: 2,
+
+        enableCaseInsensitiveFiltering: true,
+
+        filterPlaceholder: 'Enter Location',
+
+    });
+
+
+
+   
+
+    
+
+});
+
+
+
+$(document).ready(function () {
+
+
+    $('#previous_start_date').datepicker({
+                    autoclose: true,
+                    format: 'dd-mm-yyyy',
+                    todayHighlight: true,
+                    startDate: new Date() // set minimum date to today
+                });    
+
+                var startDate = new Date('12/1950');
+                var FromEndDate = new Date();
+                var ToEndDate = new Date();
+                ToEndDate.setDate(ToEndDate.getDate() + 365);
+
+                $('#previous_start_date').datepicker({
+                    weekStart: 1,
+                    startDate: '01/09/2019',
+                    endDate: FromEndDate,
+                    autoclose: true
+                })
+                    .on('changeDate', function (selected) {
+                        startDate = new Date(selected.date.valueOf());
+                        startDate.setDate(startDate.getDate(new Date(selected.date.valueOf())));
+                        $('#previous_end_date').datepicker('setStartDate', startDate);
+                    });
+            $('#previous_end_date').datepicker({
+                    weekStart: 1,
+                    startDate: startDate,                  
+                    format: 'dd-mm-yyyy',
+                    autoclose: true,
+                   
+                })
+                
+
+
+
+            // Initialize the tokenfield plugin
+            $('#search_data').tokenfield({
+              autocomplete: {
+                source: function(request, response) {
+                  jQuery.get("{{ url('autocomplete/search-location') }}", {
+                    query : request.term
+                  }, function(data){
+                    data = JSON.parse(data);
+                    response(data);
+                  });
+                },
+                delay: 100
+              },
+              showAutocompleteOnFocus: true,
+              allowDuplicates: false,
+              createTokensOnBlur: false
+            });
+
+            @if(isset($locations_vals))
+                // Set the selected values
+                $('#search_data').tokenfield('setTokens', {!! json_encode($selected) !!});
+            @endif
+
+
+
+            $('.select-skill').tokenfield({
+                delimiter: ',',
+                beautify: false
+            });
+
+
+            @if(isset($search_vals))
+              // Pre-select the options               
+              $('.select-skill').tokenfield('setTokens', {!! json_encode($searchselected) !!} );
+            @endif
+
+
+
+
+});
+
+    </script>
+
+    
+
+@endpush

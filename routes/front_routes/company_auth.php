@@ -1,0 +1,21 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+
+Route::prefix('company')->name('company.')->group(function () {
+    Route::get('/', 'Company\Auth\LoginController@showLoginForm');
+    Route::get('/login', 'Company\Auth\LoginController@showLoginForm')->name('login');
+    Route::post('/login', 'Company\Auth\LoginController@login');
+    Route::post('/logout', 'Company\Auth\LoginController@logout')->name('logout');
+    Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerLoginForm')->name('employer.login');
+    Route::get('/email-verify/{token}', 'Company\Auth\RegisterController@VerifyEmployer')->name('employer.email-verify');
+    // Registration Routes...
+
+
+    Route::post('/register', 'Company\Auth\RegisterController@storeregister')->name('register.page.store');
+    Route::get('/password/reset', 'Company\Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
+    Route::post('/password/email', 'Company\Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
+    Route::get('/password/reset/{token}', 'Company\Auth\ResetPasswordController@showResetForm')->name('password.reset');
+    Route::post('/password/reset', 'Company\Auth\ResetPasswordController@reset');
+});

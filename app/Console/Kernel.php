@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Console;
+
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+
+class Kernel extends ConsoleKernel
+{
+
+    /**
+     * The Artisan commands provided by your application.
+     *
+     * @var array
+     */
+    protected $commands = [
+        'App\Console\Commands\CallRoute',
+        Commands\sendMailDaily::class,
+        Commands\AlertKYC::class,
+        Commands\sendWeeklyReport::class,
+        'App\Console\Commands\DeleteOldUsers',
+        'App\Console\Commands\ReminderMailSend',
+        'App\Console\Commands\EmployerReminderMailSend',
+        'App\Console\Commands\NoticePeriod'
+
+    ];
+    
+
+    /**
+     * Define the application's command schedule.
+     *
+     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
+     * @return void
+     */
+    protected function schedule(Schedule $schedule)
+    {
+  
+        $schedule->command('reminder:mail')->daily();
+        $schedule->command('employerreminder:mail')->daily();
+        $schedule->command('noticeperiod:update')->everyMinute();
+        $schedule->command('alert:kyc')->daily();
+        
+        // $schedule->command('inspire')
+        //          ->hourly();
+        // $schedule->command('weekly:mail_report')->weekly();
+        // $schedule->command('daily:mail_send')->everyFiveMinutes();
+        $schedule->command('queue:work --stop-when-empty')->everyFiveMinutes()->withoutOverlapping(5)->sendOutputTo(storage_path() . '/logs/queue-jobs.log');
+        $schedule->command('route:call check-package-validity')->daily()->withoutOverlapping(5)->sendOutputTo(storage_path() . '/logs/queue-jobs.log');
+    }
+
+    /**
+     * Register the commands for the application.
+     *
+     * @return void
+     */
+    protected function commands()
+    {
+        $this->load(__DIR__ . '/Commands');
+        require base_path('routes/console.php');
+    }
+
+}
