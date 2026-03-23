@@ -9,13 +9,13 @@
 
                     <nav class="navbar navbar-expand-lg navbar-light px-0 custom_nav_hover">
                         @if (Auth::check())
-                            <a class="navbar-brand pr-sm-3" href="{{ url('jobs') }}"><img
+                            <a class="navbar-brand pr-sm-3" href="{{ url('/') }}"><img
                                     src="{{ asset('/') }}asset/images/logo.svg"></a>
                         @elseif(Auth::guard('company')->check())
-                            <a class="navbar-brand pr-sm-3" href="{{ url('jobs') }}"><img
+                            <a class="navbar-brand pr-sm-3" href="{{ url('/') }}"><img
                                     src="{{ asset('/') }}asset/images/logo.svg"></a>
                         @else
-                            <a class="navbar-brand pr-sm-3" href="{{ url('jobs') }}"><img
+                            <a class="navbar-brand pr-sm-3" href="{{ url('/') }}"><img
                                     src="{{ asset('/') }}asset/images/logo.svg"></a>
                         @endif
 

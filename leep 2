@@ -1,0 +1,43 @@
+Fields:
+Array
+(
+    [0] => id
+    [1] => job_title
+    [2] => work_mode
+    [3] => industry
+    [4] => job_type
+    [5] => job_shift
+    [6] => job_skills
+    [7] => min_salary
+    [8] => max_salary
+    [9] => experience
+    [10] => no_of_openings
+    [11] => location
+    [12] => job_description
+    [13] => job_overview
+    [14] => roles_responsibility
+    [15] => company_id
+    [16] => search
+    [17] => slug
+    [18] => status
+    [19] => website_address
+    [20] => duration
+    [21] => interview_modes
+    [22] => walkin_date
+    [23] => walkin_time
+    [24] => walkin_venue
+    [25] => walkin_contact
+    [26] => resume_view
+    [27] => created_at
+    [28] => updated_at
+)
+Slug: data-scientist-138
+job_title: Data Scientist
+Company: ZNP
+is_freelance: 
+salary_from: 
+salary_to: 
+job_type: Full time/Permanent
+job_experience: null
+City: no city rel
+Count: 122

@@ -63,7 +63,7 @@ Route::get('/', 'IndexController@index')->name('index');
 //   return redirect('/jobs');
 // });
 
-Route::get('/find-talent', 'IndexController@index')->name('index');
+Route::get('/find-talent', 'IndexController@index');
 
 
 Route::post('set-locale', 'IndexController@setLocale')->name('set.locale');
