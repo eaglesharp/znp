@@ -133,7 +133,7 @@ class IndexController extends Controller
         $categoryCards = collect([
             ['icon' => '🏢', 'bg' => '#dbeafe', 'name' => 'Hybrid',            'keyword' => 'Hybrid',                    'count' => PostJob::status()->where('work_mode', 'like', '%Hybrid%')->count()],
             ['icon' => '🏛️', 'bg' => '#fed7aa', 'name' => 'Work From Office',  'keyword' => 'Work From Office',          'count' => PostJob::status()->where('work_mode', 'like', '%Work From Office%')->count()],
-            ['icon' => '🏠', 'bg' => '#dcfce7', 'name' => 'Remote/WFH',        'keyword' => 'Remote/WFH',                'count' => PostJob::status()->where(function ($query) {
+            ['icon' => '🏠', 'bg' => '#dcfce7', 'name' => 'Remote',        'keyword' => 'Remote/WFH',                'count' => PostJob::status()->where(function ($query) {
                 $query->where('work_mode', 'like', '%Remote%')
                       ->orWhereRaw('LOWER(search) LIKE ?', ['%remote/wfh%'])
                       ->orWhereRaw('LOWER(search) LIKE ?', ['%remote%']);
@@ -175,9 +175,23 @@ class IndexController extends Controller
             }
         }
         $cityOrder = ['Bengaluru', 'Chennai', 'Hyderabad', 'Mumbai', 'Delhi', 'Gurgaon', 'Pune', 'Kolkata'];
-        $jobCities = collect(array_values(array_filter($cityOrder, function ($c) use ($cityCounts) {
-            return isset($cityCounts[$c]);
-        })));
+        $jobCities = collect($cityOrder); // always show all predefined cities
+
+        // "Others" tab — jobs that have at least one non-metro location
+        $metroKeywords = array_keys($cityNormMap); // all keywords that map to metro cities
+        $hasOthers = $latestJobs->contains(function ($job) use ($metroKeywords) {
+            $rawLoc = $job->location ?? '';
+            $locs = (@unserialize($rawLoc) !== false && is_array(@unserialize($rawLoc)))
+                ? @unserialize($rawLoc) : [$rawLoc];
+            foreach ($locs as $loc) {
+                $isMetro = false;
+                foreach ($metroKeywords as $kw) {
+                    if (stripos($loc, $kw) !== false) { $isMetro = true; break; }
+                }
+                if (!$isMetro && trim($loc) !== '') return true;
+            }
+            return false;
+        });
 
         return view('home', compact(
             'seo',
@@ -188,6 +202,7 @@ class IndexController extends Controller
             'contractJobs',
             'fresherJobs',
             'jobCities',
+            'hasOthers',
             'categoryCards'
         ));
 

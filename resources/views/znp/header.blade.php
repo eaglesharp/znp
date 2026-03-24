@@ -25,7 +25,7 @@ header.znp-header {
     background: var(--white);
     border-bottom: 1px solid var(--border);
     padding: 0 40px;
-    height: 77px;
+    height: 60px;
     display: flex;
     align-items: center;
     position: sticky;
@@ -51,7 +51,7 @@ header.znp-header .znp-logo {
     align-items: center;
     text-decoration: none;
 }
-header.znp-header .znp-logo-img { height: 36px; width: auto; display: block; }
+header.znp-header .znp-logo-img { height: 24px; width: auto; display: block; }
 header.znp-header .znp-nav-actions {
     display: flex;
     align-items: center;

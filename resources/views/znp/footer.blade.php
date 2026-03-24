@@ -34,7 +34,7 @@ footer.znp-footer a { text-decoration: none; }
     margin-bottom: 14px;
 }
 .znp-footer-brand-text {
-    font-size: 34px;
+    font-size: 42px;
     font-weight: 800;
     letter-spacing: -0.03em;
     line-height: 1;
@@ -123,6 +123,12 @@ footer.znp-footer a { text-decoration: none; }
     object-fit: contain;
     display: block;
 }
+.footer-brand{
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 14px;
+    }
 @media (max-width: 960px) {
     .znp-footer-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
 }
@@ -137,13 +143,8 @@ footer.znp-footer a { text-decoration: none; }
         <div class="znp-footer-grid">
 
             <div>
-                <a href="{{ url('/') }}" class="znp-footer-logo-link">
-                    <span class="znp-footer-brand-text" aria-label="ZeroNoticePeriod">
-                        <span class="brand-white">Zero</span><span class="brand-orange">Notice</span><span class="brand-white">Period</span>
-                    </span>
-                </a>
-                <p class="znp-footer-addr">We are an exclusive online hiring platform connecting Job seekers with ZERO Notice Period with employers looking for Immediate hires. That's our niche.</p>
-                <p class="znp-footer-addr">Kokarya Business Synergy Center, Nagananda Commercial Complex,<br># 07/03, 15/1, Second Floor, 18th Main Road,<br>Jayanagar 9th Block, Bengaluru, Karnataka 560041</p>
+                   <div class="footer-brand">ZeroNoticePeriod</div>
+                <p class="znp-footer-addr">Evolve, SNN Raj Serenity, Begur - Koppa Rd,<br>Yelenahalli, Bengaluru, Karnataka 560114</p>
                 <a href="mailto:hello@zeronoticeperiod.com" class="znp-footer-email">hello@zeronoticeperiod.com</a>
             </div>
 
@@ -176,15 +177,15 @@ footer.znp-footer a { text-decoration: none; }
                 </ul>
                 <div class="znp-footer-col-title" style="margin-top:20px;">Links</div>
                 <ul class="znp-footer-links">
-                    <li><a href="{{ route('about-us') }}">About</a></li>
-                    <li><a href="{{ route('contact-us') }}">Contact</a></li>
+                    <li><a href="{{ url('terms-and-conditons') }}">Terms &amp; Conditions</a></li>
+                    <li><a href="{{ url('privacy-policy') }}">Privacy Policy</a></li>
                 </ul>
             </div>
 
         </div>
 
         <div class="znp-footer-bottom">
-            <span class="znp-footer-copy">&copy; Copyrights reserved {{ date('Y') }} ZeroNoticePeriod. All Rights Reserved | <a href="{{ url('terms-and-conditons') }}" class="znp-footer-copy-link">Terms &amp; Conditions</a> | <a href="{{ url('privacy-policy') }}" class="znp-footer-copy-link">Privacy Policy</a></span>
+            <span class="znp-footer-copy">&copy; {{ date('Y') }} ZeroNoticePeriod. All rights reserved.</span>
             <div class="znp-footer-socials">
                 <a href="https://www.facebook.com/profile.php?id=100078635680624" class="znp-social-icon" title="Facebook" aria-label="Facebook"><img src="{{ asset('asset/images/fb.png') }}" alt="Facebook" class="znp-social-img"></a>
                 <a href="https://www.linkedin.com/company/zeronoticeperiod/" class="znp-social-icon" title="LinkedIn" aria-label="LinkedIn"><img src="{{ asset('asset/images/linkedin.png') }}" alt="LinkedIn" class="znp-social-img"></a>

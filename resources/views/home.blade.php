@@ -33,14 +33,14 @@
     .znp-home ul                { list-style: none; padding: 0; margin: 0; }
 
     /* ── HERO ── */
-    .hero { background: var(--bg); padding: 48px 40px 56px; }
+    .hero { background: var(--bg); padding: 28px 40px 40px; }
     .hero-inner {
         max-width: 1120px;
         margin: 0 auto;
         display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 28px;
-        align-items: center;
+            grid-template-columns: 1fr 430px;
+    gap: 132px;
+        align-items: start;
     }
     .hero-eyebrow {
         display: inline-flex;
@@ -108,11 +108,11 @@
     /* ── HERO QUICK TAGS ── */
     .hero-tags { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
     .hero-tag  {
-        background: var(--white); border: 1px solid var(--border); border-radius: 100px;
-        padding: 6px 14px; font-size: 13px; color: var(--text-muted); font-weight: 500;
+        background: transparent; border: 1.5px solid #d1d5db; border-radius: 100px;
+        padding: 6px 16px; font-size: 13px; color: #374151; font-weight: 500;
         cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center;
     }
-    .hero-tag:hover { border-color: var(--blue); color: var(--blue); }
+    .hero-tag:hover { border-color: var(--blue); color: var(--blue); background: #eef2ff; }
 
     /* ── AUTOCOMPLETE DROPDOWN ── */
     .znp-home .ui-autocomplete {
@@ -158,10 +158,10 @@
     }
     .live-panel-header {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 16px 20px; border-bottom: 1px solid var(--border);
+        padding: 15px 24px; border-bottom: 1px solid var(--border);
     }
-    .live-label   { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
-    .live-dot     { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; animation: blink 1.5s infinite; flex-shrink: 0; }
+    .live-label   { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .live-dot     { width: 9px; height: 9px; background: #22c55e; border-radius: 50%; animation: blink 1.5s infinite; flex-shrink: 0; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .open-count   { font-size: 13px; color: var(--text-muted); }
     .live-job {
@@ -171,22 +171,22 @@
     .live-job:hover              { background: #f9fafb; }
     .live-job:last-of-type       { border-bottom: none; }
     .job-avatar {
-        width: 36px; height: 36px; border-radius: 8px; font-size: 11px; font-weight: 800;
+        width: 42px; height: 42px; border-radius: 10px; font-size: 11px; font-weight: 800;
         color: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .ja-znp { background: var(--blue); }
     .ja-fs  { background: #f97316; }
     .ja-yx  { background: #7c3aed; }
     .live-job-info       { flex: 1; min-width: 0; }
-    .live-job-title      { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .live-job-company    { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .live-job-title      { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .live-job-company    { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
     .work-badge          { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 100px; flex-shrink: 0; }
     .wb-remote           { background: #fef3c7; color: #92400e; }
     .wb-hybrid           { background: #dbeafe; color: #1d4ed8; }
     .wb-wfo              { background: #dcfce7; color: #166534; }
     .btn-browse {
-        display: block; margin: 12px 16px 16px; background: var(--orange); color: var(--white) !important;
-        border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700;
+        display: block; margin: 16px 20px 20px; background: var(--orange); color: var(--white) !important;
+        border: none; border-radius: 10px; padding: 15px; font-size: 15px; font-weight: 700;
         text-align: center; cursor: pointer; font-family: 'Inter', sans-serif;
         transition: background 0.15s; text-decoration: none;
     }
@@ -361,7 +361,7 @@
     .dc-title   { font-size: 26px; font-weight: 800; line-height: 1.25; margin-bottom: 14px; letter-spacing: -0.5px; }
     .dc-blue .dc-title  { color: var(--white); }
     .dc-peach .dc-title { color: var(--text); }
-    .dc-desc    { font-size: 14px; line-height: 1.65; margin-bottom: 24px; }
+    .dc-desc    { font-size: 14px; line-height: 1.65; margin-bottom: 24px !important; }
     .dc-blue .dc-desc   { color: rgba(255,255,255,0.7); }
     .dc-peach .dc-desc  { color: var(--text-muted); }
     .dc-list    { list-style: none; margin-bottom: 28px !important; display: flex; flex-direction: column; gap: 10px; }
@@ -494,11 +494,11 @@
 
             <div class="hero-tags">
                 @foreach ([
-                    ['label' => 'Remote/WFH', 'keyword' => 'Remote/WFH'],
-                    ['label' => 'Contract Jobs', 'keyword' => 'Contract'],
-                    ['label' => 'Hybrid', 'keyword' => 'Hybrid'],
-                    ['label' => 'Permanent Jobs', 'keyword' => 'Full Time'],
-                    ['label' => 'Fresher Jobs', 'keyword' => 'Fresher'],
+                    ['label' => 'Remote',    'keyword' => 'Remote/WFH'],
+                    ['label' => 'Contract',  'keyword' => 'Contract'],
+                    ['label' => 'Hybrid',    'keyword' => 'Hybrid'],
+                    ['label' => 'Permanent', 'keyword' => 'Full Time'],
+                    ['label' => 'Freshers',  'keyword' => 'Fresher'],
                 ] as $tag)
                     <a class="hero-tag" href="{{ url('/jobs') . '?searchfield=' . urlencode($tag['keyword']) }}" target="_blank" rel="noopener noreferrer">{{ $tag['label'] }}</a>
                 @endforeach
@@ -591,10 +591,10 @@
     <div class="stats-inner">
         @php
             $stats = [
-                ['num' => number_format($totalJobs),       'label' => 'Active Jobs'],
-                ['num' => number_format($permanentJobs),   'label' => 'Permanent Jobs'],
-                ['num' => number_format($contractJobs),    'label' => 'Contract Jobs'],
-                ['num' => number_format($fresherJobs),     'label' => 'Fresher Jobs'],
+                ['num' => $totalJobs,       'label' => 'Active Jobs'],
+                ['num' => $permanentJobs,   'label' => 'Permanent Jobs'],
+                ['num' => $contractJobs,    'label' => 'Contract Jobs'],
+                ['num' => $fresherJobs,     'label' => 'Fresher Jobs'],
             ];
         @endphp
         @foreach ($stats as $stat)
@@ -627,6 +627,9 @@
                 onclick="filterJobs('{{ strtolower($city) }}', this)"
             >{{ $city }}</button>
         @endforeach
+        @if (!empty($hasOthers) && $hasOthers)
+            <button class="tab" role="tab" aria-selected="false" data-filter="others" onclick="filterJobs('others', this)">Others</button>
+        @endif
     </div>
 
     {{-- Job cards --}}
@@ -652,9 +655,13 @@
                              : ($minSal ? $minSal . '+ LPA' : '');
                 // location is sometimes serialized PHP array
                 $rawLoc      = $job->location ?? '';
-                $locDisplay  = (@unserialize($rawLoc) !== false && is_array(@unserialize($rawLoc)))
-                             ? implode(', ', @unserialize($rawLoc))
-                             : $rawLoc;
+                $locAllParts = (@unserialize($rawLoc) !== false && is_array(@unserialize($rawLoc)))
+                             ? @unserialize($rawLoc)
+                             : array_map('trim', explode(',', $rawLoc));
+                $locAllParts = array_values(array_filter($locAllParts));
+                $locDisplay  = (count($locAllParts) > 3)
+                             ? implode(', ', array_slice($locAllParts, 0, 3)) . '...'
+                             : implode(', ', $locAllParts);
                 $isNew       = $job->created_at && $job->created_at->diffInDays(now()) <= 7;
                 $cityNormMap2 = ['bangalore' => 'bengaluru', 'bengaluru' => 'bengaluru',
                                  'hyderabad' => 'hyderabad', 'secunderabad' => 'hyderabad',
@@ -664,19 +671,28 @@
                                  'gurgaon' => 'gurgaon', 'gurugram' => 'gurgaon',
                                  'pune' => 'pune', 'kolkata' => 'kolkata'];
                 $citySlugs = [];
-                if ($locDisplay) {
-                    foreach ($cityNormMap2 as $kw => $slug) {
-                        if (stripos($locDisplay, $kw) !== false) { $citySlugs[] = $slug; }
+                $hasNonMetro = false;
+                if ($locAllParts) {
+                    foreach ($locAllParts as $singleLoc) {
+                        $matchedMetro = false;
+                        foreach ($cityNormMap2 as $kw => $slug) {
+                            if (stripos($singleLoc, $kw) !== false) {
+                                $citySlugs[] = $slug;
+                                $matchedMetro = true;
+                            }
+                        }
+                        if (!$matchedMetro && trim($singleLoc) !== '') $hasNonMetro = true;
                     }
                 }
+                if ($hasNonMetro) $citySlugs[] = 'others';
                 $citySlug = implode(' ', array_values(array_unique($citySlugs)));
             @endphp
             <a class="job-card" href="{{ url('/job/' . $job->slug) }}" data-cat="{{ $citySlug }}">
                 <div class="jc-top">
                     <div class="jc-avatar {{ $avClass }}">{{ $initials }}</div>
                     <div class="jc-meta">
-                        <div class="jc-company">{{ $companyName }}</div>
                         <div class="jc-title">{{ $job->job_title }}</div>
+                        <div class="jc-company">{{ $companyName }}</div>
                         @if ($locDisplay)<div class="jc-loc">{{ $locDisplay }}</div>@endif
                     </div>
                 </div>
