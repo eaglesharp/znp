@@ -51,7 +51,15 @@ header.znp-header .znp-logo {
     align-items: center;
     text-decoration: none;
 }
-header.znp-header .znp-logo-img { height: 24px; width: auto; display: block; }
+header.znp-header .znp-logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    white-space: nowrap;
+}
+header.znp-header .znp-logo-text .logo-blue   { color: var(--blue); }
+header.znp-header .znp-logo-text .logo-orange { color: var(--orange); }
 header.znp-header .znp-nav-actions {
     display: flex;
     align-items: center;
@@ -106,12 +114,7 @@ header.znp-header .znp-btn-post:hover {
     }
     .znp-header-inner { gap: 8px; }
     header.znp-header .znp-logo { flex: 1 1 0; min-width: 0; overflow: hidden; }
-    header.znp-header .znp-logo-img {
-        height: 26px;
-        max-width: 100%;
-        object-fit: contain;
-        object-position: left center;
-    }
+    header.znp-header .znp-logo-text { font-size: 15px; }
     header.znp-header .znp-nav-actions { gap: 6px; flex-shrink: 0; }
     header.znp-header .znp-btn-jobs {
         padding: 8px 14px;
@@ -132,7 +135,7 @@ header.znp-header .znp-btn-post:hover {
 <header class="znp-header">
     <div class="znp-header-inner">
         <a class="znp-logo" href="{{ url('/') }}">
-            <img src="{{ asset('/') }}asset/images/logo.svg" alt="ZeroNoticePeriod" class="znp-logo-img">
+            <span class="znp-logo-text"><span class="logo-blue">Zero</span><span class="logo-orange">Notice</span><span class="logo-blue">Period</span></span>
         </a>
         <nav></nav>
         <div class="znp-nav-actions">

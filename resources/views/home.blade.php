@@ -56,14 +56,15 @@
         margin-bottom: 22px;
     }
     .eyebrow-dot      { width: 8px; height: 8px; background: var(--orange); border-radius: 50%; flex-shrink: 0; }
-    .hero h1          { font-size: 42px !important; font-weight: 800 !important; line-height: 1.18 !important; color: var(--text) !important; margin-bottom: 16px !important; letter-spacing: -1.5px !important; }
+    .hero h1          { font-size: 38px !important; font-weight: 800 !important; line-height: 1.18 !important; color: var(--text) !important; margin-bottom: 16px !important; letter-spacing: -1.5px !important; }
     /* Ensure orange/colored words inside headings ALWAYS inherit the heading font-size */
     .hero h1 .orange,
     .section-title span,
     .how-title span,
     .employers-title span,
     .email-title span    { color: var(--orange); font-size: inherit !important; font-weight: inherit !important; }
-    .hero-sub         { font-size: 16px; color: var(--text-muted); line-height: 1.65; margin-bottom: 28px !important; max-width: 440px; }
+    .hero-sub         { font-size: 16px; line-height: 1.65; margin-bottom: 28px !important; }
+    .hero-sub mark      { background: var(--blue); color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: 500; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
     /* ── HERO SEARCH BAR ── */
     .hero-search {
@@ -158,14 +159,14 @@
     }
     .live-panel-header {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 15px 24px; border-bottom: 1px solid var(--border);
+        padding: 10px 20px; border-bottom: 1px solid var(--border);
     }
     .live-label   { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
     .live-dot     { width: 9px; height: 9px; background: #22c55e; border-radius: 50%; animation: blink 1.5s infinite; flex-shrink: 0; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .open-count   { font-size: 13px; color: var(--text-muted); }
     .live-job {
-        display: flex; align-items: center; gap: 12px; padding: 14px 20px;
+        display: flex; align-items: center; gap: 12px; padding: 8px 20px;
         border-bottom: 1px solid #f3f4f6; transition: background 0.12s; cursor: pointer; text-decoration: none;
     }
     .live-job:hover              { background: #f9fafb; }
@@ -186,7 +187,7 @@
     .wb-wfo              { background: #dcfce7; color: #166534; }
     .btn-browse {
         display: block; margin: 16px 20px 20px; background: var(--orange); color: var(--white) !important;
-        border: none; border-radius: 10px; padding: 15px; font-size: 15px; font-weight: 700;
+        border: none; border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 700;
         text-align: center; cursor: pointer; font-family: 'Inter', sans-serif;
         transition: background 0.15s; text-decoration: none;
     }
@@ -233,7 +234,8 @@
     .jobs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
     .job-card {
         background: var(--white); border: 1px solid var(--border); border-radius: 12px;
-        padding: 18px 20px; transition: all 0.18s; cursor: pointer; text-decoration: none; display: block;
+        padding: 18px 20px; transition: all 0.18s; cursor: pointer; text-decoration: none;
+        display: flex; flex-direction: column;
     }
     .job-card:hover { box-shadow: 0 6px 24px rgba(26,63,170,0.12); border-color: #c7d5f8; transform: translateY(-2px); }
     .jc-top     { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
@@ -250,9 +252,10 @@
     .av-7 { background: #ea580c; }
     .av-8 { background: #0d9488; }
     .jc-meta    { flex: 1; min-width: 0; }
-    .jc-company { font-size: 11.5px; color: var(--text-muted); margin-bottom: 2px; }
-    .jc-title   { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
+    .jc-company { font-size: 10.5px; color: var(--text-muted); margin-bottom: 2px; }
+    .jc-title   { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
     .jc-loc     { font-size: 11px; color: var(--text-light); font-weight: 500; margin-top: 2px; }
+    .jc-bottom  { margin-top: auto; }
     .jc-tags    { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .tag        { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
     .t-remote   { background: #fef3c7; color: #92400e; }
@@ -411,7 +414,7 @@
         .stats-inner   { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 8px 0; }
     }
     @media (max-width: 600px) {
-        .hero          { padding: 32px 16px 40px; }
+        .hero          { padding: 48px 40px 56px; }
         .hero h1       { font-size: 30px; }
         /* ── Hero search: stack vertically ── */
         .hero-search   {
@@ -473,8 +476,8 @@
                 <span class="eyebrow-dot"></span>
                 India's #1 Exclusive Job Portal For Immediate Joiners
             </div>
-            <h1>Hire people who<br>join <span class="orange">immediately.</span></h1>
-            <p class="hero-sub">India's only job portal built for zero notice talent.</p>
+            <h1>India's largest pool of<br><span class="orange">immediately available </span>talent.</h1>
+            <p class="hero-sub"><mark>Only job portal built for zero notice talent.</mark></p>
 
             <div class="hero-search" role="search">
                 <div class="hs-field">
@@ -696,26 +699,32 @@
                         @if ($locDisplay)<div class="jc-loc">{{ $locDisplay }}</div>@endif
                     </div>
                 </div>
-                <div class="jc-tags">
-                    <span class="tag {{ $workClass }}">{{ $workMode }}</span>
-                    @if ($jobTypeName)
-                        <span class="tag {{ $typeClass }}">{{ $jobTypeName }}</span>
-                    @endif
-                    @if ($isNew)
-                        <span class="tag t-new">New</span>
-                    @endif
-                </div>
-                <div class="jc-footer">
-                    <span class="jc-exp">
-                        @if ($expName){{ $expName }} &nbsp;&middot;&nbsp;@endif
-                        <span class="salary">{{ $salaryStr }}</span>
-                    </span>
-                    <button class="btn-apply" type="button" onclick="event.preventDefault(); window.location.href='{{ url('/job/' . $job->slug) }}'">Apply now</button>
+                <div class="jc-bottom">
+                    <div class="jc-tags">
+                        <span class="tag {{ $workClass }}">{{ $workMode }}</span>
+                        @if ($jobTypeName)
+                            <span class="tag {{ $typeClass }}">{{ $jobTypeName }}</span>
+                        @endif
+                        @if ($isNew)
+                            <span class="tag t-new">New</span>
+                        @endif
+                    </div>
+                    <div class="jc-footer">
+                        <span class="jc-exp">
+                            @if ($expName){{ $expName }} &nbsp;&middot;&nbsp;@endif
+                            <span class="salary">{{ $salaryStr }}</span>
+                        </span>
+                        <button class="btn-apply" type="button" onclick="event.preventDefault(); window.location.href='{{ url('/job/' . $job->slug) }}'">Apply now</button>
+                    </div>
                 </div>
             </a>
         @empty
             <p style="color:var(--text-muted);font-size:14px;text-align:center;grid-column:1/-1;padding:48px 0;">No active jobs at the moment — please check back soon.</p>
         @endforelse
+    </div>
+
+    <div style="text-align: center; margin-top: 28px;">
+        <a class="see-all" href="{{ url('/jobs') }}" target="_blank" rel="noopener noreferrer" style="font-size: 14px; padding: 12px 28px;">View all jobs <span aria-hidden="true">&#8594;</span></a>
     </div>
 
 </div>
@@ -745,7 +754,7 @@
     <div class="employers-inner">
         <div class="employers-header">
             <div class="employers-title">Top Employers <span>Across India</span></div>
-            <p class="employers-sub">Trusted by India's leading companies hiring zero notice period talent</p>
+            <p class="employers-sub">India's leading companies hiring zero notice talent</p>
         </div>
 
         {{-- Previous text-based employer strip kept for quick rollback.
@@ -834,12 +843,12 @@
     <div class="dual-card dc-peach">
         <div class="dc-label">For Recruiters</div>
         <div class="dc-title">Hire in days,<br>not months.</div>
-        <p class="dc-desc">Stop losing time chasing candidates on 60-day notice. Find verified immediate joiners today.</p>
+        <p class="dc-desc">Stop losing time chasing candidates with notice. Find verified immediate joiners today.</p>
         <ul class="dc-list">
             <li><span class="dc-bullet" aria-hidden="true"></span>Verified zero-notice-period database</li>
-            <li><span class="dc-bullet" aria-hidden="true"></span>Buy single CVs or bulk packages</li>
-            <li><span class="dc-bullet" aria-hidden="true"></span>Find contractors and perm hires</li>
-            <li><span class="dc-bullet" aria-hidden="true"></span>Post jobs to immediate joiners only</li>
+            <li><span class="dc-bullet" aria-hidden="true"></span>Applications from immediate joiners only</li>
+            <li><span class="dc-bullet" aria-hidden="true"></span>Find contractors and permanent hires</li>
+            <li><span class="dc-bullet" aria-hidden="true"></span>Buy bulk job posts</li>
         </ul>
         <a class="dc-cta" href="{{ url('/employer-register') }}">Post a job</a>
     </div>
@@ -850,9 +859,9 @@
 <section class="email-section">
   <div class="email-inner">
     <div class="email-title">Ready to <span>hire immediately?</span></div>
-    <p class="email-sub">Join 1,800+ employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
+    <p class="email-sub">Join hundreds of employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
     <div class="cta-btns">
-      <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-register') }}'">Post a Job — It's Free</button>
+      <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-register') }}'">I am an Employer</button>
       <button class="cta-btn-secondary" onclick="window.location='{{ url('/register') }}'">I'm a Jobseeker</button>
     </div>
   </div>
@@ -991,7 +1000,8 @@
         btn.setAttribute('aria-selected', 'true');
         var idx = 0;
         document.querySelectorAll('#jobsGrid .job-card').forEach(function (card) {
-            var match = cat === 'all' || (card.getAttribute('data-cat') || '').includes(cat);
+            var isRemote = card.querySelector('.t-remote') !== null;
+            var match = cat === 'all' || isRemote || (card.getAttribute('data-cat') || '').includes(cat);
             if (match) {
                 card.style.display    = '';
                 card.style.opacity    = '0';
