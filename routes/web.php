@@ -51,6 +51,7 @@ Route::view('coming-soon', 'coming');
 
 
 $real_path = realpath(__DIR__) . DIRECTORY_SEPARATOR . 'front_routes' . DIRECTORY_SEPARATOR;
+Route::get('/jobs-page', 'Job\JobController@jobsPage')->name('jobs.page');
 
 
 
@@ -199,7 +200,6 @@ include_once($real_path . 'cms.php');
 
 
 /* * ******** JobController ************ */
-
 
 
 include_once($real_path . 'job.php');

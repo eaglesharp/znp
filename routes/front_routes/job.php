@@ -48,6 +48,9 @@ Route::get('view-applicants-profile/{job_id}/{id}', 'Job\JobPublishController@vi
 
 Route::get('jobs', 'Job\JobController@jobs')->name('job.list');
 
+Route::get('jobs-page', 'Job\JobController@jobsPage')->name('jobs.page');
+Route::get('jobs-autocomplete', 'Job\JobController@jobsAutocomplete')->name('jobs.autocomplete');
+
 Route::get('job/{slug}', 'Job\JobController@jobDetail')->name('job.detail');
 
 Route::post('applyjob', 'Job\JobController@postApplyJob')->name('post.apply.job');

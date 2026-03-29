@@ -1,0 +1,102 @@
+/*
+ * znp-common.css — ZNP Design System, shared across all new ZNP pages.
+ * Loaded globally by layouts/znp.blade.php.
+ *
+ * Rules:
+ *  - HOME PAGE values are the STANDARD for every shared class.
+ *  - Page-specific differences go in each page's @push('styles') as
+ *    scoped overrides (e.g. .znp-jobs .jc-title { … }).
+ *  - When a field is changed here, it changes across the entire site.
+ */
+
+/* ── DESIGN TOKENS ──────────────────────────────────────────────── */
+:root {
+    --blue:        #1a3faa;
+    --blue-dark:   #152f85;
+    --blue-mid:    #2350cc;
+    --orange:      #f97316;
+    --orange-dark: #ea6a00;
+    --text:        #111827;
+    --text-muted:  #6b7280;
+    --text-light:  #9ca3af;
+    --border:      #e5e7eb;
+    --bg:          #f3f4f8;
+    --white:       #ffffff;
+}
+
+html { scroll-behavior: smooth; }
+
+/* ── JOB CARD — base (standard from approved home page) ─────────── */
+.job-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: all 0.18s;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+}
+.job-card:hover {
+    box-shadow: 0 6px 24px rgba(26,63,170,0.12);
+    border-color: #c7d5f8;
+    transform: translateY(-2px);
+}
+
+/* ── JOB CARD STRUCTURE — standard ──────────────────────────────── */
+.jc-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.jc-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.jc-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 3px;
+}
+.jc-company {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+
+/* ── TAG PILLS — base standard ───────────────────────────────────── */
+.jc-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+.tag {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+}
+
+/* Work-mode / job-type tag colours (home page values = standard) */
+.t-remote   { background: #fef3c7; color: #92400e; }
+.t-hybrid   { background: #dbeafe; color: #1d4ed8; }
+.t-wfo      { background: #dcfce7; color: #166534; }
+.t-urgent   { background: #fee2e2; color: #b91c1c; }
+.t-new      { background: #f0fdf4; color: #15803d; }
+.t-contract { background: #f3e8ff; color: #7e22ce; }
+.t-full     { background: #f0f9ff; color: #0369a1; }
+.t-c2h      { background: #fdf4ff; color: #86198f; }

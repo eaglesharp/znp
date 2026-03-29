@@ -1,20 +1,17 @@
-@extends('layouts.app')
+@extends('layouts.znp')
 
 {{-- ══════════════════════════════════════
      PAGE-SPECIFIC STYLES
 ══════════════════════════════════════ --}}
 @push('styles')
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     /* ── ZNP HOME: SCOPE & HARD BOOTSTRAP OVERRIDE ── */
-    /* CSS variables are defined on :root in znp/header.blade.php */
+    /* Design tokens, Inter font, jQuery UI → layouts/znp.blade.php + znp-common.css
+       Shared components (.job-card, .jc-title, .tag etc.) → znp-common.css         */
     .znp-home {
         background: var(--bg);
         color: var(--text);
     }
-    html { scroll-behavior: smooth; }
     /* Forcibly apply Inter to every element inside the home wrapper,
        overriding Bootstrap's helvetica/system font stack */
     .znp-home,
@@ -232,17 +229,8 @@
 
     /* ── JOB CARDS GRID ── */
     .jobs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .job-card {
-        background: var(--white); border: 1px solid var(--border); border-radius: 12px;
-        padding: 18px 20px; transition: all 0.18s; cursor: pointer; text-decoration: none;
-        display: flex; flex-direction: column;
-    }
-    .job-card:hover { box-shadow: 0 6px 24px rgba(26,63,170,0.12); border-color: #c7d5f8; transform: translateY(-2px); }
-    .jc-top     { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
-    .jc-avatar  {
-        width: 38px; height: 38px; border-radius: 9px; font-size: 11px; font-weight: 800;
-        color: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
+    /* .job-card, .jc-top, .jc-avatar, .jc-title, .jc-company,
+       .jc-tags, .tag and all tag colours → znp-common.css          */
     .av-1 { background: var(--blue); }
     .av-2 { background: #f97316; }
     .av-3 { background: #0891b2; }
@@ -252,20 +240,8 @@
     .av-7 { background: #ea580c; }
     .av-8 { background: #0d9488; }
     .jc-meta    { flex: 1; min-width: 0; }
-    .jc-company { font-size: 10.5px; color: var(--text-muted); margin-bottom: 2px; }
-    .jc-title   { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; margin-bottom: 3px; }
     .jc-loc     { font-size: 11px; color: var(--text-light); font-weight: 500; margin-top: 2px; }
     .jc-bottom  { margin-top: auto; }
-    .jc-tags    { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-    .tag        { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
-    .t-remote   { background: #fef3c7; color: #92400e; }
-    .t-hybrid   { background: #dbeafe; color: #1d4ed8; }
-    .t-wfo      { background: #dcfce7; color: #166534; }
-    .t-urgent   { background: #fee2e2; color: #b91c1c; }
-    .t-new      { background: #f0fdf4; color: #15803d; }
-    .t-contract { background: #f3e8ff; color: #7e22ce; }
-    .t-full     { background: #f0f9ff; color: #0369a1; }
-    .t-c2h      { background: #fdf4ff; color: #86198f; }
     .jc-footer  { display: flex; justify-content: space-between; align-items: center; }
     .jc-exp     { font-size: 12px; color: var(--text-light); font-weight: 500; }
     .salary     { font-size: 12px; color: #7a8fb0; font-weight: 500; }
@@ -477,7 +453,9 @@
                 India's #1 Exclusive Job Portal For Immediate Joiners
             </div>
             <h1>India's largest pool of<br><span class="orange">immediately available </span>talent.</h1>
-            <p class="hero-sub"><mark>Only job portal built for zero notice talent.</mark></p>
+            <p class="hero-sub"><mark style="
+    font-size: 13px;
+">Only job portal built for zero notice talent.</mark></p>
 
             <div class="hero-search" role="search">
                 <div class="hs-field">

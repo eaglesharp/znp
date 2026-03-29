@@ -56,7 +56,7 @@ class JobController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth', ['except' => ['jobs', 'jobDetail']]);
+        // $this->middleware('auth', ['except' => ['jobs', 'jobDetail','jobsPage']]);
 
         $this->functionalAreas = DataArrayHelper::langFunctionalAreasArray();
         $this->countries = DataArrayHelper::langCountriesArray();
@@ -66,6 +66,7 @@ class JobController extends Controller
 
     public function jobs(Request $request)
     {
+     
         
         // Retrieve the filter parameters from the request
         $searchfield = $request->input('searchfield');
@@ -264,6 +265,208 @@ class JobController extends Controller
         $jobs = Job::whereIn('slug', $myFavouriteJobSlugs)->paginate(10);
         return view('job.my_favourite_jobs')
                         ->with('jobs', $jobs);
+    }
+
+    /**
+     * Jobs listing page — new ZNP design (temp URL: /jobs-page)
+     */
+    public function jobsPage(Request $request)
+    {
+        $query = PostJob::with(['company', 'jobSkills'])->status();
+
+        // ── Text search (q) — split comma-separated terms, match any
+        if ($q = trim($request->input('q', ''))) {
+            $terms = array_filter(array_map('trim', explode(',', $q)));
+            if ($terms) {
+                $query->where(function ($sq) use ($terms) {
+                    foreach ($terms as $term) {
+                        $like = '%' . strtolower($term) . '%';
+                        $sq->orWhere('search',    'LIKE', $like)
+                           ->orWhere('job_title', 'LIKE', $like);
+                    }
+                });
+            }
+        }
+
+        // ── Location from search bar (loc)
+        if ($loc = trim($request->input('loc', ''))) {
+            $query->where('search', 'LIKE', '%' . strtolower($loc) . '%');
+        }
+
+        // ── Popular tag quick filter
+        if ($tag = $request->input('tag', '')) {
+            $tagMap = [
+                'Bengaluru'        => ['search',    '%bengaluru%'],
+                'Mumbai'           => ['search',    '%mumbai%'],
+                'Hyderabad'        => ['search',    '%hyderabad%'],
+                'Delhi NCR'        => ['search',    '%delhi%'],
+                'Pune'             => ['search',    '%pune%'],
+                'Chennai'          => ['search',    '%chennai%'],
+                'Remote'           => ['work_mode', 'Remote/WFH'],
+                'Hybrid'           => ['work_mode', 'Hybrid'],
+                'Work From Office' => ['work_mode', 'Work From Office'],
+                'Contract'         => ['job_type',  'Contract'],
+                'Night Shift'      => ['job_shift',  '%shift%'],
+            ];
+            if (isset($tagMap[$tag])) {
+                [$col, $val] = $tagMap[$tag];
+                str_contains($val, '%') ? $query->where($col, 'LIKE', $val) : $query->where($col, $val);
+            }
+        }
+
+        // ── Work mode filter (multi-select, LIKE so partial values match)
+        if ($modes = array_filter((array) $request->input('mode', []))) {
+            $query->where(function ($sq) use ($modes) {
+                foreach ($modes as $mode) {
+                    $sq->orWhere('work_mode', 'LIKE', '%' . $mode . '%');
+                }
+            });
+        }
+
+        // ── Job type filter (multi-select, LIKE so partial values match)
+        if ($types = array_filter((array) $request->input('type', []))) {
+            $query->where(function ($sq) use ($types) {
+                foreach ($types as $type) {
+                    $sq->orWhere('job_type', 'LIKE', '%' . $type . '%');
+                }
+            });
+        }
+
+        // ── Job shift filter (multi-select, LIKE because values can be verbose)
+        if ($shifts = array_filter((array) $request->input('shift', []))) {
+            $query->where(function ($sq) use ($shifts) {
+                foreach ($shifts as $shift) {
+                    $sq->orWhere('job_shift', 'LIKE', '%' . $shift . '%');
+                }
+            });
+        }
+
+        // ── Experience filter (multi-select, range-based)
+        if ($exps = array_filter((array) $request->input('exp', []))) {
+            $expRangeMap = ['0-3'=>[0,3],'3-6'=>[3,6],'6-10'=>[6,10],'10-15'=>[10,15],'15-25'=>[15,25],'25+'=>[25,999]];
+            $query->where(function ($sq) use ($exps, $expRangeMap) {
+                foreach ($exps as $range) {
+                    if (isset($expRangeMap[$range])) {
+                        [$min, $max] = $expRangeMap[$range];
+                        $sq->orWhereRaw("CAST(experience AS UNSIGNED) BETWEEN ? AND ?", [$min, $max]);
+                    }
+                }
+            });
+        }
+
+        // ── Location sidebar filter (multi-select)
+        if ($locations = array_filter((array) $request->input('location', []))) {
+            $query->where(function ($sq) use ($locations) {
+                foreach ($locations as $l) {
+                    $sq->orWhere('search', 'LIKE', '%' . strtolower($l) . '%');
+                }
+            });
+        }
+
+        // ── Salary range filter (multi-select, any selected range overlaps job salary)
+        if ($sals = array_filter((array) $request->input('sal', []))) {
+            $salaryRangeMap = ['0-3'=>[0,3],'3-6'=>[3,6],'6-10'=>[6,10],'10-15'=>[10,15],'15-25'=>[15,25],'25-50'=>[25,50],'50-75'=>[50,75],'75-100'=>[75,100],'100-500'=>[100,500],'500+'=>[500,999999]];
+            $query->where(function ($sq) use ($sals, $salaryRangeMap) {
+                foreach ($sals as $sal) {
+                    if (isset($salaryRangeMap[$sal])) {
+                        [$min, $max] = $salaryRangeMap[$sal];
+                        $sq->orWhere(function ($sq2) use ($min, $max) {
+                            $sq2->where('max_salary', '>=', $min)
+                                ->where('min_salary', '<=', $max);
+                        });
+                    }
+                }
+            });
+        }
+
+        // ── Freshness filter
+        if ($date = $request->input('date', '')) {
+            $dateMap = ['today' => 1, '3days' => 3, 'week' => 7, '2weeks' => 15, 'month' => 30];
+            if (isset($dateMap[$date])) {
+                $query->where('created_at', '>=', now()->subDays($dateMap[$date]));
+            }
+        }
+
+        // ── Sort
+        $sort = $request->input('sort', 'latest');
+        if ($sort === 'salary_high')     { $query->orderByDesc('max_salary'); }
+        elseif ($sort === 'salary_low')  { $query->orderBy('min_salary');     }
+        else                             { $query->latest();                   }
+
+        $jobs = $query->paginate(10)->withQueryString();
+
+        // ── Filter metadata (counts from DB for dynamic sidebar) ──────────────
+        // Experience counts — new ranges matching sidebar labels
+        $expRangeMap = ['0-3'=>[0,3],'3-6'=>[3,6],'6-10'=>[6,10],'10-15'=>[10,15],'15-25'=>[15,25],'25+'=>[25,999]];
+        $expCounts = [];
+        foreach ($expRangeMap as $key => [$min, $max]) {
+            $expCounts[$key] = PostJob::status()
+                ->whereRaw("CAST(experience AS UNSIGNED) BETWEEN ? AND ?", [$min, $max])
+                ->count();
+        }
+
+        // Salary counts — includes Cr ranges
+        $salaryRangeMap = ['0-3'=>[0,3],'3-6'=>[3,6],'6-10'=>[6,10],'10-15'=>[10,15],'15-25'=>[15,25],'25-50'=>[25,50],'50-75'=>[50,75],'75-100'=>[75,100],'100-500'=>[100,500],'500+'=>[500,999999]];
+        $salaryCounts = [];
+        foreach ($salaryRangeMap as $key => [$min, $max]) {
+            $salaryCounts[$key] = PostJob::status()
+                ->where('max_salary', '>=', $min)->where('min_salary', '<=', $max)->count();
+        }
+
+        // Work mode counts — LIKE-based matching
+        $workModeKeys = ['Remote' => 'Remote', 'Hybrid' => 'Hybrid', 'Work From Office' => 'Work From Office', 'Temp WFH' => 'Temp WFH'];
+        $workModeCounts = [];
+        foreach ($workModeKeys as $key => $like) {
+            $workModeCounts[$key] = PostJob::status()->where('work_mode', 'LIKE', '%'.$like.'%')->count();
+        }
+
+        // Shift counts — LIKE-based matching
+        $shiftKeys = ['Day Shift' => 'Day Shift', 'Night Shift' => 'Night Shift', 'Rotational Shift' => 'Rotational Shift', 'US Shift' => 'US Shift', 'UK Shift' => 'UK Shift', 'APAC Shift' => 'APAC Shift', '6 days' => '6 days'];
+        $shiftCounts = [];
+        foreach ($shiftKeys as $key => $like) {
+            $shiftCounts[$key] = PostJob::status()->where('job_shift', 'LIKE', '%'.$like.'%')->count();
+        }
+
+        // Job type counts — LIKE-based matching
+        $typeKeys = ['Permanent' => 'Permanent', 'Contract' => 'Contract', 'Contract to Hire' => 'Contract to Hire', 'Freelance' => 'Freelance', 'Fresher' => 'Fresher', 'Internship' => 'Internship'];
+        $jobTypeCounts = [];
+        foreach ($typeKeys as $key => $like) {
+            $jobTypeCounts[$key] = PostJob::status()->where('job_type', 'LIKE', '%'.$like.'%')->count();
+        }
+
+        // Locations: unserialize the serialized array column, count occurrences
+        $locationCounts = [];
+        PostJob::status()->pluck('location')->each(function ($raw) use (&$locationCounts) {
+            $arr = @unserialize($raw);
+            if (!is_array($arr)) return;
+            foreach ($arr as $l) {
+                $l = trim($l);
+                if ($l) $locationCounts[$l] = ($locationCounts[$l] ?? 0) + 1;
+            }
+        });
+        arsort($locationCounts);
+
+        return view('znp.jobs', compact(
+            'jobs', 'expCounts', 'salaryCounts', 'workModeCounts', 'shiftCounts', 'jobTypeCounts', 'locationCounts'
+        ));
+    }
+
+    /**
+     * Autocomplete endpoint for job title search (GET /jobs-autocomplete?q=...)
+     */
+    public function jobsAutocomplete(Request $request)
+    {
+        $q = trim($request->input('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+        $titles = PostJob::status()
+            ->where('job_title', 'LIKE', '%' . $q . '%')
+            ->distinct()
+            ->pluck('job_title')
+            ->take(10)
+            ->values();
+        return response()->json($titles);
     }
 
 }
