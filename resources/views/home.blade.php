@@ -30,7 +30,7 @@
     .znp-home ul                { list-style: none; padding: 0; margin: 0; }
 
     /* ── HERO ── */
-    .hero { background: var(--bg); padding: 28px 40px 40px; }
+    .hero { background: var(--bg); padding: 32px 16px 40px; }
     .hero-inner {
         max-width: 1120px;
         margin: 0 auto;
@@ -53,7 +53,7 @@
         margin-bottom: 22px;
     }
     .eyebrow-dot      { width: 8px; height: 8px; background: var(--orange); border-radius: 50%; flex-shrink: 0; }
-    .hero h1          { font-size: 38px !important; font-weight: 800 !important; line-height: 1.18 !important; color: var(--text) !important; margin-bottom: 16px !important; letter-spacing: -1.5px !important; }
+    .hero h1          { font-size: 30px !important; font-weight: 800 !important; line-height: 1.18 !important; color: var(--text) !important; margin-bottom: 16px !important; letter-spacing: -1.5px !important; }
     /* Ensure orange/colored words inside headings ALWAYS inherit the heading font-size */
     .hero h1 .orange,
     .section-title span,
@@ -390,7 +390,7 @@
         .stats-inner   { grid-template-columns: repeat(2, 1fr); gap: 24px; padding: 8px 0; }
     }
     @media (max-width: 600px) {
-        .hero          { padding: 48px 40px 56px; }
+        .hero          { padding: 32px 16px 40px; }
         .hero h1       { font-size: 30px; }
         /* ── Hero search: stack vertically ── */
         .hero-search   {

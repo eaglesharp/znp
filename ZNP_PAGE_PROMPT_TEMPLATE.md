@@ -111,13 +111,13 @@ Reply with "ZNP context loaded — ready for first page." and nothing else.
 
 | Page       | Real URL       | Temp URL         | Controller Method     | Blade File              | Status      |
 |------------|----------------|------------------|-----------------------|-------------------------|-------------|
-| Home       | /              | /home-page       | HomeController@newIndex | znp/home.blade.php    | ✅ Done     |
-| Jobs       | /jobs          | /jobs-page       |                       |                         | ⬜ Pending  |
-| About      | /about         | /about-page      |                       |                         | ⬜ Pending  |
-| Employers  | /employers     | /employers-page  |                       |                         | ⬜ Pending  |
-|            |                |                  |                       |                         |             |
-|            |                |                  |                       |                         |             |
-|            |                |                  |                       |                         |             |
+| Home              | /              | /home-page       | HomeController@newIndex                      | znp/home.blade.php          | ✅ Done     |
+| Jobs              | /jobs          | /jobs-page       |                                              |                             | ⬜ Pending  |
+| About             | /about         | /about-page      |                                              |                             | ⬜ Pending  |
+| Employers         | /employers     | /employers-page  |                                              |                             | ⬜ Pending  |
+| Employer Auth     | /employer-auth | /company/employer-auth | LoginController@showEmployerAuth       | znp/employer-auth.blade.php | ✅ Done     |
+|                   |                |                  |                                              |                             |             |
+|                   |                |                  |                                              |                             |             |
 
 # Add new rows as client sends more HTML files.
 # Final step: once all rows are ✅ Done, do a find-replace in web.php

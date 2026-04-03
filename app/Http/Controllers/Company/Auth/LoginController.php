@@ -76,7 +76,7 @@ class LoginController extends Controller
     public function __construct()
     {
 
-        $this->middleware('company.guest')->except('logout');
+        // $this->middleware('company.guest')->except('logout');
 
     }
 
@@ -106,6 +106,11 @@ class LoginController extends Controller
 
         return view('auth.login1');
 
+    }
+
+    public function showEmployerAuth()
+    {
+        return view('znp.employer-auth');
     }
 
 
@@ -365,6 +370,115 @@ class LoginController extends Controller
             } else {
 
                 return redirect("employer-login")->with('error_message1', 'Please enter valid email!');
+
+
+
+            }
+
+        }
+
+
+
+    }
+
+    public function loginNew(Request $request)
+    {
+
+        // return redirect('coming-soon');
+        // dd(Auth::check());
+
+        if (Auth::check()) {
+
+            return redirect("employer-auth")->with('error_message1', 'Please Logout the User Account First');
+
+        } else {
+
+
+
+            $request->validate([
+
+                'email' => 'required',
+
+                'password' => 'required',
+
+            ]);
+
+
+            //   return redirect('coming-soon');
+
+
+            // return dd($request->all());
+
+            $credentials = $request->only('email', 'password');
+
+            $user = Company::where('email', $request->email)->first();
+
+            //dd($user);
+
+            if ($user) {
+                if (!$user->email_verified) {
+                    return redirect("employer-auth")->with('error_message', 'Please verify your email address!');
+                }
+
+                if ($user->is_active == 1) {
+                    //  dd('user is active');
+
+
+                    if (Auth::guard('company')->attempt($credentials)) {
+
+
+                        // if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+                        //     $ip = $_SERVER['HTTP_CLIENT_IP'];
+                        // } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+                        //     $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+                        // } else {
+                        //     $ip = $_SERVER['REMOTE_ADDR'];
+                        // }
+
+
+                        //  $now = Carbon::now();
+
+
+
+                        //     $locationData = Location::get($ip);
+
+                        //    // dd($locationData);
+
+                        //     if($locationData->cityName)
+                        //     {
+
+
+                        //  $data =  CompanyActivity::create([
+
+                        //     'date' => $now,
+                        //     'location' => $locationData->cityName ,
+                        //     'company_id' => Auth::guard('company')->user()->id
+                        //  ]);
+
+                        //     }
+
+
+
+
+
+
+                        return redirect()->intended('/employer-dashboard');
+
+                    } else {
+
+                        return redirect("employer-auth")->with('error_message1', 'You have entered invalid credentials!');
+
+
+
+                    }
+
+                } else {
+                    //  dd('user is not active');
+                    return redirect("employer-auth")->with('error_message', 'Your account deactivated!');
+                }
+            } else {
+
+                return redirect("employer-auth")->with('error_message1', 'Please enter valid email!');
 
 
 

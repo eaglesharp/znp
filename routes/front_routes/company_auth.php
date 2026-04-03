@@ -7,6 +7,7 @@ Route::prefix('company')->name('company.')->group(function () {
     Route::get('/', 'Company\Auth\LoginController@showLoginForm');
     Route::get('/login', 'Company\Auth\LoginController@showLoginForm')->name('login');
     Route::post('/login', 'Company\Auth\LoginController@login');
+    Route::post('/login-new', 'Company\Auth\LoginController@loginNew')->name('login.new');
     Route::post('/logout', 'Company\Auth\LoginController@logout')->name('logout');
     Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerLoginForm')->name('employer.login');
     Route::get('/email-verify/{token}', 'Company\Auth\RegisterController@VerifyEmployer')->name('employer.email-verify');

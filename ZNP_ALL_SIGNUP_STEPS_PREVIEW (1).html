@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZeroNoticePeriod — All Steps Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #1a3faa;
+  --orange: #f97316;
+  --text: #111827;
+  --text-muted: #6b7280;
+  --text-light: #9ca3af;
+  --border: #e5e7eb;
+  --bg: #f3f4f8;
+  --white: #ffffff;
+  --error: #dc2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  padding: 40px 20px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.preview-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.preview-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.preview-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.step-section {
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 32px;
+  background: #fafbfc;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: var(--blue);
+  color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.step-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.required {
+  color: var(--error);
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  background: var(--white);
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-note {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.info-note svg {
+  width: 18px;
+  height: 18px;
+  color: #0284c7;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-note-text {
+  font-size: 13px;
+  color: #0c4a6e;
+  line-height: 1.6;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.file-upload-label:hover {
+  border-color: var(--blue);
+  background: #f0f5ff;
+  color: var(--blue);
+}
+
+.file-name {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--blue);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkbox-item a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.summary-note {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.summary-note-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--orange);
+  margin-bottom: 8px;
+}
+
+.summary-note-text {
+  font-size: 13px;
+  color: #9a3412;
+  line-height: 1.6;
+}
+
+.field-count {
+  font-size: 11px;
+  color: var(--text-light);
+  font-style: italic;
+  margin-top: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="preview-container">
+  <h1 class="preview-title">Employer Sign Up - All Steps Preview</h1>
+  <p class="preview-subtitle">Review all form fields across 3 steps</p>
+  
+  <div class="summary-note">
+    <div class="summary-note-title">📋 Complete Sign Up Summary</div>
+    <div class="summary-note-text">
+      Total Fields: 15 • Required: 12 • Optional: 3 • Steps: 3
+    </div>
+  </div>
+  
+  <!-- STEP 1: Company Information -->
+  <div class="step-section">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <div class="step-title">Company Information</div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Company Name <span class="required">*</span></label>
+        <input type="text" class="form-input" placeholder="Your Company Ltd." value="Acme Corporation">
+        <div class="field-count">Required field</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Official Email <span class="required">*</span></label>
+        <input type="email" class="form-input" placeholder="you@company.com" value="hr@acme.com">
+        <div class="field-count">Required field</div>
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Password <span class="required">*</span></label>
+        <input type="password" class="form-input" placeholder="Create password" value="••••••••">
+        <div class="field-count">Required field</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password <span class="required">*</span></label>
+        <input type="password" class="form-input" placeholder="Re-enter password" value="••••••••">
+        <div class="field-count">Required field</div>
+      </div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Mobile Number <span class="required">*</span></label>
+        <input type="tel" class="form-input" placeholder="+91 98765 43210" value="+91 98765 43210">
+        <div class="field-count">Required field</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Person <span class="required">*</span></label>
+        <input type="text" class="form-input" placeholder="HR Manager Name" value="Priya Sharma">
+        <div class="field-count">Required field</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- STEP 2: Business Details -->
+  <div class="step-section">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <div class="step-title">Business Details</div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Designation <span class="required">*</span></label>
+        <input type="text" class="form-input" placeholder="e.g. HR Manager" value="Senior HR Manager">
+        <div class="field-count">Required field</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Business Entity Type <span class="required">*</span></label>
+        <select class="form-select">
+          <option value="">Select Type</option>
+          <option value="pvt_ltd" selected>Private Limited</option>
+          <option value="llp">LLP</option>
+          <option value="partnership">Partnership</option>
+          <option value="sole">Sole Proprietorship</option>
+          <option value="public">Public Limited</option>
+          <option value="other">Other</option>
+        </select>
+        <div class="field-count">Required field • 6 options</div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Company Headcount <span class="required">*</span></label>
+      <select class="form-select">
+        <option value="">Select Company Size</option>
+        <option value="1-10">1–10 employees</option>
+        <option value="11-50">11–50 employees</option>
+        <option value="51-200" selected>51–200 employees</option>
+        <option value="201-500">201–500 employees</option>
+        <option value="501-1000">501–1,000 employees</option>
+        <option value="1001-5000">1,001–5,000 employees</option>
+        <option value="5001-10000">5,001–10,000 employees</option>
+        <option value="10001-25000">10,001–25,000 employees</option>
+        <option value="25001-50000">25,001–50,000 employees</option>
+        <option value="50001-75000">50,001–75,000 employees</option>
+        <option value="75001-100000">75,001–1,00,000 employees</option>
+        <option value="100000+">1,00,000+ employees</option>
+      </select>
+      <div class="field-count">Required field • 12 size ranges • NEW FIELD</div>
+    </div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">GSTIN (Optional)</label>
+        <input type="text" class="form-input" placeholder="22AAAAA0000A1Z5" value="29ABCDE1234F1Z5">
+        <div class="field-count">Optional field</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PIN Code <span class="required">*</span></label>
+        <input type="text" class="form-input" placeholder="560001" value="560001">
+        <div class="field-count">Required field</div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">LinkedIn Profile (Optional)</label>
+      <input type="url" class="form-input" placeholder="https://linkedin.com/company/your-company" value="https://linkedin.com/company/acme-corp">
+      <div class="field-count">Optional field</div>
+    </div>
+  </div>
+  
+  <!-- STEP 3: Upload & Confirm -->
+  <div class="step-section">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <div class="step-title">Upload & Confirm</div>
+    </div>
+    
+    <div class="info-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <div class="info-note-text">
+        Your account will be reviewed within 24 hours. You'll receive a confirmation email once approved.
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Company Logo</label>
+      <div class="file-upload">
+        <label for="logo-upload" class="file-upload-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Choose File
+        </label>
+        <div class="file-name">Accepts JPEG, JPG, PNG (max 2 MB)</div>
+        <div class="field-count">Optional field</div>
+      </div>
+    </div>
+    
+    <div class="checkbox-group">
+      <label class="checkbox-item">
+        <input type="checkbox">
+        I agree to receive promotional communications from ZeroNoticePeriod
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" checked>
+        I have read and agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
+      </label>
+    </div>
+    
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; text-align: center;">
+      <div style="font-size: 13px; color: #1e40af; font-weight: 600; margin-bottom: 4px;">
+        ✅ All Required Fields Complete
+      </div>
+      <div style="font-size: 12px; color: #3b82f6;">
+        Ready to create account after clicking "Create Account" button
+      </div>
+    </div>
+  </div>
+  
+  <!-- Summary Box -->
+  <div style="background: linear-gradient(135deg, #1a3faa 0%, #2563eb 100%); border-radius: 16px; padding: 32px; color: white; text-align: center;">
+    <div style="font-size: 24px; font-weight: 800; margin-bottom: 12px;">
+      Complete Sign Up Flow
+    </div>
+    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 24px;">
+      Total of 15 fields across 3 easy steps
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #f97316;">6</div>
+        <div style="font-size: 12px; opacity: 0.8;">Fields in Step 1</div>
+      </div>
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #f97316;">6</div>
+        <div style="font-size: 12px; opacity: 0.8;">Fields in Step 2</div>
+      </div>
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #f97316;">3</div>
+        <div style="font-size: 12px; opacity: 0.8;">Items in Step 3</div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+
+</body>
+</html>

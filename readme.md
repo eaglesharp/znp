@@ -58,3 +58,40 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+---
+
+## ZNP New Pages — Development Convention
+
+> **All new ZNP public pages must follow these rules without exception.**
+
+### Page List
+
+| Page          | URL (Dev)              | Blade File                         | Status    |
+|---------------|------------------------|------------------------------------|-----------|
+| Home          | `/`                    | `resources/views/znp/home.blade.php`          | ✅ Done   |
+| Jobs          | `/jobs`                | `resources/views/znp/jobs.blade.php`          | ✅ Done   |
+| Employer Auth | `/company/employer-auth` | `resources/views/znp/employer-auth.blade.php` | ✅ Done   |
+| About         | `/about-page`          | pending                            | ⬜ Pending|
+| Employers     | `/employers-page`      | pending                            | ⬜ Pending|
+
+> Full page tracker with temp/real URLs: see `ZNP_PAGE_PROMPT_TEMPLATE.md`
+
+### Mandatory Rules for Every New Page
+
+1. **Layout**: `@extends('layouts.znp')` — never use `layouts/app.blade.php`
+2. **CSS scope**: All styles inside `@push('styles')`, scoped to `.znp-{pagename}` — never write unscoped or `body {}` styles in page blades
+3. **Scope reset block** — every page blade starts styles with:
+   ```css
+   .znp-{pagename}, .znp-{pagename} * { font-family: 'Inter', sans-serif !important; box-sizing: border-box; }
+   .znp-{pagename} { font-size: 12px; background: var(--bg); color: var(--text); }
+   ```
+4. **No re-imports**: Inter font, Bootstrap, Font Awesome, jQuery — all loaded by `layouts/znp.blade.php`
+5. **Header & footer outside wrapper**:
+   ```blade
+   @include('znp.header')  {{-- OUTSIDE .znp-{page} --}}
+   <div class="znp-{pagename}"> ... </div>
+   @include('znp.footer')  {{-- OUTSIDE .znp-{page} --}}
+   ```
+6. **Design source**: Convert from client-supplied HTML file pixel-perfect — use exact font sizes, padding, and spacings from the HTML, not approximations
+7. **JS**: Vanilla JS only in `@push('scripts')` — prefix function names with `znp` to avoid global conflicts

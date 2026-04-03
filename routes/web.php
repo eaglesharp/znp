@@ -183,6 +183,8 @@ Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerLoginFor
 
 Route::get('/employer-register', 'Company\Auth\RegisterController@showRegistrationForm')->name('company.register.page');
 
+Route::get('/employer-auth', 'Company\Auth\LoginController@showEmployerAuth')->name('employer.auth');
+
 /* * ******** OrderController ************ */
 
 

@@ -62,7 +62,7 @@ class RegisterController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('company.guest', ['except' => ['getVerification', 'getVerificationError']]);
+        // $this->middleware('company.guest', ['except' => ['getVerification', 'getVerificationError']]);
     }
 
     /**
@@ -126,7 +126,7 @@ class RegisterController extends Controller
                 'gstin' => 'max:15',
                 'terms' => 'required',
                 'designation' => 'required',
-                'linkedin' => 'required|url',
+                'linkedin' => 'nullable|url',
                 'password' => 'required|min:6|max:50',
                 'confirm_password' => 'required|same:password|min:6|max:50',
                 'company_type' => 'required'
@@ -190,7 +190,11 @@ class RegisterController extends Controller
 
         $company->phone = $request->input('mobile');
         
-        $company->linkedin = $request->input('linkedin');
+        $company->linkedin     = $request->input('linkedin');
+        $company->gstin       = $request->input('gstin');
+        $company->size        = $request->input('size');
+        $company->pincode     = $request->input('pincode');
+        $company->promotional = $request->has('promotional') ? 1 : 0;
 
         $company->is_active = 1;
 
