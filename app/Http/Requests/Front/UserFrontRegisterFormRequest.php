@@ -77,6 +77,7 @@ class UserFrontRegisterFormRequest extends Request
             'terms_of_use' => 'required',
 
              'immediate_last_date' => 'required_if:nop_days,1',
+             'last_working_day'    => 'required_if:nop_days,2,3,4,5,6',
              
            //  'confirm_nop' => 'required_if:nop_days,1',
 
@@ -116,7 +117,7 @@ class UserFrontRegisterFormRequest extends Request
              
              'gender_id'  => 'required',
 
-             
+             'reason_moved' => 'required',
 
          
 
@@ -183,6 +184,7 @@ class UserFrontRegisterFormRequest extends Request
             'work_type.required'   => 'Work Type is required',
             
             'immediate_last_date.required_if'  => 'Last Working Date is required',
+            'last_working_day.required_if'      => 'Last Working Date is required when serving notice',
             
            // 'confirm_nop.required_if' => 'Please confirm',
 

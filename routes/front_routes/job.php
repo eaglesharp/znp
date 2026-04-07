@@ -52,6 +52,7 @@ Route::get('jobs-page', 'Job\JobController@jobsPage')->name('jobs.page');
 Route::get('jobs-autocomplete', 'Job\JobController@jobsAutocomplete')->name('jobs.autocomplete');
 
 Route::get('job/{slug}', 'Job\JobController@jobDetail')->name('job.detail');
+Route::get('job-detail/{slug}', 'Job\JobController@jobDetailZnp')->name('job.detail.znp');
 
 Route::post('applyjob', 'Job\JobController@postApplyJob')->name('post.apply.job');
 

@@ -147,9 +147,13 @@ use RegistersUsers;
         }
         $ignored_companies = [];
         
-        if($request->ignore_companies)
+        // Support both array (ignore_companies[]) and comma-separated text (ignore_companies_text)
+        $ignoreInput = $request->ignore_companies
+            ?? (array_filter(array_map('trim', explode(',', $request->ignore_companies_text ?? ''))));
+
+        if (!empty($ignoreInput))
         {
-              foreach($request->ignore_companies as $company)
+              foreach($ignoreInput as $company)
 
         {
            // dd($company);
@@ -527,7 +531,7 @@ use RegistersUsers;
         // UserVerification::send($user, 'User Verification', config('mail.recieve_to.address'), config('mail.recieve_to.name'));
 
         // return $this->registered($request, $user) ?: redirect($this->redirectPath());
-        return redirect("login")->with('new_message', "Thank you for registering! We've sent a verification email to your registered email address. Please verify your email to activate your account and then use the 'Sign In' option under jobseeker module to log in.");
+        return redirect(route('jobseeker.auth'))->with('new_message', "Thank you for registering! We've sent a verification email to your registered email address. Please verify your email to activate your account and then use the 'Sign In' option below to log in.");
 
 
     }

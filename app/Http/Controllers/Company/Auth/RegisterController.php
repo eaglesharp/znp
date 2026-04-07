@@ -190,11 +190,15 @@ class RegisterController extends Controller
 
         $company->phone = $request->input('mobile');
         
-        $company->linkedin     = $request->input('linkedin');
-        $company->gstin       = $request->input('gstin');
-        $company->size        = $request->input('size');
-        $company->pincode     = $request->input('pincode');
-        $company->promotional = $request->has('promotional') ? 1 : 0;
+        $company->linkedin            = $request->input('linkedin');
+        $company->gstin               = $request->input('gstin');
+        $company->size                = $request->input('size');
+        $company->pincode             = $request->input('pincode');
+        $company->promotional         = $request->has('promotional') ? 1 : 0;
+        $company->is_gptw_certified   = $request->has('is_gptw_certified') ? 1 : 0;
+        $company->is_top_employer     = $request->has('is_top_employer') ? 1 : 0;
+        $company->is_disability_hiring = $request->has('is_disability_hiring') ? 1 : 0;
+        $company->is_women_friendly   = $request->has('is_women_friendly') ? 1 : 0;
 
         $company->is_active = 1;
 

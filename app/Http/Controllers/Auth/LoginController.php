@@ -232,6 +232,11 @@ use AuthenticatesUsers;
         return view('auth.login');
     }
 
+    public function showJobseekerAuth()
+    {
+        return view('znp.jobseeker-auth');
+    }
+
     public function login(Request $request)
 
     {
@@ -240,7 +245,7 @@ use AuthenticatesUsers;
         {
           //  dd(Auth::guard('company')->user());
 
-            return redirect("login")->with('error_message1', 'Please logout of the Employer account');
+            return redirect()->back()->with('error_message1', 'Please logout of the Employer account');
                    
         }else{   
        
@@ -351,7 +356,7 @@ use AuthenticatesUsers;
 
                 else{
 
-                     return redirect("login")->with('error_message1', 'You have entered invalid credentials!');
+                     return redirect()->back()->withInput($request->only('email','remember'))->with('error_message1', 'You have entered invalid credentials!');
 
                    
 
@@ -360,7 +365,7 @@ use AuthenticatesUsers;
 
             else{
 
-                 return redirect("login")->with('verify_message', 'Email verfication is pending. If you not received? <a href="' . route('verification.resend', $user->id) . '">Click here to Resend</a>');
+                 return redirect()->back()->withInput($request->only('email','remember'))->with('verify_message', 'Email verfication is pending. If you not received? <a href="' . route('verification.resend', $user->id) . '">Click here to Resend</a>');
 
                
 
@@ -370,7 +375,7 @@ use AuthenticatesUsers;
 
             else{
 
-                return redirect("login")->with('error_message', 'Your account deactivated!');
+                return redirect()->back()->withInput($request->only('email','remember'))->with('error_message', 'Your account deactivated!');
 
             }
 
@@ -381,7 +386,7 @@ use AuthenticatesUsers;
 
         else{
 
-             return redirect("login")->with('error_message1', 'Please enter valid email!');
+             return redirect()->back()->withInput($request->only('email','remember'))->with('error_message1', 'Please enter valid email!');
 
             
 

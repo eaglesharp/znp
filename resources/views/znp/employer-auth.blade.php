@@ -234,8 +234,8 @@
 .znp-employer-auth .tab-btn {
     flex: 1;
     padding: 10px 16px;
-  /* keep a transparent border so adding an active border doesn't shift layout */
-  border: 2px solid transparent;
+    /* mild blue border identical to Find Jobs button — keeps layout stable */
+    border: 2px solid rgba(26,90,203,0.18);
     background: transparent;
     color: var(--text-muted);
     font-size: 13px !important;
@@ -246,18 +246,25 @@
 }
 .znp-employer-auth .tab-btn.active {
     background: var(--white);
-  color: var(--blue) !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  /* brand color */
-  border-color: #1a3faa;
+    color: var(--blue) !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    /* solid brand border on active */
+    border-color: #cbdeff;
 }
 .znp-employer-auth .tab-btn:hover:not(.active) { color: var(--text) !important; }
-.znp-employer-auth .tab-btn:focus { outline: none; box-shadow: 0 0 0 4px rgba(26,63,170,0.08); }
-.znp-employer-auth .tab-btn.active:focus { border-color: #1a3faa; }
+.znp-employer-auth .tab-btn:focus { outline: none; box-shadow: 0 0 0 2px rgba(26,63,170,0.08); }
+.znp-employer-auth .tab-btn.active:focus { border-color: #cbdeff; }
 
 .znp-employer-auth .form-section { display: none; }
 .znp-employer-auth .form-section.active { display: block; }
 .znp-employer-auth .form-content { flex: 1; }
+/* Fixed panel height so Sign-In and Sign-Up tabs never resize the card.
+   min-height is set to accommodate the tallest step (Sign Up step 1).
+   overflow-y: auto handles if content ever exceeds this on small screens. */
+.znp-employer-auth .form-panel {
+    min-height: 500px;
+    overflow-y: auto;
+}
 
 .znp-employer-auth .form-title {
     font-size: 20px !important;
@@ -911,7 +918,7 @@
               <div class="znp-step-seg" id="ps2"></div>
               <div class="znp-step-seg" id="ps3"></div>
             </div>
-            <div class="znp-step-label" id="progress-label">Step 1 of 3 — Company Information</div>
+            {{-- <div class="znp-step-label" id="progress-label">Step 1 of 3 — Company Information</div> --}}
           </div>
 
           <form method="POST" action="{{ route('company.register.page.store') }}"
@@ -1126,6 +1133,29 @@
                   <input type="file" name="logo" id="logo-upload" accept="image/jpeg,image/jpg,image/png"
                          onchange="znpUpdateFileName(this)">
                   <div class="file-name" id="file-name">Accepts JPEG, JPG, PNG (max 2 MB)</div>
+                </div>
+              </div>
+
+              {{-- ── Company Highlights ── --}}
+              <div style="margin-bottom: 18px;">
+                <div class="form-label" style="margin-bottom: 10px; font-weight: 600;">Company Highlights <span style="color:var(--text-muted);font-weight:400;font-size:11px;">(shown on your job listings)</span></div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
+                    <input type="checkbox" name="is_gptw_certified" value="1" {{ old('is_gptw_certified') ? 'checked' : '' }}>
+                    <span>GPTW Certified</span>
+                  </label>
+                  <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
+                    <input type="checkbox" name="is_top_employer" value="1" {{ old('is_top_employer') ? 'checked' : '' }}>
+                    <span>Top Employer</span>
+                  </label>
+                  <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
+                    <input type="checkbox" name="is_disability_hiring" value="1" {{ old('is_disability_hiring') ? 'checked' : '' }}>
+                    <span>Disability Hiring</span>
+                  </label>
+                  <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
+                    <input type="checkbox" name="is_women_friendly" value="1" {{ old('is_women_friendly') ? 'checked' : '' }}>
+                    <span>Women Friendly</span>
+                  </label>
                 </div>
               </div>
 

@@ -151,24 +151,35 @@ class JobController extends Controller
 
     public function jobDetail(Request $request, $job_slug)
     {
+        $job = PostJob::with('company')->with('jobSkills')->where('slug', 'like', $job_slug)->firstOrFail();
 
-
-       
-
-        
-
-
-       // $job = PostJob::
-        $job =  PostJob::with('company')->with('jobSkills')->where('slug', 'like', $job_slug)->firstOrFail();
-       
         $job_skill_ids = (array) $job->getJobSkillsArray();
+        $jobskills = JobSkill::whereIn('id', $job_skill_ids)->select('job_skill')->get();
 
-        $jobskills = JobSkill::whereIn('id',$job_skill_ids)->select('job_skill')->get();
-
-      
         return view('job.detail')
                         ->with('job', $job)
-                        ->with('jobskills', $jobskills);                     
+                        ->with('jobskills', $jobskills);
+    }
+
+    public function jobDetailZnp(Request $request, $job_slug)
+    {
+        $job = PostJob::with('company')->with('jobSkills')->where('slug', 'like', $job_slug)->firstOrFail();
+
+        $job_skill_ids = (array) $job->getJobSkillsArray();
+        $jobskills = JobSkill::whereIn('id', $job_skill_ids)->select('id', 'job_skill')->get();
+
+        $applicantCount = $job->appliedUsers()->count();
+
+        $titleKeyword = explode(' ', $job->job_title)[0];
+        $similarJobs = PostJob::with('company')
+            ->status()
+            ->where('id', '!=', $job->id)
+            ->where('job_title', 'LIKE', '%' . $titleKeyword . '%')
+            ->latest()
+            ->take(3)
+            ->get();
+
+        return view('znp.job-detail', compact('job', 'jobskills', 'applicantCount', 'similarJobs'));
     }
 
     /*     * ************************************************** */
@@ -388,10 +399,33 @@ class JobController extends Controller
         }
 
         // ── Sort
-        $sort = $request->input('sort', 'latest');
-        if ($sort === 'salary_high')     { $query->orderByDesc('max_salary'); }
-        elseif ($sort === 'salary_low')  { $query->orderBy('min_salary');     }
-        else                             { $query->latest();                   }
+        $sort = $request->input('sort', 'relevance');
+        if ($sort === 'salary_high') {
+            $query->orderByDesc('max_salary')->orderByDesc('created_at');
+        } elseif ($sort === 'latest') {
+            $query->orderByDesc('created_at');
+        } else {
+            // Relevance: when a search term is present, rank title matches first,
+            // then partial search-field matches; fall back to created_at DESC.
+            $q = trim($request->input('q', ''));
+            if ($q) {
+                $terms = array_filter(array_map('trim', explode(',', $q)));
+                $first = strtolower(reset($terms));  // use the primary term for scoring
+                $like  = '%' . $first . '%';
+                // CASE score: 2 = job_title match, 1 = search field match, 0 = other
+                $query->orderByRaw(
+                    "CASE
+                        WHEN LOWER(job_title) LIKE ? THEN 2
+                        WHEN LOWER(search)    LIKE ? THEN 1
+                        ELSE 0
+                    END DESC",
+                    [$like, $like]
+                )->orderByDesc('created_at');
+            } else {
+                // No search term: default to latest jobs first
+                $query->orderByDesc('created_at');
+            }
+        }
 
         $jobs = $query->paginate(10)->withQueryString();
 

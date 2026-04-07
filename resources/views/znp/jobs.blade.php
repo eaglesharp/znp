@@ -116,17 +116,17 @@
 
 /* ── FILTER SIDEBAR ── */
 .znp-jobs .filter-sidebar {
-    position: sticky;
-    top: 80px;
+    position: relative;
+    top: auto;
     display: flex;
     flex-direction: column;
     gap: 0;
     background: var(--white);
     border: 1px solid var(--border);
     border-radius: 10px;
-    overflow: hidden;
-    height: fit-content;
-    max-height: calc(100vh - 100px);
+    overflow: visible;
+    height: auto;
+    max-height: none;
 }
 .znp-jobs .filter-header {
     padding: 12px 16px;
@@ -736,7 +736,7 @@
     {{-- ── SEARCH HERO ── --}}
     <div class="search-hero">
         <div class="sh-inner">
-            <div class="sh-title">India's <span>fast growing pool</span> of immediately available talent, Apply Now!</div>
+            <div class="sh-title">India's fast growing pool of <span>immediately available</span> talent, Apply Now!</div>
             <form method="GET" action="{{ route('jobs.page') }}" id="searchForm">
                 <div class="search-bar">
                     <div class="sb-field">
@@ -1118,17 +1118,18 @@
                 <div class="sort-bar">
                     <span class="sort-label">Sort by:</span>
                     <div class="sort-dropdown" id="sortDropdown">
+                        @php $currentSort = request('sort', 'relevance'); @endphp
                         <button class="sort-current" onclick="toggleSortDropdown(event)" type="button">
-                            @if(request('sort') == 'salary_high')Salary: High to Low
-                            @elseif(request('sort') == 'salary_low')Salary: Low to High
-                            @else Date Posted
+                            @if($currentSort === 'salary_high')Salary: High to Low
+                            @elseif($currentSort === 'latest')Date Posted
+                            @else Relevance
                             @endif
                             <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
                         </button>
                         <div class="sort-options" id="sortOptions">
-                            <div class="sort-option {{ request('sort','latest') == 'latest' ? 'active' : '' }}" onclick="applySort('latest')">Date Posted</div>
-                            <div class="sort-option {{ request('sort') == 'salary_high' ? 'active' : '' }}" onclick="applySort('salary_high')">Salary (High to Low)</div>
-                            <div class="sort-option {{ request('sort') == 'salary_low' ? 'active' : '' }}" onclick="applySort('salary_low')">Salary (Low to High)</div>
+                            <div class="sort-option {{ $currentSort === 'relevance' ? 'active' : '' }}" onclick="applySort('relevance')">Relevance</div>
+                            <div class="sort-option {{ $currentSort === 'latest' ? 'active' : '' }}" onclick="applySort('latest')">Date Posted</div>
+                            <div class="sort-option {{ $currentSort === 'salary_high' ? 'active' : '' }}" onclick="applySort('salary_high')">Salary (High to Low)</div>
                         </div>
                     </div>
                 </div>
@@ -1231,8 +1232,21 @@
                     $ageInDays    = $job->created_at ? $job->created_at->diffInDays(now()) : 999;
                     $isNew        = $ageInDays <= 1;
                     $isFresh      = !$isNew && $ageInDays <= 3;
+                    // Dynamic company badges
+                    $co = $job->company;
+                    $hcMap = ['1-10'=>'1-10 Employees','11-50'=>'11-50 Employees','51-200'=>'51-200 Employees',
+                              '201-500'=>'201-500 Employees','501-1000'=>'501-1K Employees','1001-5000'=>'1K-5K Employees',
+                              '5001-10000'=>'5K-10K Employees','10001-25000'=>'10K-25K Employees',
+                              '25001-50000'=>'25K-50K Employees','50001-75000'=>'50K-75K Employees',
+                              '75001-100000'=>'75K-1L Employees','100000+'=>'1L+ Employees'];
+                    $headcountStr    = ($co && $co->size) ? ($hcMap[$co->size] ?? $co->size.' Employees') : '';
+                    $hasGptw         = $co && $co->is_gptw_certified;
+                    $hasTopEmp       = $co && $co->is_top_employer;
+                    $hasDisability   = $co && $co->is_disability_hiring;
+                    $hasWomen        = $co && $co->is_women_friendly;
+                    $hasAnyBadge     = $hasGptw || $hasTopEmp || $headcountStr || $hasDisability || $hasWomen;
                 @endphp
-                <a href="{{ route('job.detail', $job->slug) }}" class="job-card" target="_blank">
+                <a href="{{ route('job.detail.znp', $job->slug) }}" class="job-card" target="_blank">
                     <div class="jc-top">
                         <div class="jc-avatar">{{ $avatarText }}</div>
                         <div class="jc-info">
@@ -1260,14 +1274,16 @@
                                     </span>
                                 @endif
                             </div>
-                            {{-- jc-details: static per requirement --}}
+                            {{-- jc-details: dynamic from company badges --}}
+                            @if($hasAnyBadge)
                             <div class="jc-details">
-                            <span class="jc-cert">GPTW Certified</span>
-                            <span class="jc-cert">Top Employer</span>
-                            <span class="jc-headcount">10K+ Employees</span>
-                            <span class="jc-diversity">Disability Hiring</span>
-                            <span class="jc-diversity">Women Friendly</span>
+                                @if($hasGptw)<span class="jc-cert">GPTW Certified</span>@endif
+                                @if($hasTopEmp)<span class="jc-cert">Top Employer</span>@endif
+                                @if($headcountStr)<span class="jc-headcount">{{ $headcountStr }}</span>@endif
+                                @if($hasDisability)<span class="jc-diversity">Disability Hiring</span>@endif
+                                @if($hasWomen)<span class="jc-diversity">Women Friendly</span>@endif
                             </div>
+                            @endif
                         </div>
                     </div>
                     @if($description)
@@ -1288,7 +1304,7 @@
                             @if($job->job_type)<span class="tag t-type">{{ $job->job_type }}</span>@endif
                             @if($isNew)<span class="tag t-new">New</span>@elseif($isFresh)<span class="tag t-fresh">Fresh Job</span>@endif
                         </div>
-                        <button class="jc-apply" onclick="event.preventDefault();">Apply</button>
+                        <button class="jc-apply" onclick="window.open('{{ route('job.detail.znp', $job->slug) }}', '_blank'); event.stopPropagation();">Apply</button>
                     </div>
                 </a>
                 @empty
@@ -1351,14 +1367,18 @@
 /** Multi-select toggle: add if absent, remove if present.
  * Uses param[] (e.g. mode[]) so PHP parses as array. */
 function applyFilter(param, value) {
-    var url     = new URL(window.location.href);
-    var key     = param + '[]';
-    var current = url.searchParams.getAll(key);
-    var idx     = current.indexOf(String(value));
+    var url = new URL(window.location.href);
+    var keyBr = param + '[]';
+    // Read both possible key formats (param and param[]), merge and dedupe
+    var current = url.searchParams.getAll(keyBr).concat(url.searchParams.getAll(param));
+    current = current.filter(function(v, i) { return current.indexOf(v) === i; });
+    var idx = current.indexOf(String(value));
     if (idx > -1) { current.splice(idx, 1); }
-    else          { current.push(String(value)); }
-    url.searchParams.delete(key);
-    current.forEach(function(v) { url.searchParams.append(key, v); });
+    else { current.push(String(value)); }
+    // Remove any existing keys then write back using the bracketed form
+    url.searchParams.delete(keyBr);
+    url.searchParams.delete(param);
+    current.forEach(function(v) { url.searchParams.append(keyBr, v); });
     url.searchParams.delete('page');
     window.location.href = url.toString();
 }
