@@ -117,7 +117,7 @@ class UserFrontRegisterFormRequest extends Request
              
              'gender_id'  => 'required',
 
-             'reason_moved' => 'required',
+             'reason_moved' => 'nullable',
 
          
 

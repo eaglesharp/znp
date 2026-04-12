@@ -234,7 +234,8 @@ use AuthenticatesUsers;
 
     public function showJobseekerAuth()
     {
-        return view('znp.jobseeker-auth');
+        $educations = \App\Education::orderBy('education')->get();
+        return view('znp.jobseeker-auth', compact('educations'));
     }
 
     public function login(Request $request)

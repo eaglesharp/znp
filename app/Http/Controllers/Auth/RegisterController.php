@@ -200,7 +200,13 @@ use RegistersUsers;
 
             'current_city'  => $request->current_city,
 
+            'locality'      => $request->locality,
+
+            'linkedin_url'  => $request->linkedin_url,
+
             'reason_moved'  => $request->reason_moved,
+
+            'mode_of_separation' => $request->mode_of_separation,
 
             'is_active' => 1,
 
@@ -257,6 +263,8 @@ use RegistersUsers;
 
             $profileNP->last_working_day = $request->last_working_day;
 
+            $profileNP->lwd_proof = $request->lwd_proof;
+
             $profileNP->immediate_last_date = $request->immediate_last_date;
 
             $profileNP->contract = $request->contract;
@@ -270,6 +278,8 @@ use RegistersUsers;
             $nop->user_id = $user->id;
             
             $nop->last_working_day = $request->last_working_day;
+
+            $nop->lwd_proof = $request->lwd_proof;
 
             $nop->immediate_last_date = $request->immediate_last_date;
 

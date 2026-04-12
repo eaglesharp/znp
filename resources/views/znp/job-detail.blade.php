@@ -2,13 +2,19 @@
 
 @push('styles')
 <style>
-/* ─── scope ─────────────────────────────────────────── */
-.znp-job-detail {
-    background: var(--bg);
-    color: var(--text);
-    font-size: 13px;
-    padding-bottom: 56px;
+/* ─── scope & font reset ─────────────────────────────── */
+.znp-job-detail,
+.znp-job-detail * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
 }
+.znp-job-detail { background: var(--bg); color: var(--text); font-size: 13px; padding-bottom: 56px; }
+.znp-job-detail a              { color: inherit; text-decoration: none; }
+.znp-job-detail h1, .znp-job-detail h2,
+.znp-job-detail h3, .znp-job-detail h4 { margin: 0; font-weight: inherit; }
+.znp-job-detail p              { margin: 0; }
+.znp-job-detail button         { font-family: inherit !important; }
 
 /* ─── page wrapper ───────────────────────────────────── */
 .znp-job-detail .jd-pg {
@@ -493,6 +499,12 @@
 }
 
 /* ─── apply modal ─────────────────────────────────────── */
+.znp-apply-modal,
+.znp-apply-modal * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}
 .znp-apply-modal .modal-content {
     border: none;
     border-radius: 16px;
