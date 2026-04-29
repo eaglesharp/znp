@@ -208,7 +208,55 @@ class IndexController extends Controller
 
     }
 
+    /**
+     * Fetch jobs by location for home page dynamic filtering
+     * Returns up to 6 jobs for the specified location
+     */
+    public function getJobsByLocation(Request $request)
+    {
+        $location = $request->input('location', '');
+        
+        if (empty($location) || $location === 'all') {
+            // Return latest 12 if 'all' is selected
+            $jobs = PostJob::with('company')
+                ->status()
+                ->latest()
+                ->take(12)
+                ->get();
+        } elseif ($location === 'others') {
+            // For "Others", show jobs with non-metro locations
+            $metroKeywords = ['bangalore', 'bengaluru', 'hyderabad', 'mumbai', 'delhi', 'kolkata', 'pune', 'gurgaon', 'gurugram', 'noida'];
+            $jobs = PostJob::with('company')
+                ->status()
+                ->where(function ($query) use ($metroKeywords) {
+                    foreach ($metroKeywords as $keyword) {
+                        $query->whereNotLike('search', '%' . $keyword . '%');
+                    }
+                })
+                ->latest()
+                ->take(6)
+                ->get();
+        } else {
+            // Search for jobs matching the location
+            $jobs = PostJob::with('company')
+                ->status()
+                ->where('search', 'LIKE', '%' . strtolower($location) . '%')
+                ->latest()
+                ->take(6)
+                ->get();
+        }
 
+        // Return HTML for job cards
+        $html = '';
+        foreach ($jobs as $job) {
+            $company = $job->company;
+            if ($company) {
+                $html .= view('includes.job-card', ['job' => $job])->render();
+            }
+        }
+
+        return response()->json(['html' => $html, 'count' => $jobs->count()]);
+    }
 
     public function setLocale(Request $request)
 

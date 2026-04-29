@@ -190,7 +190,7 @@ footer.znp-footer a { text-decoration: none; }
                 <a href="https://www.facebook.com/profile.php?id=100078635680624" class="znp-social-icon" title="Facebook" aria-label="Facebook"><img src="{{ asset('asset/images/fb.png') }}" alt="Facebook" class="znp-social-img"></a>
                 <a href="https://www.linkedin.com/company/zeronoticeperiod/" class="znp-social-icon" title="LinkedIn" aria-label="LinkedIn"><img src="{{ asset('asset/images/linkedin.png') }}" alt="LinkedIn" class="znp-social-img"></a>
                 <a href="https://twitter.com/ZNPTEAM" class="znp-social-icon" title="Twitter" aria-label="Twitter"><img src="{{ asset('asset/images/twitter.png') }}" alt="Twitter" class="znp-social-img"></a>
-                <a href="https://www.youtube.com/channel/UCA_pykWTYsltpgdinRQMOgg" class="znp-social-icon" title="YouTube" aria-label="YouTube"><img src="{{ asset('asset/images/youtube.png') }}" alt="YouTube" class="znp-social-img"></a>
+                <a href="https://www.youtube.com/watch?v=6WZOxnYi4Cs" class="znp-social-icon" title="YouTube" aria-label="YouTube"><img src="{{ asset('asset/images/youtube.png') }}" alt="YouTube" class="znp-social-img"></a>
             </div>
         </div>
     </div>

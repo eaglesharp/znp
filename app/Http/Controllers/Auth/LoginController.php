@@ -366,7 +366,7 @@ use AuthenticatesUsers;
 
             else{
 
-                 return redirect()->back()->withInput($request->only('email','remember'))->with('verify_message', 'Email verfication is pending. If you not received? <a href="' . route('verification.resend', $user->id) . '">Click here to Resend</a>');
+                 return redirect()->back()->withInput($request->only('email','remember'))->with('verify_message', 'Email verfication is pending. Not received? <a href="' . route('verification.resend', $user->id) . '">Click here to Resend</a>');
 
                
 

@@ -66,6 +66,7 @@ Route::get('/', 'IndexController@index')->name('index');
 
 Route::get('/find-talent', 'IndexController@index');
 
+Route::get('/jobs-by-location', 'IndexController@getJobsByLocation')->name('jobs.by.location');
 
 Route::post('set-locale', 'IndexController@setLocale')->name('set.locale');
 

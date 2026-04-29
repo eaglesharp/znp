@@ -44,7 +44,7 @@
         align-items: center;
         gap: 8px;
         background: var(--white);
-        border: 1px solid var(--border);
+        border: 2px solid var(--border);
         border-radius: 100px;
         padding: 6px 14px;
         font-size: 13px;
@@ -158,7 +158,7 @@
         display: flex; justify-content: space-between; align-items: center;
         padding: 10px 20px; border-bottom: 1px solid var(--border);
     }
-    .live-label   { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .live-label   { font-size: 12px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 7px; }
     .live-dot     { width: 9px; height: 9px; background: #22c55e; border-radius: 50%; animation: blink 1.5s infinite; flex-shrink: 0; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .open-count   { font-size: 13px; color: var(--text-muted); }
@@ -176,7 +176,7 @@
     .ja-fs  { background: #f97316; }
     .ja-yx  { background: #7c3aed; }
     .live-job-info       { flex: 1; min-width: 0; }
-    .live-job-title      { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .live-job-title      { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .live-job-company    { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; }
     .work-badge          { font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 100px; flex-shrink: 0; }
     .wb-remote           { background: #fef3c7; color: #92400e; }
@@ -444,18 +444,28 @@
 @include('znp.header')
 <div class="znp-home">
 
+@php
+    $formatStat = function ($value) {
+        $value = (int) $value;
+        if ($value >= 1000) {
+            return rtrim(rtrim(number_format($value / 1000, 1), '0'), '.') . 'K+';
+        }
+        return $value . '+';
+    };
+@endphp
+
 {{-- ── HERO ── --}}
 <section class="hero">
     <div class="hero-inner">
         <div>
             <div class="hero-eyebrow">
                 <span class="eyebrow-dot"></span>
-                India's #1 Exclusive Job Portal For Immediate Joiners
+                Dedicated Job Portal For Immediate Joiners
             </div>
-            <h1>India's largest pool of<br><span class="orange">immediately available </span>talent.</h1>
+            <h1>India's exclusive pool of<br><span class="orange">immediately available </span>talent.</h1>
             <p class="hero-sub"><mark style="
     font-size: 13px;
-">Only job portal built for zero notice talent.</mark></p>
+">Hire talent with zero notice period now!</mark></p>
 
             <div class="hero-search" role="search">
                 <div class="hs-field">
@@ -580,9 +590,9 @@
         @endphp
         @foreach ($stats as $stat)
             <div class="stat-item">
-                <div class="stat-num" >{{ $stat['num'] }}<span class="hi" style="
+                <div class="stat-num" >{{ $formatStat($stat['num']) }}<span class="hi" style="
     font-size: 36px !important;
-">+</span></div>
+"></span></div>
                 <div class="stat-lbl">{{ $stat['label'] }}</div>
             </div>
         @endforeach
@@ -839,7 +849,7 @@
     <div class="email-title">Ready to <span>hire immediately?</span></div>
     <p class="email-sub">Join hundreds of employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
     <div class="cta-btns">
-      <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-register') }}'">I am an Employer</button>
+            <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-register') }}'">I'm an Employer</button>
       <button class="cta-btn-secondary" onclick="window.location='{{ url('/register') }}'">I'm a Jobseeker</button>
     </div>
   </div>
@@ -976,21 +986,39 @@
         });
         btn.classList.add('active');
         btn.setAttribute('aria-selected', 'true');
-        var idx = 0;
-        document.querySelectorAll('#jobsGrid .job-card').forEach(function (card) {
-            var isRemote = card.querySelector('.t-remote') !== null;
-            var match = cat === 'all' || isRemote || (card.getAttribute('data-cat') || '').includes(cat);
-            if (match) {
-                card.style.display    = '';
-                card.style.opacity    = '0';
-                card.style.transform  = 'translateY(8px)';
-                card.style.transition = 'opacity .22s ease ' + (idx * 0.04) + 's, transform .22s ease ' + (idx * 0.04) + 's';
-                (function (c) {
-                    requestAnimationFrame(function () { c.style.opacity = '1'; c.style.transform = 'translateY(0)'; });
-                })(card);
-                idx++;
-            } else {
-                card.style.display = 'none';
+
+        // For all locations (including "all"), fetch fresh jobs via AJAX
+        var gridContainer = document.getElementById('jobsGrid');
+        gridContainer.style.opacity = '0.5';
+        gridContainer.style.pointerEvents = 'none';
+
+        $.ajax({
+            url: "{{ url('/jobs-by-location') }}",
+            type: 'GET',
+            data: { location: cat },
+            dataType: 'json',
+            success: function(response) {
+                // Clear and repopulate the grid
+                gridContainer.innerHTML = response.html;
+                gridContainer.style.opacity = '1';
+                gridContainer.style.pointerEvents = 'auto';
+
+                // Animate cards entrance
+                var idx = 0;
+                document.querySelectorAll('#jobsGrid .job-card').forEach(function (card) {
+                    card.style.opacity    = '0';
+                    card.style.transform  = 'translateY(8px)';
+                    card.style.transition = 'opacity .22s ease ' + (idx * 0.04) + 's, transform .22s ease ' + (idx * 0.04) + 's';
+                    (function (c) {
+                        requestAnimationFrame(function () { c.style.opacity = '1'; c.style.transform = 'translateY(0)'; });
+                    })(card);
+                    idx++;
+                });
+            },
+            error: function() {
+                gridContainer.style.opacity = '1';
+                gridContainer.style.pointerEvents = 'auto';
+                console.error('Failed to load jobs for location: ' + cat);
             }
         });
     }

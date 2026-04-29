@@ -339,12 +339,12 @@
 
 /* jc-company: badge/pill style in list view (vs plain text in grid) */
 .znp-jobs .jc-company {
-    font-size: 12px;
+    font-size: 11px;
     color: #1e40af;
     font-weight: 600;
-    padding: 5px 12px;
-    background: #f0f4ff;
-    border: 1px solid #dbeafe;
+    padding: 4px 10px;
+    background: #e6efff;
+    border: 1px solid #b8cdfa;
     border-radius: 6px;
     margin-bottom: 0;
 }
@@ -353,7 +353,7 @@
 .znp-jobs .jc-tags   { gap: 5px; margin-bottom: 0; }
 
 /* tag: slightly smaller in list view */
-.znp-jobs .tag       { font-size: 11px; font-weight: 500; padding: 3px 9px; }
+.znp-jobs .tag       { font-size: 10.5px; font-weight: 500; padding: 2px 8px; }
 
 /* Jobs-page-specific tag colours (different from master / new names) */
 .znp-jobs .t-mode    { background: #f0f4ff; color: #2a52c9; border: 1px solid #d0daF5; }
@@ -423,7 +423,7 @@
 
 .znp-jobs .jc-skills { display: flex; gap: 5px; overflow: hidden; white-space: nowrap; }
 .znp-jobs .jc-skill {
-    font-size: 10.5px; color: #4b5563; padding: 4px 10px;
+    font-size: 10px; color: #4b5563; padding: 3px 9px;
     border: 1.5px solid #d1d5db; border-radius: 20px; background: #f3f4f6;
     transition: all 0.15s; font-weight: 500; flex-shrink: 0;
 }
@@ -736,7 +736,7 @@
     {{-- ── SEARCH HERO ── --}}
     <div class="search-hero">
         <div class="sh-inner">
-            <div class="sh-title">India's fast growing pool of <span>immediately available</span> talent, Apply Now!</div>
+            <div class="sh-title">India's exclusive pool of <span>immediately available</span> talent, Apply Now!</div>
             <form method="GET" action="{{ route('jobs.page') }}" id="searchForm">
                 <div class="search-bar">
                     <div class="sb-field">
@@ -753,7 +753,7 @@
                     </button>
                 </div>
                 {{-- Preserve all active sidebar filters when re-searching --}}
-                @foreach(request()->except(['q', 'loc', 'page']) as $pKey => $pVal)
+                @foreach(request()->except(['q', 'loc', 'page', 'company_type']) as $pKey => $pVal)
                     @foreach((array)$pVal as $pItem)
                         <input type="hidden" name="{{ $pKey }}{{ is_array($pVal) ? '[]' : '' }}" value="{{ $pItem }}">
                     @endforeach
@@ -870,12 +870,10 @@
                         <span class="fsh-chevron">▴</span>
                     </div>
                     <div class="filter-section-body">
-                        <input class="filter-search" type="text" placeholder="Search location..." oninput="filterOptions(this)">
                         <div class="filter-location-grid">
                             @foreach($locationCounts as $locVal => $locCount)
                                 @php $locActive = in_array($locVal, (array)request('location', [])); @endphp
-                                <div class="filter-option {{ $locActive ? 'checked' : '' }} {{ !$locActive && $loop->index >= 4 ? 'overflow-opt' : '' }}"
-                                     data-overflow="{{ !$locActive && $loop->index >= 4 ? '1' : '0' }}"
+                                <div class="filter-option {{ $locActive ? 'checked' : '' }}"
                                      onclick="applyFilterEl(this)" data-param="location" data-val="{{ $locVal }}">
                                     <div class="fo-box">{{ $locActive ? '✓' : '' }}</div>
                                     <span class="fo-label">{{ $locVal }}</span>
@@ -883,9 +881,6 @@
                                 </div>
                             @endforeach
                         </div>
-                        @if(count($locationCounts) > 4)
-                            <button class="view-more-btn" onclick="viewMore(this)">+ {{ count($locationCounts) - 4 }} more</button>
-                        @endif
                     </div>
                 </div>
 
@@ -979,31 +974,6 @@
                     </div>
                 </div>
 
-                {{-- Company Type (static labels, clickable) --}}
-                <div class="filter-section">
-                    <div class="filter-section-header" onclick="toggleSection(this)">
-                        <span class="fsh-title">Company type</span>
-                        <span class="fsh-chevron">▴</span>
-                    </div>
-                    <div class="filter-section-body">
-                        <input class="filter-search" type="text" placeholder="Search Company type..." oninput="filterOptions(this)">
-                        @php
-                            $companyTypeItems = ['Foreign MNC','Corporate','Indian MNC','Startup','Others','Govt/PSU','MNC'];
-                        @endphp
-                        @foreach($companyTypeItems as $ctVal)
-                            @php $ctActive = in_array($ctVal, (array)request('company_type', [])); @endphp
-                            <div class="filter-option {{ $ctActive ? 'checked' : '' }} {{ !$ctActive && $loop->index >= 4 ? 'overflow-opt' : '' }}"
-                                 data-overflow="{{ !$ctActive && $loop->index >= 4 ? '1' : '0' }}"
-                                 onclick="applyFilterEl(this)" data-param="company_type" data-val="{{ $ctVal }}">
-                                <div class="fo-box">{{ $ctActive ? '✓' : '' }}</div>
-                                <span class="fo-label">{{ $ctVal }}</span>
-                                <span class="fo-count">0</span>
-                            </div>
-                        @endforeach
-                        <button class="view-more-btn" onclick="viewMore(this)">+ 3 more</button>
-                    </div>
-                </div>
-
                 {{-- Education (static labels, clickable) --}}
                 <div class="filter-section">
                     <div class="filter-section-header" onclick="toggleSection(this)">
@@ -1050,29 +1020,7 @@
                     </div>
                 </div>
 
-                {{-- Language (static labels, clickable) --}}
-                <div class="filter-section">
-                    <div class="filter-section-header" onclick="toggleSection(this)">
-                        <span class="fsh-title">Language</span>
-                        <span class="fsh-chevron">▴</span>
-                    </div>
-                    <div class="filter-section-body">
-                        @php
-                            $langItems = ['English','Hindi','Tamil','Telugu','Kannada','Marathi','Bengali','Gujarati','Malayalam','Punjabi'];
-                        @endphp
-                        @foreach($langItems as $langVal)
-                            @php $langActive = in_array($langVal, (array)request('lang', [])); @endphp
-                            <div class="filter-option {{ $langActive ? 'checked' : '' }} {{ !$langActive && $loop->index >= 4 ? 'overflow-opt' : '' }}"
-                                 data-overflow="{{ !$langActive && $loop->index >= 4 ? '1' : '0' }}"
-                                 onclick="applyFilterEl(this)" data-param="lang" data-val="{{ $langVal }}">
-                                <div class="fo-box">{{ $langActive ? '✓' : '' }}</div>
-                                <span class="fo-label">{{ $langVal }}</span>
-                                <span class="fo-count">0</span>
-                            </div>
-                        @endforeach
-                        <button class="view-more-btn" onclick="viewMore(this)">+ 6 more</button>
-                    </div>
-                </div>
+           
 
                 {{-- Freshness (static date ranges) --}}
                 <div class="filter-section">
@@ -1136,7 +1084,7 @@
             </div>
 
             {{-- ── ACTIVE FILTER CHIPS ── --}}
-            @if(request()->hasAny(['q','loc','tag','mode','type','shift','exp','location','sal','date','company_type','edu','posted_by','lang']))
+            @if(request()->hasAny(['q','loc','tag','mode','type','shift','exp','location','sal','date','edu','posted_by','lang']))
             <div class="active-filters">
                 @if(request('q'))
                     <div class="af-chip">{{ rtrim(trim(request('q')), ',') }}
@@ -1187,11 +1135,6 @@
                         <span class="af-x" data-param="sal" data-val="{{ $chip }}" onclick="applyFilterEl(this)">×</span>
                     </div>
                 @endforeach
-                @foreach((array)request('company_type',[]) as $chip)
-                    <div class="af-chip">{{ $chip }}
-                        <span class="af-x" data-param="company_type" data-val="{{ $chip }}" onclick="applyFilterEl(this)">×</span>
-                    </div>
-                @endforeach
                 @foreach((array)request('edu',[]) as $chip)
                     <div class="af-chip">{{ $chip }}
                         <span class="af-x" data-param="edu" data-val="{{ $chip }}" onclick="applyFilterEl(this)">×</span>
@@ -1239,12 +1182,11 @@
                               '5001-10000'=>'5K-10K Employees','10001-25000'=>'10K-25K Employees',
                               '25001-50000'=>'25K-50K Employees','50001-75000'=>'50K-75K Employees',
                               '75001-100000'=>'75K-1L Employees','100000+'=>'1L+ Employees'];
-                    $headcountStr    = ($co && $co->size) ? ($hcMap[$co->size] ?? $co->size.' Employees') : '';
                     $hasGptw         = $co && $co->is_gptw_certified;
                     $hasTopEmp       = $co && $co->is_top_employer;
                     $hasDisability   = $co && $co->is_disability_hiring;
                     $hasWomen        = $co && $co->is_women_friendly;
-                    $hasAnyBadge     = $hasGptw || $hasTopEmp || $headcountStr || $hasDisability || $hasWomen;
+                    $hasAnyBadge     = $hasGptw || $hasTopEmp || $hasDisability || $hasWomen;
                 @endphp
                 <a href="{{ route('job.detail.znp', $job->slug) }}" class="job-card" target="_blank">
                     <div class="jc-top">
@@ -1279,7 +1221,6 @@
                             <div class="jc-details">
                                 @if($hasGptw)<span class="jc-cert">GPTW Certified</span>@endif
                                 @if($hasTopEmp)<span class="jc-cert">Top Employer</span>@endif
-                                @if($headcountStr)<span class="jc-headcount">{{ $headcountStr }}</span>@endif
                                 @if($hasDisability)<span class="jc-diversity">Disability Hiring</span>@endif
                                 @if($hasWomen)<span class="jc-diversity">Women Friendly</span>@endif
                             </div>

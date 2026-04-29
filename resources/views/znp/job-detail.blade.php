@@ -27,12 +27,12 @@
 .znp-job-detail .jh {
     background: var(--white);
     border: 0.5px solid #d1dae8;
+    border-top: 3px solid #93c5fd; /* blue top stroke to follow curved corners */
     border-radius: 12px;
     overflow: hidden;
 }
 .znp-job-detail .jh-bar {
-    background: #93c5fd;
-    height: 6px;
+    display: none; /* top stroke is now provided by the .jh border-top */
 }
 .znp-job-detail .jh-body {
     padding: 22px 26px 18px;
@@ -61,6 +61,7 @@
     font-size: 11px;
     color: #1e40af;
     font-weight: 600;
+    max-width: 100%;
 }
 .znp-job-detail .pdot {
     width: 6px;
@@ -72,17 +73,25 @@
 .znp-job-detail .znpbadge {
     width: 56px;
     height: 56px;
-    background: var(--blue);
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 800;
-    color: var(--white);
+    color: #1e40af;
     text-align: center;
-    line-height: 1.45;
+    line-height: 1.2;
     flex-shrink: 0;
+    overflow: hidden;
+    padding: 4px;
+}
+.znp-job-detail .znpbadge img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 /* ─── summary pills ──────────────────────────────────── */
@@ -91,7 +100,7 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 7px;
-    margin: 0 0 12px;
+    margin: 0 0 5px;
 }
 .znp-job-detail .sg-pill {
     display: inline-flex;
@@ -111,7 +120,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 7px;
-    padding: 8px 0;
+    padding: 5px 0;
     border-top: 0.5px solid #e8eef5;
     border-bottom: 0.5px solid #e8eef5;
     margin-bottom: 12px;
@@ -155,9 +164,9 @@
     gap: 10px;
 }
 .znp-job-detail .bsave {
-    border: 1.5px solid #cbd5e1;
-    background: var(--white);
-    color: #334155;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e40af;
     padding: 7px 18px;
     border-radius: 6px;
     font-size: 13px;
@@ -179,7 +188,7 @@
     display: inline-block;
 }
 .znp-job-detail .bapp:hover { background: var(--orange-dark); color: var(--white); text-decoration: none; }
-.znp-job-detail .bsave:hover { background: #f8fafc; color: #0f172a; text-decoration: none; }
+.znp-job-detail .bsave:hover { background: #dbeafe; color: #1e3a8a; text-decoration: none; }
 
 /* ─── grid layout ────────────────────────────────────── */
 .znp-job-detail .jd-grid {
@@ -662,7 +671,7 @@
     preg_match_all('/<li[^>]*>\s*(.*?)\s*<\/li>/si', $hlSource, $hlMatches);
     $highlights = [];
     foreach (($hlMatches[1] ?? []) as $raw) {
-        $clean = trim(strip_tags($raw));
+        $clean = preg_replace('/^[\s\-\*\•\●\·]+/u', '', trim(strip_tags($raw)));
         if ($clean) $highlights[] = $clean;
         if (count($highlights) >= 3) break;
     }
@@ -681,7 +690,12 @@
         '25001-50000'=>'25K-50K Employees','50001-75000'=>'50K-75K Employees',
         '75001-100000'=>'75K-1L Employees','100000+'=>'1L+ Employees',
     ];
-    $headcountStr = ($co && $co->size) ? ($hcMap[$co->size] ?? $co->size . ' Employees') : '';
+    $companyName = trim($co->name ?? '');
+    $companyDisplayName = $companyName ?: 'Company';
+    $companyBadgeText = mb_strlen($companyDisplayName) <= 14
+        ? $companyDisplayName
+        : strtoupper(mb_substr(preg_replace('/\s+/', '', $companyDisplayName), 0, 3));
+    $headcountStr = ($co && isset($hcMap[$co->size])) ? $hcMap[$co->size] : '';
     $hasGptw      = $co && $co->is_gptw_certified;
     $hasTopEmp    = $co && $co->is_top_employer;
     $hasDisab     = $co && $co->is_disability_hiring;
@@ -701,9 +715,15 @@
         <div class="jh-top">
             <div>
                 <div class="jtitle">{{ $job->job_title }}</div>
-                <div class="pbadge"><span class="pdot"></span>ZeroNoticePeriod</div>
+                <div class="pbadge"><span class="pdot"></span>{{ $companyDisplayName }}</div>
             </div>
-            <div class="znpbadge">Zero<br>Notice<br>Hire</div>
+            <div class="znpbadge">
+                @if($co && $co->logo)
+                    <img src="{{ asset('company_logos/' . $co->logo) }}" alt="{{ $companyDisplayName }}">
+                @else
+                    {{ $companyBadgeText }}
+                @endif
+            </div>
         </div>
 
         <div class="sum-row">
@@ -751,8 +771,11 @@
         @endif
 
         <div class="jact">
+            <!--<div class="jinfo">-->
+            <!--    {{ $postedLabel }}@if($postedLabel) &nbsp;·&nbsp; @endif Applicants: {{ $applicantCount }}-->
+            <!--</div>-->
             <div class="jinfo">
-                {{ $postedLabel }}@if($postedLabel) &nbsp;·&nbsp; @endif Applicants: {{ $applicantCount }}
+                {{ $postedLabel }}@if($postedLabel) &nbsp; @endif
             </div>
             <div class="abtns">
                 @guest
@@ -866,8 +889,8 @@
                     @endif
                 </div>
                 <div>
-                    <div class="cn">{{ $co->name ?? 'Company' }} (via ZeroNoticePeriod)</div>
-                    <div class="csub">Exclusive immediate-hire listing · zeronoticeperiod.com</div>
+                    <div class="cn">{{ $companyDisplayName }}</div>
+                    <div class="csub">Exclusive immediate-hire listing on ZeroNoticePeriod</div>
                 </div>
             </div>
             <p class="cdesc">

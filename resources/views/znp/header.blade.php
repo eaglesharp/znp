@@ -24,7 +24,7 @@
 header.znp-header {
     background: var(--white);
     border-bottom: 1px solid var(--border);
-    padding: 0 40px;
+    padding: 0 24px;
     height: 60px;
     display: flex;
     align-items: center;
@@ -134,7 +134,7 @@ header.znp-header .znp-btn-post:hover {
 
 <header class="znp-header">
     <div class="znp-header-inner">
-        <a class="znp-logo" href="{{ url('/') }}">
+        <a class="znp-logo" href="#">
             <span class="znp-logo-text"><span class="logo-blue">Zero</span><span class="logo-orange">Notice</span><span class="logo-blue">Period</span></span>
         </a>
         <nav></nav>

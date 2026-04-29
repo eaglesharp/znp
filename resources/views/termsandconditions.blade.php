@@ -4,7 +4,7 @@
 
 <!-- Header start -->
 
-@include('includes.header')
+{{-- @include('includes.header') --}}
 <style>
     h2 {
         margin-bottom: 15px !important;
@@ -306,6 +306,6 @@ offending information that might have been uploaded by such subscriber/user </p>
 </section>
 
 
-@include('includes.footer')
+{{-- @include('includes.footer') --}}
 
 @endsection

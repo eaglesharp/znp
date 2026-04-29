@@ -1,579 +1,303 @@
 @extends('layouts.znp')
 
 @push('styles')
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,500;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
 <style>
-/* ── ZNP JOBSEEKER-AUTH: SCOPE & RESET ── */
-.znp-jobseeker-auth,
-.znp-jobseeker-auth * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-}
-.znp-jobseeker-auth { background: var(--bg); color: var(--text); font-size: 12px; }
-.znp-jobseeker-auth .form-content { flex: 1; }
-.znp-jobseeker-auth a   { color: inherit; text-decoration: none; }
-.znp-jobseeker-auth p   { margin: 0; }
-.znp-jobseeker-auth ul  { list-style: none; padding: 0; margin: 0; }
-.znp-jobseeker-auth button { font-family: inherit !important; }
-
-/* ── MAIN CONTENT WRAPPER ── */
-.znp-jobseeker-auth {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px 20px;
-}
-
-/* ── AUTH CONTAINER ── */
-.znp-jobseeker-auth .auth-container {
-    width: 100%;
-    max-width: 960px;
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    background: var(--white);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-    overflow: hidden;
-}
-
-/* ── LEFT INFO PANEL ── */
-.znp-jobseeker-auth .info-panel {
-    background: linear-gradient(135deg, #1a3faa 0%, #152f85 100%);
-    padding: 28px 24px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-}
-.znp-jobseeker-auth .info-panel::before {
-    content: '';
-    position: absolute;
-    top: -100px; right: -100px;
-    width: 300px; height: 300px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50%;
-}
-.znp-jobseeker-auth .info-panel::after {
-    content: '';
-    position: absolute;
-    bottom: -120px; left: -80px;
-    width: 280px; height: 280px;
-    background: rgba(249,115,22,0.15);
-    border-radius: 50%;
-}
-.znp-jobseeker-auth .info-content { position: relative; z-index: 1; }
-.znp-jobseeker-auth .logo-section { margin-bottom: 20px; }
-.znp-jobseeker-auth .logo-section .logo-text {
-    font-size: 14px !important; font-weight: 800 !important; color: var(--white);
-    display: flex; flex-wrap: wrap; line-height: 1.3;
-}
-.znp-jobseeker-auth .logo-section .logo-orange { color: var(--orange) !important; }
-.znp-jobseeker-auth .info-headline {
-    font-size: 16px !important; font-weight: 600 !important; color: var(--white) !important;
-    line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.3px;
-}
-.znp-jobseeker-auth .info-headline .highlight { color: var(--orange) !important; }
-.znp-jobseeker-auth .info-desc {
-    font-size: 10px !important; color: rgba(255,255,255,0.9) !important;
-    line-height: 1.5; margin-bottom: 16px;
-}
-.znp-jobseeker-auth .info-features { display: flex; flex-direction: column; gap: 8px; }
-.znp-jobseeker-auth .feature-item { display: flex; align-items: flex-start; gap: 8px; }
-.znp-jobseeker-auth .feature-icon {
-    width: 24px; height: 24px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-}
-.znp-jobseeker-auth .feature-icon svg { width: 12px !important; height: 12px !important; stroke: var(--white) !important; }
-.znp-jobseeker-auth .feature-text { flex: 1; }
-.znp-jobseeker-auth .feature-title {
-    font-size: 10px !important; font-weight: 700 !important; color: var(--white) !important; margin-bottom: 1px;
-}
-.znp-jobseeker-auth .feature-desc { font-size: 9px !important; color: rgba(255,255,255,0.8) !important; line-height: 1.4; }
-
-/* Roles carousel */
-.znp-jobseeker-auth .info-stats { position: relative; z-index: 1; margin-top: 10px; overflow: hidden; }
-.znp-jobseeker-auth .roles-carousel {
-    display: flex; flex-direction: column; gap: 6px; position: relative;
-}
-.znp-jobseeker-auth .roles-carousel::before,
-.znp-jobseeker-auth .roles-carousel::after {
-    content: ''; position: absolute; top: 0; bottom: 0; width: 30px; z-index: 2; pointer-events: none;
-}
-.znp-jobseeker-auth .roles-carousel::before {
-    left: 0;
-    background: linear-gradient(to right, #152f85 0%, transparent 100%);
-}
-.znp-jobseeker-auth .roles-carousel::after {
-    right: 0;
-    background: linear-gradient(to left, #152f85 0%, transparent 100%);
-}
-.znp-jobseeker-auth .rc-row {
-    display: flex; gap: 6px; width: max-content;
-    animation: jsa-scrollLeft 20s linear infinite;
-}
-.znp-jobseeker-auth .rc-row.reverse { animation: jsa-scrollRight 16s linear infinite; }
-@keyframes jsa-scrollLeft {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-@keyframes jsa-scrollRight {
-    0%   { transform: translateX(-50%); }
-    100% { transform: translateX(0); }
-}
-.znp-jobseeker-auth .roles-carousel:hover .rc-row { animation-play-state: paused; }
-.znp-jobseeker-auth .rc-pill {
-    display: inline-flex; align-items: center; white-space: nowrap;
-    border-radius: 100px; cursor: default; transition: all 0.2s;
-    line-height: 1; font-size: 9px !important; padding: 4px 10px;
-}
-.znp-jobseeker-auth .rc-pill:hover { transform: scale(1.05); }
-.znp-jobseeker-auth .rc-pill.bold  { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); color: #fff !important; font-weight: 700 !important; }
-.znp-jobseeker-auth .rc-pill.light { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.55) !important; font-weight: 400 !important; }
-.znp-jobseeker-auth .rc-pill.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.28) !important; font-weight: 400 !important; }
-.znp-jobseeker-auth .rc-pill.accent{ background: rgba(249,115,22,0.18); border: 1px solid rgba(249,115,22,0.5); color: #ffb07a !important; font-weight: 700 !important; }
-.znp-jobseeker-auth .rc-pill .pulse {
-    width: 4px; height: 4px; border-radius: 50%;
-    background: #4ade80; display: inline-block; margin-right: 4px;
-    animation: jsa-rcpulse 2s ease-in-out infinite; flex-shrink: 0;
-}
-@keyframes jsa-rcpulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.35; transform: scale(0.7); }
-}
-.znp-jobseeker-auth .rc-label {
-    font-size: 8px !important; font-weight: 700 !important; color: var(--orange) !important;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    text-align: center; margin-bottom: 8px; opacity: 0.9;
-}
-
-/* ── RIGHT FORM PANEL ── */
-.znp-jobseeker-auth .form-panel {
-    padding: 36px 42px;
-    display: flex; flex-direction: column;
-    background: var(--white);
-}
-/* Fixed panel height so Sign-In and Sign-Up tabs never resize the card. */
-.znp-jobseeker-auth .form-panel {
-    min-height: 500px;
-    overflow-y: auto;
-}
-.znp-jobseeker-auth .tab-switcher {
-    display: flex; background: #f3f4f8;
-    border-radius: 10px; padding: 3px;
-    margin-bottom: 20px;
-}
-.znp-jobseeker-auth .tab-btn {
-    flex: 1; padding: 10px 16px;
-    border: 2px solid rgba(26,90,203,0.18);
-    background: transparent; color: var(--text-muted);
-    font-size: 13px !important; font-weight: 700 !important; border-radius: 8px;
-    cursor: pointer; transition: all 0.2s;
-}
-.znp-jobseeker-auth .tab-btn.active {
-    background: var(--white); color: var(--blue) !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    border-color: #cbdeff;
-}
-.znp-jobseeker-auth .tab-btn:hover:not(.active) { color: var(--text) !important; }
-.znp-jobseeker-auth .tab-btn:focus { outline: none; box-shadow: 0 0 0 2px rgba(26,63,170,0.08); }
-.znp-jobseeker-auth .tab-btn.active:focus { border-color: #cbdeff; }
-.znp-jobseeker-auth .form-title {
-    font-size: 20px !important; font-weight: 800 !important; color: var(--text) !important;
-    margin-bottom: 6px; letter-spacing: -0.5px;
-}
-.znp-jobseeker-auth .form-subtitle {
-    font-size: 12px !important; color: var(--text-muted) !important;
-    line-height: 1.6;
-}
-.znp-jobseeker-auth .form-sections-stack > .form-section {
-    display: none;
-}
-.znp-jobseeker-auth .form-sections-stack > .form-section.active {
-    display: block;
-    animation: jsaFadeIn 180ms ease;
-}
-@keyframes jsaFadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Progress bar */
-.znp-jobseeker-auth .znp-step-bar {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
-}
-.znp-jobseeker-auth .znp-step-seg {
-    height: 3px; flex: 1; background: var(--border);
-    border-radius: 2px; transition: background 0.3s;
-}
-.znp-jobseeker-auth .znp-step-seg.active { background: var(--blue); }
-.znp-jobseeker-auth .znp-step-label {
-    font-size: 11px !important; color: var(--text-muted) !important; font-weight: 600 !important;
-    text-align: center; margin-top: 6px;
-}
-
-/* Form elements */
-.znp-jobseeker-auth .form-group { margin-bottom: 14px; }
-.znp-jobseeker-auth .form-label {
-    display: block; font-size: 12px !important; font-weight: 600 !important;
-    color: var(--text) !important; margin-bottom: 5px;
-}
-.znp-jobseeker-auth .required { color: #dc2626 !important; margin-left: 2px; }
-/* ── Validation error state ── */
-.znp-jobseeker-auth .form-input.is-invalid,
-.znp-jobseeker-auth .form-select.is-invalid {
-    border-color: #dc2626 !important;
-    box-shadow: 0 0 0 3px rgba(220,38,38,0.1);
-}
-.znp-jobseeker-auth .znp-fe-err,
-.znp-jobseeker-auth .field-error {
-    display: block;
-    color: #dc2626 !important;
-    font-size: 11px !important;
-    margin-top: 4px;
-    line-height: 1.4;
-}
-.znp-jobseeker-auth .form-input,
-.znp-jobseeker-auth .form-select {
-    width: 100%; padding: 10px 12px;
-    border: 1.5px solid var(--border); border-radius: 8px;
-    font-size: 13px !important; color: var(--text) !important;
-    background: var(--white); transition: all 0.2s; outline: none;
-}
-.znp-jobseeker-auth .form-input:focus,
-.znp-jobseeker-auth .form-select:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 4px rgba(26,63,170,0.08);
-}
-.znp-jobseeker-auth .form-input::placeholder { color: var(--text-light) !important; }
-.znp-jobseeker-auth .form-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 12px center;
-    padding-right: 40px; cursor: pointer;
-}
-.znp-jobseeker-auth .form-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-  margin-left: 0;
-  margin-right: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
-.znp-jobseeker-auth .form-row > .form-group {
-  min-width: 0;
-  padding-left: 0;
-  padding-right: 0;
-}
-.znp-jobseeker-auth .input-with-icon { position: relative; }
-.znp-jobseeker-auth .input-icon-left {
-    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-    color: var(--text-light); width: 14px; height: 14px; pointer-events: none;
-}
-.znp-jobseeker-auth .input-with-icon .form-input { padding-left: 38px; }
-/* Password-only wrapper — right toggle, no left icon */
-.znp-jobseeker-auth .input-pass-wrap { position: relative; }
-.znp-jobseeker-auth .input-pass-wrap .form-input { padding-right: 44px; }
-.znp-jobseeker-auth .password-toggle {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; color: var(--text-light);
-    cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.2s;
-}
-.znp-jobseeker-auth .password-toggle:hover { color: var(--text-muted); }
-.znp-jobseeker-auth .password-toggle svg { width: 18px !important; height: 18px !important; }
-.znp-jobseeker-auth .form-options {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;
-}
-.znp-jobseeker-auth .checkbox-label {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px !important; color: var(--text-muted) !important; cursor: pointer;
-}
-.znp-jobseeker-auth .checkbox-label input[type="checkbox"] {
-    width: 14px; height: 14px; accent-color: var(--blue); cursor: pointer;
-}
-.znp-jobseeker-auth .forgot-link {
-    font-size: 12px !important; font-weight: 600 !important; color: var(--blue) !important;
-    text-decoration: none; transition: color 0.2s;
-}
-.znp-jobseeker-auth .forgot-link:hover { color: var(--blue-dark) !important; text-decoration: underline; }
-.znp-jobseeker-auth .btn-primary {
-    width: 100%; padding: 11px 20px;
-    background: var(--blue); border: none; border-radius: 8px;
-    color: var(--white) !important; font-size: 13px !important; font-weight: 700 !important;
-    cursor: pointer; transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(26,63,170,0.2);
-}
-.znp-jobseeker-auth .btn-primary:hover {
-    background: var(--blue-dark);
-    box-shadow: 0 6px 16px rgba(26,63,170,0.3); transform: translateY(-1px);
-}
-.znp-jobseeker-auth .btn-secondary {
-    width: 100%; padding: 11px 20px;
-    background: transparent; border: 1.5px solid var(--border);
-    border-radius: 8px; color: var(--text) !important; font-size: 13px !important; font-weight: 700 !important;
-    cursor: pointer; transition: all 0.2s;
-}
-.znp-jobseeker-auth .btn-secondary:hover {
-    border-color: var(--blue); color: var(--blue) !important; background: #f0f5ff;
-}
-.znp-jobseeker-auth .step-nav { display: flex; gap: 10px; margin-top: 18px; }
-.znp-jobseeker-auth .step-nav .btn-secondary { flex: 0 0 100px; }
-.znp-jobseeker-auth .step-nav .btn-primary  { flex: 1; }
-.znp-jobseeker-auth .alt-action {
-    text-align: center; font-size: 12px !important; color: var(--text-muted) !important; margin-top: 18px;
-}
-.znp-jobseeker-auth .alt-action a {
-    color: var(--blue) !important; font-weight: 600 !important; text-decoration: none; cursor: pointer;
-}
-.znp-jobseeker-auth .alt-action a:hover { text-decoration: underline; }
-
-/* ── Alerts ── */
-.znp-jobseeker-auth .znp-alert {
-    padding: 10px 14px; border-radius: 8px;
-    font-size: 12px !important; margin-bottom: 16px;
-    display: flex; align-items: flex-start; gap: 8px;
-}
-.znp-jobseeker-auth .znp-alert-error  { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626 !important; }
-.znp-jobseeker-auth .znp-alert-success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a !important; }
-
-/* File upload */
-.znp-jobseeker-auth .file-upload { position: relative; }
-.znp-jobseeker-auth .file-upload-label {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 10px 16px; border: 2px dashed var(--border); border-radius: 8px;
-    background: #fafafa; cursor: pointer; transition: all 0.2s;
-    font-size: 12px !important; font-weight: 600 !important; color: var(--text-muted) !important;
-}
-.znp-jobseeker-auth .file-upload-label:hover {
-    border-color: var(--blue); background: #f0f5ff; color: var(--blue) !important;
-}
-.znp-jobseeker-auth .file-upload-label svg { width: 14px !important; height: 14px !important; }
-.znp-jobseeker-auth .file-upload input[type="file"] { position: absolute; opacity: 0; width: 0; height: 0; }
-.znp-jobseeker-auth .file-name {
-    font-size: 11px !important; color: var(--text-muted) !important; margin-top: 5px; font-style: italic;
-}
-
-/* Checkbox group */
-.znp-jobseeker-auth .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
-.znp-jobseeker-auth .checkbox-item {
-    display: flex; align-items: flex-start; gap: 8px;
-    font-size: 11px !important; color: var(--text-muted) !important; line-height: 1.6; cursor: pointer;
-}
-.znp-jobseeker-auth .checkbox-item input[type="checkbox"] {
-    margin-top: 2px; width: 14px; height: 14px;
-    accent-color: var(--blue); cursor: pointer; flex-shrink: 0;
-}
-.znp-jobseeker-auth .checkbox-item a { color: var(--blue) !important; font-weight: 600 !important; text-decoration: none; }
-.znp-jobseeker-auth .checkbox-item a:hover { text-decoration: underline; }
-
-/* Skills input */
-.znp-jobseeker-auth .skills-tags {
-    display: flex; flex-wrap: wrap; gap: 6px;
-    padding: 8px 12px; border: 1.5px solid var(--border);
-    border-radius: 8px; min-height: 44px; cursor: text;
-    background: var(--white); transition: border 0.2s;
-}
-.znp-jobseeker-auth .skills-tags:focus-within {
-    border-color: var(--blue); box-shadow: 0 0 0 4px rgba(26,63,170,0.08);
-}
-.znp-jobseeker-auth .skill-tag {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: #eef2ff; border: 1px solid #c7d2fe;
-    color: var(--blue) !important; border-radius: 100px;
-    padding: 2px 8px; font-size: 11px !important; font-weight: 600 !important;
-}
-.znp-jobseeker-auth .skill-tag button {
-    background: none; border: none; color: var(--blue);
-    cursor: pointer; font-size: 13px; line-height: 1; padding: 0; opacity: 0.6;
-}
-.znp-jobseeker-auth .skill-tag button:hover { opacity: 1; }
-.znp-jobseeker-auth .skills-text-input {
-    border: none; outline: none; font-size: 12px !important;
-    color: var(--text) !important; min-width: 140px; flex: 1; background: transparent;
-}
-.znp-jobseeker-auth .skills-text-input::placeholder { color: var(--text-light) !important; }
-.znp-jobseeker-auth .skills-hint { font-size: 10px !important; color: var(--text-muted) !important; margin-top: 4px; }
-.znp-jobseeker-auth .skills-error {
-    font-size: 10px !important; color: #dc2626 !important; font-weight: 600 !important; margin-top: 4px; display: none;
-}
-
-/* City chips */
-.znp-jobseeker-auth .cities-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-.znp-jobseeker-auth .city-chip {
-    display: inline-flex; align-items: center; gap: 4px;
-    border: 1.5px solid var(--border); border-radius: 100px;
-    padding: 5px 12px; font-size: 11px !important; font-weight: 600 !important;
-    cursor: pointer; color: var(--text-muted) !important; background: var(--white); transition: all 0.15s;
-}
-.znp-jobseeker-auth .city-chip:hover { border-color: var(--blue); color: var(--blue) !important; }
-.znp-jobseeker-auth .city-chip.selected {
-    background: #eef2ff; border-color: var(--blue); color: var(--blue) !important;
-}
-.znp-jobseeker-auth .city-chip.selected::before { content: '✓ '; }
-
-/* Notice date field (conditionally shown) */
-.znp-jobseeker-auth .nop-date-field { display: none; }
-.znp-jobseeker-auth .nop-date-field.visible { display: block; }
-
-/* Responsive */
-@media (max-width: 968px) {
-    .znp-jobseeker-auth .auth-container { grid-template-columns: 1fr; }
-    .znp-jobseeker-auth .info-panel { display: none; }
-    .znp-jobseeker-auth .form-panel { padding: 40px 32px; }
-}
-@media (max-width: 640px) {
-    .znp-jobseeker-auth { padding: 0; }
-    .znp-jobseeker-auth .auth-container { border-radius: 0; box-shadow: none; }
-    .znp-jobseeker-auth .form-panel { padding: 32px 24px; }
-    .znp-jobseeker-auth .form-row { grid-template-columns: 1fr; }
-}
-
-/* ── Success modal ── */
-.znp-jobseeker-auth .znp-modal {
-    display: none;
-    position: fixed; inset: 0;
-    z-index: 9999;
-    align-items: center; justify-content: center;
-    padding: 20px;
-}
-.znp-jobseeker-auth .znp-modal.open { display: flex; }
-.znp-jobseeker-auth .znp-modal-overlay {
-    position: absolute; inset: 0;
-    background: rgba(10,18,50,0.55);
-    backdrop-filter: blur(3px);
-    opacity: 0; transition: opacity 280ms ease;
-}
-.znp-jobseeker-auth .znp-modal.open .znp-modal-overlay { opacity: 1; }
-.znp-jobseeker-auth .znp-modal-content {
-    position: relative;
-    background: #fff;
-    border-radius: 20px;
-    padding: 36px 32px 0;
-    width: 100%; max-width: 400px;
-    box-shadow: 0 32px 80px rgba(10,18,50,0.22), 0 4px 16px rgba(10,18,50,0.08);
-    z-index: 2;
-    text-align: center;
-    overflow: hidden;
-    transform: translateY(20px) scale(0.97);
-    opacity: 0;
-    transition: transform 320ms cubic-bezier(.16,1,.3,1), opacity 240ms ease;
-}
-.znp-jobseeker-auth .znp-modal.open .znp-modal-content {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-}
-.znp-jobseeker-auth .znp-modal-topclose {
-    position: absolute; right: 14px; top: 14px;
-    width: 28px; height: 28px;
-    border-radius: 50%; background: #f3f4f6; border: none;
-    cursor: pointer; color: #6b7280;
-    font-size: 16px; line-height: 28px; text-align: center;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 150ms;
-}
-.znp-jobseeker-auth .znp-modal-topclose:hover { background: #e5e7eb; color: #111827; }
-.znp-jobseeker-auth .znp-modal-topclose:focus { outline: none; }
-.znp-jobseeker-auth .znp-modal-icon-wrap {
-    width: 76px; height: 76px;
-    border-radius: 50%;
-    background: linear-gradient(135deg,#e8effe,#dbeafe);
-    display: inline-flex; align-items: center; justify-content: center;
-    margin-bottom: 18px;
-    position: relative;
-}
-.znp-jobseeker-auth .znp-modal-icon-wrap::before {
-    content: '';
-    position: absolute; inset: -6px;
-    border-radius: 50%;
-    border: 2px solid rgba(59,130,246,0.18);
-}
-.znp-jobseeker-auth .znp-check {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: linear-gradient(135deg,#2563eb,#1a3faa);
-    box-shadow: 0 8px 24px rgba(37,99,235,0.30);
-    display: inline-grid; place-items: center;
-}
-.znp-jobseeker-auth .znp-check svg {
-    width: 26px; height: 26px;
-    stroke: #fff; stroke-width: 2.5;
-    stroke-linecap: round; stroke-linejoin: round; fill: none;
-}
-.znp-jobseeker-auth .znp-check .chkpath {
-    stroke-dasharray: 48; stroke-dashoffset: 48;
-    animation: znpChkDraw 400ms ease forwards 200ms;
-}
-@keyframes znpChkDraw { to { stroke-dashoffset: 0; } }
-.znp-jobseeker-auth .znp-modal-content h3 {
-    margin: 0 0 8px; font-size: 20px !important; font-weight: 800 !important;
-    color: #0f172a !important;
-}
-.znp-jobseeker-auth .znp-modal-content .znp-modal-msg {
-    font-size: 13.5px !important; color: #475569 !important; line-height: 1.6;
-    margin: 0 0 24px;
-}
-.znp-jobseeker-auth .znp-modal-cta {
-    display: block; width: 100%;
-    padding: 13px 0;
-    background: linear-gradient(135deg,#2563eb,#1a3faa);
-    color: #fff !important; font-weight: 700 !important; font-size: 14px !important;
-    border: none; border-radius: 12px;
-    cursor: pointer; margin-bottom: 20px;
-    transition: opacity 150ms;
-}
-.znp-jobseeker-auth .znp-modal-cta:hover { opacity: 0.9; }
-.znp-jobseeker-auth .znp-modal-cta:focus { outline: none; box-shadow: 0 0 0 4px rgba(37,99,235,0.18); }
-.znp-jobseeker-auth .znp-modal-bar-wrap {
-    height: 3px; background: #f1f5f9;
-    position: absolute; bottom: 0; left: 0; right: 0;
-}
-.znp-jobseeker-auth .znp-modal-bar {
-    height: 100%;
-    background: linear-gradient(90deg,#2563eb,#60a5fa);
-    width: 100%;
-    transform-origin: left;
-    animation: znpBarShrink var(--znp-bar-dur,6s) linear forwards;
-}
-@keyframes znpBarShrink { to { transform: scaleX(0); } }
-.znp-jobseeker-auth .znp-modal.paused .znp-modal-bar { animation-play-state: paused; }
-
-/* ── jQuery UI Autocomplete dropdown — scoped to this page ── */
-.znp-jobseeker-auth .ui-autocomplete {
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    max-height: 200px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 4px 0;
-    z-index: 9999;
-    list-style: none;
-    margin: 4px 0 0;
-}
-.znp-jobseeker-auth .ui-autocomplete .ui-menu-item { padding: 0; }
-.znp-jobseeker-auth .ui-autocomplete .ui-menu-item-wrapper {
-    padding: 9px 14px;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
-    color: var(--text);
-    cursor: pointer;
-    display: block;
-}
-.znp-jobseeker-auth .ui-autocomplete .ui-menu-item-wrapper.ui-state-active,
-.znp-jobseeker-auth .ui-autocomplete .ui-menu-item-wrapper:hover {
-    background: #eef2ff;
-    color: var(--blue);
-    border: none;
-    outline: none;
-}
-.znp-jobseeker-auth .ui-autocomplete .highlight {
-    font-weight: 700;
-    color: var(--blue);
+/* ── ZNP JOBSEEKER-AUTH v13 ── */
+.znp-auth-v13 {
+    --blue:#3B5CCC;--blue-d:#2d47a3;--blue-50:#EEF1FB;--blue-100:#D6DEFC;
+    --orange:#F2994A;--orange-50:#FEF3E8;--bg:#F7F8FC;--surface:#FFFFFF;
+    --surface-2:#EEF1FB;--border:#E7EAF3;--text:#2F3443;--text-2:#4A5068;
+    --text-3:#717A96;--text-4:#A0AABF;--r:14px;--r-sm:9px;--r-lg:22px;
+    --font:'Nunito Sans',sans-serif;
+    font-family:var(--font);color:var(--text);
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    background:var(--bg);position:relative;
+}
+.znp-auth-v13::before {
+    content:'';position:fixed;inset:0;
+    background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(59,92,204,.07) 0%,transparent 60%),
+               radial-gradient(ellipse 55% 45% at 85% 85%,rgba(59,92,204,.05) 0%,transparent 55%),
+               radial-gradient(ellipse 40% 40% at 60% 30%,rgba(242,153,74,.04) 0%,transparent 50%);
+    pointer-events:none;z-index:0;
+}
+.znp-auth-v13 *,.znp-auth-v13 *::before,.znp-auth-v13 *::after {box-sizing:border-box;}
+.znp-auth-v13 .wrap {
+    max-width:900px;margin:0 auto;padding:32px 28px 56px;
+    position:relative;z-index:1;
+    animation:znpFadeUp .4s cubic-bezier(.22,.68,0,1.2) both;
+}
+.znp-auth-v13 .top {text-align:center;margin-bottom:24px;}
+.znp-auth-v13 .top-eyebrow {
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--blue-50);border:1px solid var(--blue-100);
+    color:var(--blue);font-size:13.5px;font-weight:700;
+    padding:6px 16px;border-radius:50px;margin-bottom:14px;letter-spacing:.01em;
+}
+.znp-auth-v13 .top h1 {font-size:20px;font-weight:700;color:var(--text);letter-spacing:-.2px;line-height:1.3;margin-bottom:8px;}
+.znp-auth-v13 .top h1 em {color:var(--blue);font-style:normal;}
+.znp-auth-v13 .top p {font-size:13.5px;color:var(--text-3);letter-spacing:.01em;}
+.znp-auth-v13 .props {
+    display:flex;background:rgba(255,255,255,.7);border:1px solid var(--border);
+    border-radius:var(--r) var(--r) 0 0;overflow:hidden;backdrop-filter:blur(8px);
+    border-top:3px solid var(--orange);
+}
+.znp-auth-v13 .prop {flex:1;display:flex;align-items:center;gap:7px;padding:10px 14px;border-right:1px solid var(--border);}
+.znp-auth-v13 .prop:last-child {border-right:none;}
+.znp-auth-v13 .pdot {width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.znp-auth-v13 .prop span {font-size:11.5px;font-weight:500;color:var(--text-2);}
+.znp-auth-v13 .card {
+    background:var(--surface);border:1px solid var(--border);border-top:none;
+    border-radius:0 0 var(--r-lg) var(--r-lg);
+    box-shadow:0 16px 48px rgba(59,92,204,.12),0 4px 16px rgba(47,52,67,.06);overflow:hidden;
+}
+.znp-auth-v13 .tabs {display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.znp-auth-v13 .tab {
+    padding:14px;text-align:center;font-size:13px;font-weight:500;color:var(--text-3);
+    cursor:pointer;border:none;background:transparent;font-family:var(--font);
+    border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;letter-spacing:.01em;
+}
+.znp-auth-v13 .tab.on {color:var(--blue);background:var(--surface);border-bottom-color:var(--blue);font-weight:600;}
+.znp-auth-v13 .tab:hover:not(.on) {color:var(--text-2);background:rgba(255,255,255,.6);}
+.znp-auth-v13 .tab:focus,.znp-auth-v13 .tab:focus-visible,
+.znp-auth-v13 .btn:focus,.znp-auth-v13 .btn:focus-visible,
+.znp-auth-v13 .bback:focus,.znp-auth-v13 .bback:focus-visible,
+.znp-auth-v13 .socbtn:focus,.znp-auth-v13 .socbtn:focus-visible,
+.znp-auth-v13 .pw-tog:focus,.znp-auth-v13 .pw-tog:focus-visible,
+.znp-auth-v13 .otpsend:focus,.znp-auth-v13 .otpsend:focus-visible {outline:none;box-shadow:none;}
+.znp-auth-v13 .pnl {display:none;padding:28px 40px 36px;min-width:0;}
+.znp-auth-v13 #psi {width:100%;max-width:500px;margin:0 auto;}
+.znp-auth-v13 .pnl.on {display:block;}
+.znp-auth-v13 .steps {display:flex;align-items:center;margin-bottom:28px;}
+.znp-auth-v13 .st {display:flex;align-items:center;gap:8px;flex:1;}
+.znp-auth-v13 .snum {
+    width:28px;height:28px;border-radius:50%;font-size:11px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    transition:all .25s;box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+.znp-auth-v13 .snum.a {background:var(--orange);color:#fff;}
+.znp-auth-v13 .snum.d {background:var(--blue);color:#fff;font-size:13px;}
+.znp-auth-v13 .snum.i {background:#fff;color:var(--text-4);border:1.5px solid var(--border);box-shadow:none;cursor:default;}
+.znp-auth-v13 .snum.a,.znp-auth-v13 .snum.d {cursor:pointer;}
+.znp-auth-v13 .slbl {font-size:11.5px;font-weight:500;white-space:nowrap;}
+.znp-auth-v13 .slbl.a {color:var(--orange);font-weight:600;}
+.znp-auth-v13 .slbl.d {color:var(--blue);font-weight:600;}
+.znp-auth-v13 .slbl.i {color:var(--text-4);}
+.znp-auth-v13 .sln {flex:1;height:2px;background:var(--border);margin:0 6px;border-radius:2px;transition:background .3s;}
+.znp-auth-v13 .sln.d {background:var(--blue);}
+.znp-auth-v13 .sec {
+    font-size:10px;font-weight:700;color:var(--text-4);text-transform:uppercase;
+    letter-spacing:.09em;margin:22px 0 12px;display:flex;align-items:center;gap:8px;
+}
+.znp-auth-v13 .sec:first-child {margin-top:0;}
+.znp-auth-v13 .secbar {width:14px;height:2px;border-radius:2px;background:var(--blue);flex-shrink:0;}
+.znp-auth-v13 .nopts {display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.znp-auth-v13 .nopt {
+    border:1.5px solid var(--border);border-radius:var(--r);padding:14px 12px;
+    cursor:pointer;transition:all .2s;background:var(--surface-2);position:relative;overflow:hidden;
+}
+.znp-auth-v13 .nopt::before {content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background .2s;}
+.znp-auth-v13 .nopt:hover {border-color:var(--blue);background:var(--blue-50);box-shadow:0 1px 3px rgba(59,92,204,.06);}
+.znp-auth-v13 .nopt:hover::before {background:var(--blue-d);}
+.znp-auth-v13 .nopt.on {border-color:var(--blue);background:var(--blue-50);box-shadow:0 0 0 3px rgba(59,92,204,.1);}
+.znp-auth-v13 .nopt.on::before {background:var(--blue);}
+.znp-auth-v13 .nlbl {font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.znp-auth-v13 .nopt.on .nlbl {color:var(--blue);}
+.znp-auth-v13 .nsub {font-size:11px;color:var(--text-4);line-height:1.4;}
+.znp-auth-v13 .g2 {display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.znp-auth-v13 .g3 {display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.znp-auth-v13 .g4 {display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;}
+.znp-auth-v13 .f {display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.znp-auth-v13 .f:last-child {margin-bottom:0;}
+.znp-auth-v13 .lbl {font-size:12px;font-weight:600;color:var(--text-2);display:flex;align-items:center;gap:4px;}
+.znp-auth-v13 .req {color:var(--orange);}
+.znp-auth-v13 .opt-lbl {font-size:11px;font-weight:400;color:var(--text-4);}
+.znp-auth-v13 input[type=text],.znp-auth-v13 input[type=email],.znp-auth-v13 input[type=tel],
+.znp-auth-v13 input[type=password],.znp-auth-v13 input[type=date],
+.znp-auth-v13 input[type=number],.znp-auth-v13 select {
+    width:100%;font-family:var(--font);font-size:13.5px;
+    border:1.5px solid var(--border);border-radius:var(--r-sm);
+    padding:10px 13px;color:var(--text);background:var(--surface);
+    outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;
+}
+.znp-auth-v13 input:focus,.znp-auth-v13 select:focus {border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,92,204,.12);}
+.znp-auth-v13 input::placeholder {color:var(--text-4);font-weight:400;}
+.znp-auth-v13 select {
+    cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239ca3af' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;
+}
+.znp-auth-v13 .hint {font-size:11px;color:var(--text-4);}
+.znp-auth-v13 .hint.ok {color:var(--blue);}
+.znp-auth-v13 .hint.er {color:#dc2626;}
+.znp-auth-v13 .pfx {display:flex;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;transition:border .15s,box-shadow .15s;}
+.znp-auth-v13 .pfx:focus-within {border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,92,204,.12);}
+.znp-auth-v13 .pfx-lbl {padding:10px 12px;background:var(--surface-2);color:var(--text-3);font-size:13px;font-weight:500;white-space:nowrap;border-right:1.5px solid var(--border);flex-shrink:0;font-family:var(--font);}
+.znp-auth-v13 .pfx-inp {border:none;outline:none;padding:10px 13px;font-size:13.5px;font-family:var(--font);color:var(--text);flex:1;min-width:0;background:var(--surface);}
+.znp-auth-v13 .pfx-inp::placeholder {color:var(--text-4);}
+.znp-auth-v13 .phw {display:flex;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;transition:border .15s,box-shadow .15s;}
+.znp-auth-v13 .phw:focus-within {border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,92,204,.12);}
+.znp-auth-v13 .phcode {padding:10px 12px;background:var(--surface-2);color:var(--text-2);font-size:13px;font-weight:600;border-right:1.5px solid var(--border);flex-shrink:0;font-family:var(--font);}
+.znp-auth-v13 .phinp {border:none;outline:none;padding:10px 13px;font-size:13.5px;font-family:var(--font);color:var(--text);flex:1;background:var(--surface);}
+.znp-auth-v13 .phinp::placeholder {color:var(--text-4);}
+.znp-auth-v13 .emst {min-height:16px;font-size:11.5px;font-weight:500;margin-top:3px;}
+.znp-auth-v13 .emst.ok {color:var(--blue);}
+.znp-auth-v13 .emst.er {color:#dc2626;}
+.znp-auth-v13 .emst.ch {color:var(--text-4);}
+.znp-auth-v13 .upload {border:2px dashed var(--border);border-radius:var(--r);padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface-2);}
+.znp-auth-v13 .upload:hover {border-color:var(--blue);background:var(--blue-50);box-shadow:0 0 0 4px rgba(59,92,204,.07);}
+.znp-auth-v13 .upload-ico {width:44px;height:44px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.znp-auth-v13 .ut {font-size:13px;color:var(--text-2);font-weight:500;}
+.znp-auth-v13 .ut b {color:var(--blue);}
+.znp-auth-v13 .ut-sub {font-size:11.5px;color:var(--text-4);margin-top:3px;}
+.znp-auth-v13 .pills {display:flex;flex-wrap:wrap;gap:7px;margin-bottom:5px;align-items:flex-start;}
+.znp-auth-v13 .pill {
+    display:inline-flex;align-items:center;gap:4px;padding:5px 13px;
+    border:1.5px solid var(--border);border-radius:50px;font-size:12.5px;font-weight:500;
+    color:var(--text-3);cursor:pointer;transition:all .15s;background:var(--surface);
+    user-select:none;white-space:nowrap;flex:0 0 auto;font-family:var(--font);
+}
+.znp-auth-v13 .pill:hover {border-color:var(--blue);color:var(--blue);background:var(--blue-50);}
+.znp-auth-v13 .pill.on {border-color:var(--blue);background:var(--blue-50);color:var(--blue);font-weight:600;}
+.znp-auth-v13 .pill.on::before {content:'\2713  ';font-size:10px;}
+.znp-auth-v13 .pill.added::after {content:' ×';font-size:12px;font-weight:700;line-height:1;}
+.znp-auth-v13 .skwrap {border:1.5px solid var(--border);border-radius:var(--r);overflow:visible;transition:border .15s;}
+.znp-auth-v13 .skwrap:focus-within {border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,92,204,.12);}
+.znp-auth-v13 .skbox {display:flex;flex-wrap:wrap;gap:5px;padding:8px;min-height:38px;background:var(--surface-2);border-bottom:1px solid var(--border);}
+.znp-auth-v13 .sktag {display:inline-flex;align-items:center;gap:5px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:50px;padding:3px 10px 3px 12px;font-size:12px;font-weight:500;color:var(--blue);}
+.znp-auth-v13 .sktag button {appearance:none;border:1px solid var(--blue-100);background:#fff;color:var(--text-2);width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;line-height:1;cursor:pointer;padding:0;box-shadow:none;}
+.znp-auth-v13 .sktag button:hover {background:var(--blue);border-color:var(--blue);color:#fff;}
+.znp-auth-v13 .skx {cursor:pointer;color:var(--blue-d);font-size:14px;line-height:1;transition:color .1s;}
+.znp-auth-v13 .skx:hover {color:var(--blue);}
+.znp-auth-v13 .skinpw {position:relative;}
+.znp-auth-v13 .skinp {width:100%;border:none;border-radius:0;padding:9px 13px;font-size:13px;font-family:var(--font);color:var(--text);outline:none;background:var(--surface);}
+.znp-auth-v13 .skdd {display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);z-index:20;max-height:160px;overflow-y:auto;box-shadow:0 8px 24px rgba(30,58,95,.12);}
+.znp-auth-v13 .skdd.on {display:block;}
+.znp-auth-v13 .skddi {padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text-2);}
+.znp-auth-v13 .skddi:hover {background:var(--blue-50);color:var(--blue);}
+.znp-auth-v13 .sksugg {display:flex;flex-wrap:nowrap;gap:5px;margin-top:8px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;}
+.znp-auth-v13 .ssugg {font-size:11.5px;font-weight:500;padding:4px 11px;border-radius:50px;border:1.5px dashed var(--blue-100);color:var(--blue);background:var(--blue-50);flex:0 0 auto;white-space:nowrap;transition:all .15s;font-family:var(--font);pointer-events:none;cursor:default;}
+.znp-auth-v13 .ssugg:hover {background:var(--blue);color:#fff;border-color:var(--blue);}
+.znp-auth-v13 .skpill {font-size:11.5px;font-weight:500;padding:4px 11px;border-radius:50px;border:1.5px dashed var(--blue-100);color:var(--blue);background:var(--blue-50);flex:0 0 auto;white-space:nowrap;transition:all .15s;font-family:var(--font);pointer-events:none;cursor:default;}
+.znp-auth-v13 .skpill.on {background:var(--blue);color:#fff;border-color:var(--blue);}
+@media (max-width: 767px) {
+  .znp-auth-v13 .sksugg {flex-wrap:wrap;overflow-x:visible;white-space:normal;}
+  .znp-auth-v13 .skpill, .znp-auth-v13 .ssugg {pointer-events:auto;cursor:pointer;}
+  .znp-auth-v13 .skdd {z-index:9999;}
+  /* Stack step buttons on mobile for better tap targets */
+  .znp-auth-v13 .brow {flex-direction:column;align-items:stretch;gap:10px;}
+  .znp-auth-v13 .brow .bback {width:100%;margin:0;border-radius:12px;padding:10px 12px;}
+  .znp-auth-v13 .brow .btn {width:100%;margin-top:0;border-radius:12px;padding:12px 14px;font-size:15px}
+}
+.znp-auth-v13 .skprog-wrap {margin-top:10px;}
+.znp-auth-v13 .skprog-meta {display:flex;justify-content:space-between;font-size:11px;color:var(--text-4);margin-bottom:5px;}
+.znp-auth-v13 .skprog {height:4px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+.znp-auth-v13 .skfill {height:100%;border-radius:4px;transition:width .3s,background .3s;background:var(--orange);}
+.znp-auth-v13 .ctcbox {display:flex;align-items:stretch;border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;background:var(--surface);transition:border-color .15s,box-shadow .15s;}
+.znp-auth-v13 .ctcbox:focus-within {border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,92,204,.12);}
+.znp-auth-v13 .ctcpfx {display:flex;align-items:center;justify-content:center;min-width:42px;padding:0 12px;background:var(--surface-2);border-right:1.5px solid var(--border);font-size:13px;font-weight:700;color:#6f82b2;}
+.znp-auth-v13 .ctcbox input {border:none !important;border-radius:0 !important;box-shadow:none !important;background:transparent;padding:10px 13px;}
+.znp-auth-v13 .optgrid {display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.znp-auth-v13 .optcheck {display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-3);cursor:pointer;}
+.znp-auth-v13 .optcheck input {accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer;}
+.znp-auth-v13 .priv {background:var(--surface-2);border:1px solid rgba(59,92,204,.18);border-radius:var(--r-sm);padding:11px 14px;display:flex;align-items:center;gap:9px;margin-bottom:14px;}
+.znp-auth-v13 .priv input {accent-color:var(--blue);width:15px;height:15px;flex-shrink:0;cursor:pointer;}
+.znp-auth-v13 .priv label {font-size:12.5px;color:var(--text-2);font-weight:500;cursor:pointer;}
+.znp-auth-v13 .social-banner {display:none;align-items:center;gap:10px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:18px;font-size:12.5px;color:var(--blue);font-weight:500;}
+.znp-auth-v13 .social-banner svg {flex-shrink:0;}
+.znp-auth-v13 .social-banner-r {margin-left:auto;font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;color:var(--blue);white-space:nowrap;}
+.znp-auth-v13 .pwbars {display:flex;gap:4px;margin-top:6px;}
+.znp-auth-v13 .pwb {flex:1;height:3px;border-radius:3px;background:var(--border);transition:background .3s;}
+.znp-auth-v13 .pwb.w {background:#ef4444;}
+.znp-auth-v13 .pwb.m {background:#f59e0b;}
+.znp-auth-v13 .pwb.s {background:var(--blue);}
+.znp-auth-v13 .btn {display:block;width:100%;padding:12px 20px;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);text-align:center;border:none;transition:all .2s;margin-top:18px;letter-spacing:.01em;}
+.znp-auth-v13 .btnb {background:linear-gradient(135deg,var(--blue) 0%,var(--blue-d) 100%);color:#fff;box-shadow:0 4px 14px rgba(59,92,204,.3),0 2px 4px rgba(59,92,204,.2);}
+.znp-auth-v13 .btnb:hover {transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,92,204,.35),0 3px 8px rgba(59,92,204,.2);}
+.znp-auth-v13 .btng {background:linear-gradient(135deg,var(--blue) 0%,#2d47a3 100%);color:#fff;box-shadow:0 4px 14px rgba(59,92,204,.3),0 2px 4px rgba(59,92,204,.12);}
+.znp-auth-v13 .btng:hover {transform:translateY(-2px);box-shadow:0 8px 24px rgba(59,92,204,.3),0 3px 8px rgba(59,92,204,.12);}
+.znp-auth-v13 .bback {padding:12px 20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text-3);border-radius:50px;font-size:13.5px;font-weight:500;cursor:pointer;font-family:var(--font);transition:all .2s;flex-shrink:0;}
+.znp-auth-v13 .bback:hover {border-color:var(--blue);color:var(--blue);}
+.znp-auth-v13 .brow {display:flex;gap:10px;margin-top:18px;}
+.znp-auth-v13 .brow .btn {margin-top:0;flex:1;}
+.znp-auth-v13 .errbox {background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r-sm);padding:12px 16px;margin-top:14px;display:none;}
+.znp-auth-v13 .errbox ul {padding-left:16px;font-size:12.5px;color:#dc2626;line-height:1.9;margin-top:4px;}
+.znp-auth-v13 #frnote {background:var(--orange-50);border:1px solid #ffe4d6;border-radius:var(--r-sm);padding:10px 14px;margin-bottom:16px;font-size:12.5px;color:#9a3412;display:none;}
+.znp-auth-v13 .ordiv {display:flex;align-items:center;gap:12px;margin:16px 0;}
+.znp-auth-v13 .orline {flex:1;height:1px;background:var(--border);}
+.znp-auth-v13 .ortxt {font-size:12px;color:var(--text-4);font-weight:500;}
+.znp-auth-v13 .socg {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.znp-auth-v13 .socbtn {display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;font-family:var(--font);background:var(--surface);transition:all .2s;}
+.znp-auth-v13 .socbtn:hover {border-color:var(--blue);color:var(--blue);background:var(--surface-2);box-shadow:0 1px 3px rgba(59,92,204,.06);}
+.znp-auth-v13 .otpw {display:flex;gap:8px;}
+.znp-auth-v13 .otpw input {flex:1;}
+.znp-auth-v13 .otpsend {padding:10px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;transition:all .2s;}
+.znp-auth-v13 .otpsend:hover {background:#2d47a3;}
+.znp-auth-v13 .cylimlbl {display:none;font-size:11.5px;color:var(--orange);font-weight:500;margin-top:4px;}
+.znp-auth-v13 .foot {text-align:center;font-size:12.5px;color:var(--text-3);padding:14px 32px;border-top:1px solid var(--border);background:var(--surface-2);}
+.znp-auth-v13 .foot a {color:var(--blue);font-weight:600;cursor:pointer;text-decoration:none;}
+.znp-auth-v13 .foot a:hover {text-decoration:underline;}
+.znp-auth-v13 .terms {font-size:11px;color:var(--text-4);text-align:center;margin-top:12px;line-height:1.7;}
+.znp-auth-v13 .terms a {color:var(--blue);text-decoration:none;}
+.znp-auth-v13 .verbox {background:var(--surface);border-radius:var(--r-lg);max-width:420px;margin:8px auto;padding:32px 28px;text-align:center;border:1px solid var(--border);box-shadow:0 4px 16px rgba(30,58,95,.08);}
+.znp-auth-v13 #cvok {display:none;font-size:12px;color:var(--blue);font-weight:500;margin-top:6px;}
+.znp-auth-v13 .gap9 {height:14px;}
+/* Password toggle */
+.znp-auth-v13 .pw-wrap {position:relative;}
+.znp-auth-v13 .pw-wrap input {padding-right:44px;}
+.znp-auth-v13 .pw-tog {position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-4);cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;transition:color .2s;}
+.znp-auth-v13 .pw-tog:hover {color:var(--text-2);}
+/* Alerts & errors */
+.znp-auth-v13 .znp-alert {padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;}
+.znp-auth-v13 .znp-alert-error {background:#fef2f2;border:1px solid #fecaca;color:#dc2626;}
+.znp-auth-v13 .znp-alert-success {background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;}
+.znp-auth-v13 .is-invalid,.znp-auth-v13 .phw.is-invalid,.znp-auth-v13 .pfx.is-invalid,.znp-auth-v13 .ctcbox.is-invalid {border-color:#dc2626 !important;box-shadow:0 0 0 3px rgba(220,38,38,.08) !important;}
+.znp-auth-v13 .znp-fe-err,.znp-auth-v13 .field-error {display:block;color:#dc2626;font-size:11px;margin-top:4px;line-height:1.4;}
+/* jQuery UI autocomplete */
+.znp-auth-v13 .ui-autocomplete {background:var(--surface);border:1.5px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:200px;overflow-y:auto;overflow-x:hidden;padding:4px 0;z-index:9999;list-style:none;margin:4px 0 0;}
+.znp-auth-v13 .ui-autocomplete .ui-menu-item {padding:0;}
+.znp-auth-v13 .ui-autocomplete .ui-menu-item-wrapper {padding:9px 14px;font-size:13px;font-family:var(--font);color:var(--text);cursor:pointer;display:block;}
+.znp-auth-v13 .ui-autocomplete .ui-menu-item-wrapper.ui-state-active,
+.znp-auth-v13 .ui-autocomplete .ui-menu-item-wrapper:hover {background:var(--blue-50);color:var(--blue);border:none;outline:none;}
+.znp-auth-v13 .ui-autocomplete .highlight {font-weight:700;color:var(--blue);}
+/* Success modal */
+.znp-auth-v13 .znp-modal {display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;}
+.znp-auth-v13 .znp-modal.open {display:flex;}
+.znp-auth-v13 .znp-modal-overlay {position:absolute;inset:0;background:rgba(10,18,50,.32);opacity:0;transition:opacity 280ms ease;}
+.znp-auth-v13 .znp-modal.open .znp-modal-overlay {opacity:1;}
+.znp-auth-v13 .znp-modal-content {position:relative;background:#fff;border-radius:20px;padding:36px 32px 0;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(10,18,50,.22),0 4px 16px rgba(10,18,50,.08);z-index:2;text-align:center;overflow:hidden;transform:translateY(20px) scale(.97);opacity:0;transition:transform 320ms cubic-bezier(.16,1,.3,1),opacity 240ms ease;}
+.znp-auth-v13 .znp-modal.open .znp-modal-content {transform:translateY(0) scale(1);opacity:1;}
+.znp-auth-v13 .znp-modal-topclose {position:absolute;right:14px;top:14px;width:28px;height:28px;border-radius:50%;background:#f3f4f6;border:none;cursor:pointer;color:#6b7280;display:flex;align-items:center;justify-content:center;transition:background 150ms;}
+.znp-auth-v13 .znp-modal-topclose:hover {background:#e5e7eb;color:#111827;}
+.znp-auth-v13 .znp-modal-icon-wrap {width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#e8effe,#dbeafe);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;position:relative;}
+.znp-auth-v13 .znp-modal-icon-wrap::before {content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(59,130,246,.18);}
+.znp-auth-v13 .znp-check {width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1a3faa);box-shadow:0 8px 24px rgba(37,99,235,.3);display:inline-grid;place-items:center;}
+.znp-auth-v13 .znp-check svg {width:26px;height:26px;stroke:#fff;stroke-width:2.5;fill:none;}
+.znp-auth-v13 .znp-check .chkpath {stroke-dasharray:48;stroke-dashoffset:48;animation:znpChkDraw 400ms ease forwards 200ms;}
+.znp-auth-v13 .znp-modal-content h3 {margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;font-family:var(--font);}
+.znp-auth-v13 .znp-modal-content .znp-modal-msg {font-size:13.5px;color:#475569;line-height:1.6;margin:0 0 24px;}
+.znp-auth-v13 .znp-modal-cta {display:block;width:100%;padding:13px 0;background:linear-gradient(135deg,#2563eb,#1a3faa);color:#fff;font-weight:700;font-size:14px;border:none;border-radius:12px;cursor:pointer;margin-bottom:20px;transition:opacity 150ms;font-family:var(--font);}
+.znp-auth-v13 .znp-modal-cta:hover {opacity:.9;}
+.znp-auth-v13 .znp-modal-bar-wrap {height:3px;background:#f1f5f9;position:absolute;bottom:0;left:0;right:0;}
+.znp-auth-v13 .znp-modal-bar {height:100%;background:linear-gradient(90deg,#2563eb,#60a5fa);width:100%;transform-origin:left;animation:znpBarShrink var(--znp-bar-dur,6s) linear forwards;}
+.znp-auth-v13 .znp-modal.paused .znp-modal-bar {animation-play-state:paused;}
+@keyframes znpFadeUp {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes znpChkDraw {to{stroke-dashoffset:0;}}
+@keyframes znpBarShrink {to{transform:scaleX(0);}}
+@media (max-width:640px) {
+    .znp-auth-v13 .wrap {padding:16px 12px 48px;}
+    .znp-auth-v13 .pnl {padding:20px 18px 24px;}
+    .znp-auth-v13 .g2,.znp-auth-v13 .g3,.znp-auth-v13 .g4 {grid-template-columns:1fr;gap:12px;}
+    .znp-auth-v13 .nopts {grid-template-columns:1fr;gap:8px;}
+    .znp-auth-v13 .socg {grid-template-columns:1fr;}
+    .znp-auth-v13 .props {flex-wrap:wrap;}
+    .znp-auth-v13 .prop {flex:1 1 calc(50% - 1px);}
+    .znp-auth-v13 .prop:nth-child(2) {border-right:none;}
+    .znp-auth-v13 .prop:nth-child(3),.znp-auth-v13 .prop:nth-child(4) {border-top:1px solid var(--border);}
+    .znp-auth-v13 .prop:nth-child(4) {border-right:none;}
+    .znp-auth-v13 .top h1 {font-size:18px;}
+    .znp-auth-v13 .slbl {display:none;}
+    .znp-auth-v13 .sln {margin:0 4px;}
 }
 </style>
 @endpush
@@ -581,137 +305,35 @@
 @section('content')
 @include('znp.header')
 
-<main class="znp-jobseeker-auth">
-  <div class="auth-container">
+<div class="znp-auth-v13">
+  <div class="wrap">
 
-    {{-- ── LEFT INFO PANEL ── --}}
-    <div class="info-panel">
-      <div class="info-content">
-        <div class="logo-section">
-          <span class="logo-text">
-            <span class="logo-blue">Zero</span><span class="logo-orange">Notice</span>Period
-          </span>
-        </div>
-
-        <div class="info-headline">
-          Find jobs you can <span class="highlight">join immediately</span>
-        </div>
-        <p class="info-desc">
-          We connect candidates who are on zero notice period or serving notice with companies that need to hire fast. No wait, no fuss.
-        </p>
-
-        <div class="info-features">
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            </div>
-            <div class="feature-text">
-              <div class="feature-title">Instant Matching</div>
-              <div class="feature-desc">Get matched with employers looking for immediate joiners</div>
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <div class="feature-text">
-              <div class="feature-title">Verified Employers</div>
-              <div class="feature-desc">All companies on our platform are verified and genuine</div>
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div class="feature-text">
-              <div class="feature-title">Privacy First</div>
-              <div class="feature-desc">Control who can see your CV — hide from current/past employers</div>
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            </div>
-            <div class="feature-text">
-              <div class="feature-title">Free for Jobseekers</div>
-              <div class="feature-desc">100% free to register, apply and get placed</div>
-            </div>
-          </div>
-        </div>
+    <div class="top">
+      <div class="top-eyebrow">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        India's exclusive zero-notice talent portal
       </div>
-
-      {{-- Roles Carousel --}}
-      <div class="info-stats">
-        <div class="rc-label">🟢 Actively Hiring Roles</div>
-        <div class="roles-carousel">
-          <div class="rc-row">
-            <span class="rc-pill accent"><span class="pulse"></span>Software Engineer</span>
-            <span class="rc-pill bold">Product Manager</span>
-            <span class="rc-pill light">Data Analyst</span>
-            <span class="rc-pill bold">Business Analyst</span>
-            <span class="rc-pill accent"><span class="pulse"></span>React Developer</span>
-            <span class="rc-pill light">HR Generalist</span>
-            <span class="rc-pill bold">DevOps Engineer</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Software Engineer</span>
-            <span class="rc-pill bold">Product Manager</span>
-            <span class="rc-pill light">Data Analyst</span>
-            <span class="rc-pill bold">Business Analyst</span>
-            <span class="rc-pill accent"><span class="pulse"></span>React Developer</span>
-            <span class="rc-pill light">HR Generalist</span>
-            <span class="rc-pill bold">DevOps Engineer</span>
-          </div>
-          <div class="rc-row reverse">
-            <span class="rc-pill light">Finance Manager</span>
-            <span class="rc-pill bold">QA Engineer</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Sales Executive</span>
-            <span class="rc-pill light">Node.js Developer</span>
-            <span class="rc-pill bold">UI/UX Designer</span>
-            <span class="rc-pill light">Marketing Manager</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Cloud Architect</span>
-            <span class="rc-pill light">Finance Manager</span>
-            <span class="rc-pill bold">QA Engineer</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Sales Executive</span>
-            <span class="rc-pill light">Node.js Developer</span>
-            <span class="rc-pill bold">UI/UX Designer</span>
-            <span class="rc-pill light">Marketing Manager</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Cloud Architect</span>
-          </div>
-          <div class="rc-row">
-            <span class="rc-pill bold">Python Developer</span>
-            <span class="rc-pill light">Operations Lead</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Full Stack Dev</span>
-            <span class="rc-pill light">Scrum Master</span>
-            <span class="rc-pill bold">ML Engineer</span>
-            <span class="rc-pill light">Content Writer</span>
-            <span class="rc-pill accent"><span class="pulse"></span>iOS Developer</span>
-            <span class="rc-pill bold">Python Developer</span>
-            <span class="rc-pill light">Operations Lead</span>
-            <span class="rc-pill accent"><span class="pulse"></span>Full Stack Dev</span>
-            <span class="rc-pill light">Scrum Master</span>
-            <span class="rc-pill bold">ML Engineer</span>
-            <span class="rc-pill light">Content Writer</span>
-            <span class="rc-pill accent"><span class="pulse"></span>iOS Developer</span>
-          </div>
-        </div>
-      </div>
+      <h1>Ready to join immediately? <em>Sign up now!</em></h1>
+      {{-- <p>Connect with employers who need to hire fast — zero wait, zero notice.</p> --}}
     </div>
-    {{-- end info-panel --}}
 
-    {{-- ── RIGHT FORM PANEL ── --}}
-    <div class="form-panel">
+    <div class="props">
+      <div class="prop"><div class="pdot" style="background:#3B5CCC"></div><span>Instant Matching</span></div>
+      <div class="prop"><div class="pdot" style="background:#7c3aed"></div><span>Verified Employers</span></div>
+      <div class="prop"><div class="pdot" style="background:#3B5CCC"></div><span>Privacy First</span></div>
+      <div class="prop"><div class="pdot" style="background:#F2994A"></div><span>Always Free</span></div>
+    </div>
 
-      <div class="tab-switcher">
-        <button class="tab-btn active" id="tab-signin" type="button" onclick="jsaTab('signin')">JobSeeker Sign In</button>
-        <button class="tab-btn" id="tab-signup" type="button" onclick="jsaTab('signup')">JobSeeker Sign Up</button>
+    <div class="card">
+      <div class="tabs">
+        <button class="tab on" id="tsu" onclick="swTab('su')">Create account</button>
+        <button class="tab" id="tsi" onclick="swTab('si')">Sign in</button>
       </div>
 
-      <div class="form-sections-stack">
+      {{-- ── SIGN UP PANEL ── --}}
+      <div class="pnl on" id="psu">
 
-      {{-- ── SIGN IN ── --}}
-      <div class="form-section active" id="section-signin">
-        {{-- <div class="form-title">Sign In As <span class="highlight">Jobseeker</span></div> --}}
-        {{-- <div class="form-subtitle">Please on-board with us if your notice period is Zero or if you are serving notice period</div> --}}
-
+        {{-- Success modal --}}
         @if(session('new_message'))
           <div id="znp-success-modal" class="znp-modal" role="dialog" aria-modal="true">
             <div class="znp-modal-overlay" onclick="jsaCloseSuccessModal()"></div>
@@ -729,94 +351,7 @@
               <h3>You're registered!</h3>
               <p class="znp-modal-msg">{!! session('new_message') !!}</p>
               <button id="jsa-success-close" class="znp-modal-cta">Continue to Sign In</button>
-              <div class="znp-modal-bar-wrap">
-                <div class="znp-modal-bar" id="jsa-modal-bar"></div>
-              </div>
-            </div>
-          </div>
-        @endif
-        @if(session('error_message1'))
-          <div class="znp-alert znp-alert-error">
-            {{ session('error_message1') }}
-          </div>
-        @endif
-        @if(session('error_message'))
-          <div class="znp-alert znp-alert-error">
-            {{ session('error_message') }}
-          </div>
-        @endif
-        @if(session('verify_message'))
-          <div class="znp-alert znp-alert-error">
-            {!! session('verify_message') !!}
-          </div>
-        @endif
-
-        <form method="POST" action="{{ route('login') }}" id="jsa-signin-form" style="margin-top:20px;">
-          @csrf
-
-          <div class="form-group">
-            <label class="form-label">Email ID <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <svg class="input-icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              <input type="email" name="email" id="signin-email" class="form-input{{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="Enter Email" value="{{ old('email') }}" required>
-            </div>
-            @if($errors->has('email'))
-              <div class="field-error">{{ $errors->first('email') }}</div>
-            @endif
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Password <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <svg class="input-icon-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input type="password" name="password" id="signin-password" class="form-input" placeholder="Enter your password" style="padding-right:44px;" required>
-              <button class="password-toggle" type="button" onclick="jsaTogglePass('signin-password', this)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="form-options">
-            <label class="checkbox-label">
-              <input type="checkbox" name="remember"> Remember me
-            </label>
-            <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>
-          </div>
-
-          <button type="submit" class="btn-primary">Sign in</button>
-        </form>
-
-        <div class="alt-action" style="margin-top:14px;">
-          Don't have an account? <a onclick="jsaTab('signup')">Sign up</a>
-        </div>
-        <div class="alt-action">
-          Sign in as an Employer? <a href="{{ route('employer.auth') }}">Sign in</a>
-        </div>
-      </div>
-      {{-- end sign-in --}}
-
-      {{-- ── SIGN UP ── --}}
-      <div class="form-section" id="section-signup">
-        {{-- <div class="form-title">Sign Up As <span class="highlight">Jobseeker</span></div> --}}
-        {{-- <div class="form-subtitle">Please on-board with us if your notice period is Zero or if you are serving notice period</div> --}}
-
-        <div>
-          <div class="znp-step-bar">
-            <div class="znp-step-seg active" id="ps1"></div>
-            <div class="znp-step-seg" id="ps2"></div>
-            <div class="znp-step-seg" id="ps3"></div>
-          </div>
-          {{-- <div class="znp-step-label" id="progress-label">Step 1 of 3 — Personal Information</div> --}}
-        </div>
-
-        @if ($errors->any() && old('_from_signup'))
-          <div class="znp-alert znp-alert-error">
-            <div><strong>Please fix the following errors:</strong>
-              <ul style="margin:6px 0 0 16px; padding:0;">
-                @foreach ($errors->all() as $err)
-                  <li>{{ $err }}</li>
-                @endforeach
-              </ul>
+              <div class="znp-modal-bar-wrap"><div class="znp-modal-bar" id="jsa-modal-bar"></div></div>
             </div>
           </div>
         @endif
@@ -824,989 +359,1566 @@
         <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="jsa-signup-form">
           @csrf
           <input type="hidden" name="_from_signup" value="1">
-          {{-- hidden keyskills array (populated by JS) --}}
+          <input type="hidden" name="nop_days" id="nop_days_hidden" value="{{ old('nop_days', 'Immediate Joiner') }}">
           <div id="keyskills-hidden-wrap"></div>
-          {{-- hidden prefered_city array (populated by JS) --}}
           <div id="prefcity-hidden-wrap"></div>
 
-          {{-- ───── STEP 1: Notice Period & Personal Info ───── --}}
-          <div id="step1">
-
-            {{-- Notice Period Status --}}
-            <div class="form-group">
-              <label class="form-label">Notice Period Status <span class="required">*</span></label>
-              <select name="nop_days" id="nop_days" class="form-select{{ $errors->has('nop_days') ? ' is-invalid' : '' }}" required onchange="jsaNopChange(this.value)">
-                <option value="">Select Option</option>
-                <option value="Immediate Joiner" {{ old('nop_days') == 'Immediate Joiner' ? 'selected' : '' }}>Immediate Joiner</option>
-                <option value="Serving Notice"   {{ old('nop_days') == 'Serving Notice'   ? 'selected' : '' }}>Serving Notice</option>
-              </select>
-              @if($errors->has('nop_days'))<div class="field-error">{{ $errors->first('nop_days') }}</div>@endif
-            </div>
-
-            {{-- Shown when Immediate Joiner --}}
-            <div class="nop-date-field{{ old('nop_days') == 'Immediate Joiner' ? ' visible' : '' }}" id="nop-date-wrap">
-              <div class="form-group">
-                <label class="form-label">Last Working Date <span class="required">*</span></label>
-                <input type="date" name="immediate_last_date" id="nop-immediate-date"
-                       class="form-input{{ $errors->has('immediate_last_date') ? ' is-invalid' : '' }}"
-                       value="{{ old('immediate_last_date') }}">
-                @if($errors->has('immediate_last_date'))<div class="field-error">{{ $errors->first('immediate_last_date') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Shown when Serving Notice --}}
-            <div class="nop-date-field{{ old('nop_days') == 'Serving Notice' ? ' visible' : '' }}" id="nop-lwd-wrap">
-              <div class="form-group">
-                <label class="form-label">Last Working Date <span class="required">*</span></label>
-                <input type="date" name="last_working_day" id="nop-lwd-date"
-                       class="form-input{{ $errors->has('last_working_day') ? ' is-invalid' : '' }}"
-                       value="{{ old('last_working_day') }}">
-                @if($errors->has('last_working_day'))<div class="field-error">{{ $errors->first('last_working_day') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Shown when any NOP status is selected --}}
-            <div class="nop-date-field{{ old('nop_days') ? ' visible' : '' }}" id="nop-lwd-proof-wrap">
-              <div class="form-group">
-                <label class="form-label">Last Working Date Proof Available <span class="required">*</span></label>
-                <select name="lwd_proof" class="form-select{{ $errors->has('lwd_proof') ? ' is-invalid' : '' }}">
-                  <option value="">Select Proof Type</option>
-                  <option value="EPFO Service History"        {{ old('lwd_proof') == 'EPFO Service History'        ? 'selected' : '' }}>EPFO Service History</option>
-                  <option value="Resignation Acceptance Mail" {{ old('lwd_proof') == 'Resignation Acceptance Mail' ? 'selected' : '' }}>Resignation Acceptance Mail</option>
-                  <option value="Relieving Letter"            {{ old('lwd_proof') == 'Relieving Letter'            ? 'selected' : '' }}>Relieving Letter</option>
-                  <option value="Fresher"                     {{ old('lwd_proof') == 'Fresher'                     ? 'selected' : '' }}>Fresher</option>
-                </select>
-                @if($errors->has('lwd_proof'))<div class="field-error">{{ $errors->first('lwd_proof') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- First Name / Last Name --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">First Name <span class="required">*</span></label>
-                <input type="text" name="first_name" class="form-input{{ $errors->has('first_name') ? ' is-invalid' : '' }}" placeholder="Enter your First Name" value="{{ old('first_name') }}" required>
-                @if($errors->has('first_name'))<div class="field-error">{{ $errors->first('first_name') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Last Name <span class="required">*</span></label>
-                <input type="text" name="last_name" class="form-input{{ $errors->has('last_name') ? ' is-invalid' : '' }}" placeholder="Enter your Last Name" value="{{ old('last_name') }}" required>
-                @if($errors->has('last_name'))<div class="field-error">{{ $errors->first('last_name') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- LinkedIn Profile URL --}}
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">LinkedIn Profile URL</label>
-                <input type="url" name="linkedin_url" class="form-input{{ $errors->has('linkedin_url') ? ' is-invalid' : '' }}" placeholder="https://linkedin.com/in/yourprofile" value="{{ old('linkedin_url') }}" autocomplete="off">
-                @if($errors->has('linkedin_url'))<div class="field-error">{{ $errors->first('linkedin_url') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Email / Phone --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Email ID <span class="required">*</span></label>
-                <input type="email" name="email" class="form-input{{ $errors->has('email') ? ' is-invalid' : '' }}" placeholder="Enter your Email" value="{{ old('email') }}" required>
-                @if($errors->has('email'))<div class="field-error">{{ $errors->first('email') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Phone Number <span class="required">*</span></label>
-                <input type="tel" name="phone" class="form-input{{ $errors->has('phone') ? ' is-invalid' : '' }}" placeholder="10-digit mobile number" maxlength="10" value="{{ old('phone') }}" required>
-                @if($errors->has('phone'))<div class="field-error">{{ $errors->first('phone') }}</div>@endif
-              </div>
-            </div>
-
-            <div class="step-nav" style="margin-top:10px;">
-              <button type="button" class="btn-primary" onclick="jsaGoStep(2)">Continue →</button>
-            </div>
-            <div class="alt-action">Already have an account? <a onclick="jsaTab('signin')">Sign in</a></div>
+          {{-- Step indicator --}}
+          <div class="steps">
+            <div class="st"><div class="snum a" id="n1" onclick="stepClick(1)" style="cursor:pointer">1</div><div class="slbl a" id="l1">Your details</div></div>
+            <div class="sln" id="ln1"></div>
+            <div class="st"><div class="snum i" id="n2" onclick="stepClick(2)">2</div><div class="slbl i" id="l2">Professional</div></div>
+            <div class="sln" id="ln2"></div>
+            <div class="st"><div class="snum i" id="n3" onclick="stepClick(3)">3</div><div class="slbl i" id="l3">CV &amp; password</div></div>
           </div>
-          {{-- end step1 --}}
 
-          {{-- ───── STEP 2: Work Profile & Experience ───── --}}
-          <div id="step2" style="display:none;">
+          {{-- ─── STEP 1: Your details ─── --}}
+          <div id="s1">
+            <div class="social-banner" id="social-banner">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span id="social-banner-text">Signed in with Google — name &amp; email pre-filled.</span>
+              <span class="social-banner-r" onclick="clearSocial()">Use email instead ×</span>
+            </div>
 
-            {{-- Current City / Locality --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Current City <span class="required">*</span></label>
-                <input type="text" id="jsa-city-input" name="current_city" class="form-input{{ $errors->has('current_city') ? ' is-invalid' : '' }}" placeholder="Enter a location" value="{{ old('current_city') }}" required autocomplete="off">
-                @if($errors->has('current_city'))<div class="field-error">{{ $errors->first('current_city') }}</div>@endif
+            @if ($errors->any() && old('_from_signup'))
+              <div class="znp-alert znp-alert-error">
+                <div><strong>Please fix the following errors:</strong>
+                  <ul style="margin:6px 0 0 16px;padding:0;">
+                    @foreach ($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                  </ul>
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Locality <span class="required">*</span></label>
-                <input type="text" id="jsa-locality-input" name="locality" class="form-input{{ $errors->has('locality') ? ' is-invalid' : '' }}" placeholder="Enter your area / locality" value="{{ old('locality') }}" required autocomplete="off">
-                @if($errors->has('locality'))<div class="field-error">{{ $errors->first('locality') }}</div>@endif
+            @endif
+
+            <div class="sec"><span class="secbar"></span>Notice period status</div>
+            <div class="nopts">
+              <div class="nopt on" id="npi" onclick="setN('i')">
+                <div class="nlbl">Immediate joiner</div>
+                <div class="nsub">Available to start right away</div>
+              </div>
+              <div class="nopt" id="nps" onclick="setN('s')">
+                <div class="nlbl">Serving notice</div>
+                <div class="nsub">Last day within 90 days</div>
+              </div>
+              <div class="nopt" id="npf" onclick="setN('f')">
+                <div class="nlbl">Fresher</div>
+                <div class="nsub">No prior employment</div>
               </div>
             </div>
 
-            {{-- Preferred Cities --}}
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Preferred Cities</label>
-                <div class="cities-wrap" id="cities-wrap">
-                  @php $prefCities = ['Bengaluru','Hyderabad','Mumbai','Chennai','Delhi','Pune','Remote']; @endphp
-                  @foreach($prefCities as $city)
-                    <span class="city-chip {{ in_array($city, (array) old('prefered_city', [])) ? 'selected' : '' }}"
-                          data-city="{{ $city }}"
-                          onclick="jsaToggleCity(this)">{{ $city }}</span>
-                  @endforeach
+            <div class="g2" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl" id="lwdlbl">Last working date <span class="req">*</span></label>
+                <input type="date" name="immediate_last_date" id="lwdinp"
+                  value="{{ old('nop_days') == 'Serving Notice' ? old('last_working_day') : old('immediate_last_date') }}"
+                       class="{{ $errors->has('immediate_last_date') ? 'is-invalid' : '' }}">
+                <span class="hint" id="lwdhint">Must be today or earlier</span>
+                @if($errors->has('immediate_last_date'))<span class="hint er">{{ $errors->first('immediate_last_date') }}</span>@endif
+                @if($errors->has('last_working_day'))<span class="hint er">{{ $errors->first('last_working_day') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0" id="proofrow">
+                <label class="lbl">Proof of last working date</label>
+                <select name="lwd_proof" class="{{ $errors->has('lwd_proof') ? 'is-invalid' : '' }}">
+                  <option value="">Select proof</option>
+                  <option value="Resignation Acceptance Mail" {{ old('lwd_proof')=='Resignation Acceptance Mail'?'selected':'' }}>Resignation acceptance email</option>
+                  <option value="Relieving Letter" {{ old('lwd_proof')=='Relieving Letter'?'selected':'' }}>Relieving letter</option>
+                  <option value="EPFO Service History" {{ old('lwd_proof')=='EPFO Service History'?'selected':'' }}>EPFO service history</option>
+                  <option value="Fresher" {{ old('lwd_proof')=='Fresher'?'selected':'' }}>Fresher</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sec"><span class="secbar"></span>Personal details</div>
+            <div class="g3" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">First name <span class="req">*</span></label>
+                <input type="text" name="first_name" id="fn" placeholder="First name"
+                       value="{{ old('first_name') }}" onblur="titleCase(this)"
+                       class="{{ $errors->has('first_name') ? 'is-invalid' : '' }}">
+                @if($errors->has('first_name'))<span class="hint er">{{ $errors->first('first_name') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Last name <span class="req">*</span></label>
+                <input type="text" name="last_name" id="ln" placeholder="Last name"
+                       value="{{ old('last_name') }}" onblur="titleCase(this)"
+                       class="{{ $errors->has('last_name') ? 'is-invalid' : '' }}">
+                @if($errors->has('last_name'))<span class="hint er">{{ $errors->first('last_name') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Date of birth</label>
+                <input type="date" name="date_of_birth" id="dob" value="{{ old('date_of_birth') }}">
+              </div>
+            </div>
+            <div class="gap9"></div>
+            <div class="g3" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Email address <span class="req">*</span></label>
+                <input type="email" name="email" id="em" placeholder="yourname@email.com"
+                       value="{{ old('email') }}" oninput="chkEm(this)"
+                       class="{{ $errors->has('email') ? 'is-invalid' : '' }}">
+                <div class="emst" id="emst">@if($errors->has('email'))<span style="color:#dc2626">{{ $errors->first('email') }}</span>@endif</div>
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Mobile number <span class="req">*</span></label>
+                <div class="phw">
+                  <div class="phcode">+91</div>
+                  <input class="phinp" type="tel" name="phone" maxlength="10"
+                         placeholder="10-digit number" value="{{ old('phone') }}">
+                </div>
+                @if($errors->has('phone'))<span class="hint er">{{ $errors->first('phone') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">LinkedIn <span class="opt-lbl">(optional)</span></label>
+                <div class="pfx">
+                  <div class="pfx-lbl">linkedin.com/in/</div>
+                  <input class="pfx-inp" type="text" name="linkedin_url" id="liinp"
+                         placeholder="your-profile" oninput="cleanLI(this)"
+                         value="{{ old('linkedin_url') }}">
                 </div>
               </div>
             </div>
 
-            {{-- Mode Of Separation / Preferred Work Mode --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Mode Of Separation <span class="required">*</span></label>
-                <select name="mode_of_separation" class="form-select{{ $errors->has('mode_of_separation') ? ' is-invalid' : '' }}" required>
-                  <option value="">Select Mode</option>
-                  <option value="Resignation"      {{ old('mode_of_separation') == 'Resignation'      ? 'selected' : '' }}>Resignation</option>
-                  <option value="Layoff"           {{ old('mode_of_separation') == 'Layoff'           ? 'selected' : '' }}>Layoff</option>
-                  <option value="Fresher"          {{ old('mode_of_separation') == 'Fresher'          ? 'selected' : '' }}>Fresher</option>
-                  <option value="Contract Closure" {{ old('mode_of_separation') == 'Contract Closure' ? 'selected' : '' }}>Contract Closure</option>
+            <div class="sec"><span class="secbar"></span>Education</div>
+            <div class="g3" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Education status <span class="req">*</span></label>
+                <select name="education_status" id="edu-status"
+                        class="{{ $errors->has('education_status') ? 'is-invalid' : '' }}">
+                  <option value="">Select status</option>
+                  <option value="Completed"    {{ old('education_status')=='Completed'   ?'selected':'' }}>Completed</option>
+                  <option value="Pursuing"     {{ old('education_status')=='Pursuing'    ?'selected':'' }}>Pursuing</option>
+                  <option value="Discontinued" {{ old('education_status')=='Discontinued'?'selected':'' }}>Discontinued</option>
                 </select>
-                @if($errors->has('mode_of_separation'))<div class="field-error">{{ $errors->first('mode_of_separation') }}</div>@endif
+                @if($errors->has('education_status'))<span class="hint er">{{ $errors->first('education_status') }}</span>@endif
               </div>
-              <div class="form-group">
-                <label class="form-label">Preferred Work Mode <span class="required">*</span></label>
-                <select name="work_option" class="form-select{{ $errors->has('work_option') ? ' is-invalid' : '' }}" required>
-                  <option value="">Select Mode</option>
-                  <option value="Hybrid"  {{ old('work_option') == 'Hybrid'  ? 'selected' : '' }}>Hybrid</option>
-                  <option value="Remote"  {{ old('work_option') == 'Remote'  ? 'selected' : '' }}>Remote</option>
-                  <option value="WFO"     {{ old('work_option') == 'WFO'     ? 'selected' : '' }}>WFO</option>
-                  <option value="Any"     {{ old('work_option') == 'Any'     ? 'selected' : '' }}>Any</option>
-                </select>
-                @if($errors->has('work_option'))<div class="field-error">{{ $errors->first('work_option') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Gender / Total Experience --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Gender <span class="required">*</span></label>
-                <select name="gender_id" class="form-select{{ $errors->has('gender_id') ? ' is-invalid' : '' }}" required>
-                  <option value="">Select Gender</option>
-                  <option value="1" {{ old('gender_id') == '1' ? 'selected' : '' }}>Male</option>
-                  <option value="2" {{ old('gender_id') == '2' ? 'selected' : '' }}>Female</option>
-                  <option value="3" {{ old('gender_id') == '3' ? 'selected' : '' }}>Non-binary</option>
-                  <option value="4" {{ old('gender_id') == '4' ? 'selected' : '' }}>Prefer not to say</option>
-                </select>
-                @if($errors->has('gender_id'))<div class="field-error">{{ $errors->first('gender_id') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Total Experience <span class="required">*</span></label>
-                <div style="display:flex;gap:6px;">
-                  <select name="totalexp" class="form-select{{ $errors->has('totalexp') ? ' is-invalid' : '' }}" required>
-                    <option value="">Year</option>
-                    @for($y = 0; $y <= 30; $y++)
-                      <option value="{{ $y }}" {{ old('totalexp') == $y ? 'selected' : '' }}>
-                        {{ $y === 0 ? '0 (Fresher)' : "$y" }}
-                      </option>
-                    @endfor
-                  </select>
-                  <select name="totalexpmonth" class="form-select{{ $errors->has('totalexpmonth') ? ' is-invalid' : '' }}" required>
-                    <option value="">Month</option>
-                    @for($m = 0; $m <= 11; $m++)
-                      <option value="{{ $m }}" {{ old('totalexpmonth') == $m ? 'selected' : '' }}>
-                        {{ $m === 0 ? '0' : $m }}
-                      </option>
-                    @endfor
-                  </select>
-                </div>
-                @if($errors->has('totalexp'))<div class="field-error">{{ $errors->first('totalexp') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Latest Company / Latest Designation --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Latest Company <span class="required">*</span></label>
-                <input type="text" id="jsa-company-input" name="latestcom" class="form-input{{ $errors->has('latestcom') ? ' is-invalid' : '' }}" placeholder="Latest Company" value="{{ old('latestcom') }}" required autocomplete="off">
-                @if($errors->has('latestcom'))<div class="field-error">{{ $errors->first('latestcom') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Latest Designation <span class="required">*</span></label>
-                <input type="text" name="latestdesg" class="form-input{{ $errors->has('latestdesg') ? ' is-invalid' : '' }}" placeholder="Latest Designation" value="{{ old('latestdesg') }}" required>
-                @if($errors->has('latestdesg'))<div class="field-error">{{ $errors->first('latestdesg') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Key Skills (min 10) --}}
-            <div class="form-group">
-              <label class="form-label">Key Skills <span class="required">*</span></label>
-              <div class="skills-tags" id="skills-container" onclick="document.getElementById('skill-input').focus()">
-                <input type="text" id="skill-input" class="skills-text-input"
-                       placeholder="Please enter key skills or technologies"
-                       onkeydown="jsaHandleSkillInput(event)"
-                       autocomplete="off">
-              </div>
-              <div class="skills-error" id="skills-error">Minimum 10 skills required</div>
-              <div class="skills-hint">Press Enter or comma to add a skill. Minimum 10 skills required.</div>
-              @if($errors->has('keyskills'))<div class="field-error">{{ $errors->first('keyskills') }}</div>@endif
-            </div>
-
-            {{-- Preferred Work Type --}}
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Preferred Work Type <span class="required">*</span></label>
-                <select name="work_type" class="form-select{{ $errors->has('work_type') ? ' is-invalid' : '' }}" required>
-                  <option value="">Select Work Type</option>
-                  <option value="Full Time"  {{ old('work_type') == 'Full Time'  ? 'selected' : '' }}>Full Time</option>
-                  <option value="Contract"   {{ old('work_type') == 'Contract'   ? 'selected' : '' }}>Contract</option>
-                  <option value="Internship" {{ old('work_type') == 'Internship' ? 'selected' : '' }}>Internship</option>
-                  <option value="Part Time"  {{ old('work_type') == 'Part Time'  ? 'selected' : '' }}>Part Time</option>
-                </select>
-                @if($errors->has('work_type'))<div class="field-error">{{ $errors->first('work_type') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Annual CTC / Expected Annual CTC --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Annual CTC <span class="required">*</span></label>
-                <div style="display:flex;gap:6px;">
-                  <input type="number" name="expect_ctc_lakhs" class="form-input{{ $errors->has('expect_ctc_lakhs') ? ' is-invalid' : '' }}" placeholder="Lakh" min="0" value="{{ old('expect_ctc_lakhs') }}" required>
-                  <input type="number" name="expect_ctc_thousand" class="form-input" placeholder="Thousand" min="0" max="99" value="{{ old('expect_ctc_thousand') }}">
-                </div>
-                @if($errors->has('expect_ctc_lakhs'))<div class="field-error">{{ $errors->first('expect_ctc_lakhs') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Expected Annual CTC <span class="required">*</span></label>
-                <div style="display:flex;gap:6px;">
-                  <input type="number" name="expect_ctc_lakhs3" class="form-input{{ $errors->has('expect_ctc_lakhs3') ? ' is-invalid' : '' }}" placeholder="Lakh" min="0" value="{{ old('expect_ctc_lakhs3') }}" required>
-                  <input type="number" name="expect_ctc_thousand3" class="form-input" placeholder="Thousand" min="0" max="99" value="{{ old('expect_ctc_thousand3') }}">
-                </div>
-                @if($errors->has('expect_ctc_lakhs3'))<div class="field-error">{{ $errors->first('expect_ctc_lakhs3') }}</div>@endif
-              </div>
-            </div>
-
-            <div class="step-nav">
-              <button type="button" class="btn-secondary" onclick="jsaGoStep(1)">← Back</button>
-              <button type="button" class="btn-primary" onclick="jsaGoStep(3)">Continue →</button>
-            </div>
-          </div>
-          {{-- end step2 --}}
-
-          {{-- ───── STEP 3: Education & Account ───── --}}
-          <div id="step3" style="display:none;">
-
-            {{-- Education Status / Highest Education --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Education Status <span class="required">*</span></label>
-                <select name="education_status" class="form-select{{ $errors->has('education_status') ? ' is-invalid' : '' }}" required>
-                  <option value="">Select Status</option>
-                  <option value="Completed"    {{ old('education_status') == 'Completed'    ? 'selected' : '' }}>Completed</option>
-                  <option value="Pursuing"     {{ old('education_status') == 'Pursuing'     ? 'selected' : '' }}>Pursuing</option>
-                  <option value="Discontinued" {{ old('education_status') == 'Discontinued' ? 'selected' : '' }}>Discontinued</option>
-                </select>
-                @if($errors->has('education_status'))<div class="field-error">{{ $errors->first('education_status') }}</div>@endif
-              </div>
-              <div class="form-group">
-                <label class="form-label">Highest Education <span class="required">*</span></label>
-                <select name="degree_title" id="degree_title_select" class="form-select{{ $errors->has('degree_title') ? ' is-invalid' : '' }}" required onchange="jsaDegreeChange(this.value)">
-                  <option value="">Select Education</option>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Highest education <span class="req">*</span></label>
+                <select name="degree_title" id="degree_title_select"
+                        class="{{ $errors->has('degree_title') ? 'is-invalid' : '' }}"
+                        onchange="jsaDegreeChange(this.value)">
+                  <option value="">Select qualification</option>
                   @foreach($educations as $edu)
-                    <option value="{{ $edu->id }}" {{ old('degree_title') == $edu->id ? 'selected' : '' }}>{{ $edu->education }}</option>
+                    <option value="{{ $edu->id }}" {{ old('degree_title')==$edu->id?'selected':'' }}>{{ $edu->education }}</option>
                   @endforeach
                 </select>
-                @if($errors->has('degree_title'))<div class="field-error">{{ $errors->first('degree_title') }}</div>@endif
+                @if($errors->has('degree_title'))<span class="hint er">{{ $errors->first('degree_title') }}</span>@endif
               </div>
-            </div>
-
-            {{-- Year of Completion --}}
-            <div class="form-row">
-              <div class="form-group" style="grid-column: 1 / -1;">
-                <label class="form-label">Year of Completion <span class="required">*</span></label>
-                <input type="text" name="year_of_completion" class="form-input{{ $errors->has('year_of_completion') ? ' is-invalid' : '' }}" placeholder="e.g. 2022" maxlength="4" value="{{ old('year_of_completion') }}" required>
-                @if($errors->has('year_of_completion'))<div class="field-error">{{ $errors->first('year_of_completion') }}</div>@endif
-              </div>
-            </div>
-
-            {{-- Course / Specialization (shown when degree > diploma/ug level) --}}
-            <div class="form-row" id="course-spec-row" style="{{ in_array(old('degree_title'), ['2','3','4']) ? '' : 'display:none;' }}">
-              <div class="form-group">
-                <label class="form-label">Course <span class="required">*</span></label>
-                <select name="course" id="course_select" class="form-select{{ $errors->has('course') ? ' is-invalid' : '' }}" onchange="jsaCourseChange(this.value)">
-                  <option value="">Select Course</option>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Year of completion <span class="req">*</span></label>
+                <select name="year_of_completion" id="edu-year"
+                        class="{{ $errors->has('year_of_completion') ? 'is-invalid' : '' }}">
+                  <option value="">Select year</option>
                 </select>
-                @if($errors->has('course'))<div class="field-error">{{ $errors->first('course') }}</div>@endif
+                @if($errors->has('year_of_completion'))<span class="hint er">{{ $errors->first('year_of_completion') }}</span>@endif
               </div>
-              <div class="form-group">
-                <label class="form-label">Specialization <span class="required">*</span></label>
-                <select name="specilation" id="specilation_select" class="form-select{{ $errors->has('specilation') ? ' is-invalid' : '' }}">
-                  <option value="">Select Specialization</option>
+            </div>
+
+            <div id="course-spec-row" style="{{ in_array(old('degree_title'), ['2','3','4']) ? '' : 'display:none;' }}">
+              <div class="g2" style="margin-bottom:14px">
+                <div class="f" style="margin-bottom:0">
+                  <label class="lbl">Course <span class="req">*</span></label>
+                  <select name="course" id="course_select"
+                          class="{{ $errors->has('course') ? 'is-invalid' : '' }}"
+                          onchange="jsaCourseChange(this.value)">
+                    <option value="">Select course</option>
+                  </select>
+                  @if($errors->has('course'))<span class="hint er">{{ $errors->first('course') }}</span>@endif
+                </div>
+                <div class="f" style="margin-bottom:0">
+                  <label class="lbl">Specialization <span class="req">*</span></label>
+                  <select name="specilation" id="specilation_select"
+                          class="{{ $errors->has('specilation') ? 'is-invalid' : '' }}">
+                    <option value="">Select specialization</option>
+                  </select>
+                  @if($errors->has('specilation'))<span class="hint er">{{ $errors->first('specilation') }}</span>@endif
+                </div>
+              </div>
+              <div class="f" style="margin-bottom:14px">
+                <label class="lbl">University / College <span class="req">*</span></label>
+                <input type="text" id="jsa-university-input" name="organization"
+                       placeholder="Search university / college"
+                       value="{{ old('organization') }}" autocomplete="off"
+                       class="{{ $errors->has('organization') ? 'is-invalid' : '' }}">
+                @if($errors->has('organization'))<span class="hint er">{{ $errors->first('organization') }}</span>@endif
+              </div>
+            </div>
+
+            <div class="errbox" id="s1err"><strong style="font-size:12.5px;color:#dc2626">Please fix before continuing:</strong><ul id="s1erl"></ul></div>
+            <button type="button" class="btn btnb" onclick="valS1()">Continue — professional details →</button>
+            <div class="terms">By continuing you agree to our <a href="#">Terms of service</a> &amp; <a href="#">Privacy policy</a></div>
+          </div>
+          {{-- end step 1 --}}
+
+          {{-- ─── STEP 2: Professional ─── --}}
+          <div id="s2" style="display:none">
+            <div id="frnote">As a fresher, CTC fields are for stipend — add any internship experience below.</div>
+
+            <div class="sec"><span class="secbar"></span>Professional details</div>
+            <div class="g2" id="wfields" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Current / last job title <span class="req">*</span></label>
+                <input type="text" name="latestdesg" id="s2t" placeholder="e.g. Senior .NET Developer"
+                       value="{{ old('latestdesg') }}" onblur="titleCase(this)"
+                       class="{{ $errors->has('latestdesg') ? 'is-invalid' : '' }}">
+                @if($errors->has('latestdesg'))<span class="hint er">{{ $errors->first('latestdesg') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Current / last company <span class="req">*</span></label>
+                <input type="text" id="jsa-company-input" name="latestcom" placeholder="Company name"
+                       value="{{ old('latestcom') }}" onblur="titleCase(this)" autocomplete="off"
+                       class="{{ $errors->has('latestcom') ? 'is-invalid' : '' }}">
+                @if($errors->has('latestcom'))<span class="hint er">{{ $errors->first('latestcom') }}</span>@endif
+              </div>
+            </div>
+            <div class="gap9"></div>
+            <div class="g2" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0" id="exprow">
+                <label class="lbl">Experience (years.months) <span class="req">*</span></label>
+                <input type="number" id="s2exp" min="0" max="40" step="0.1" placeholder="e.g. 6.9"
+                       value="{{ old('totalexp') !== null && old('totalexp') !== '' ? (old('totalexpmonth') ? old('totalexp').'.'.old('totalexpmonth') : old('totalexp')) : '' }}">
+                <input type="hidden" name="totalexp" id="s2exp_yr" value="{{ old('totalexp', '') }}">
+                <input type="hidden" name="totalexpmonth" id="s2exp_mo" value="{{ old('totalexpmonth', '') }}">
+                @if($errors->has('totalexp'))<span class="hint er">{{ $errors->first('totalexp') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Industry / domain <span class="req">*</span></label>
+                <select id="s2dom" onchange="loadSugg(this.value)">
+                  <option value="">Select domain</option>
+                  <option value="it">Information Technology</option>
+                  <option value="bfs">Banking &amp; Financial Services</option>
+                  <option value="health">Healthcare &amp; Pharma</option>
+                  <option value="ecom">E-commerce &amp; Retail</option>
+                  <option value="mfg">Manufacturing</option>
+                  <option value="consult">Consulting</option>
+                  <option value="edu">Education &amp; EdTech</option>
+                  <option value="startup">Startup / Product</option>
+                  <option value="other">Other</option>
                 </select>
-                @if($errors->has('specilation'))<div class="field-error">{{ $errors->first('specilation') }}</div>@endif
               </div>
             </div>
 
-            {{-- University / College --}}
-            <div class="form-group" id="org-row" style="{{ in_array(old('degree_title'), ['2','3','4']) ? '' : 'display:none;' }}">
-              <label class="form-label">University / College <span class="required">*</span></label>
-              <input type="text" id="jsa-university-input" name="organization"
-                     class="form-input{{ $errors->has('organization') ? ' is-invalid' : '' }}"
-                     placeholder="Search university / college"
-                     value="{{ old('organization') }}"
-                     autocomplete="off">
-              @if($errors->has('organization'))<div class="field-error">{{ $errors->first('organization') }}</div>@endif
-            </div>
-
-            {{-- Attach Resume --}}
-            <div class="form-group">
-              <label class="form-label">Attach Resume <span class="required">*</span></label>
-              <div class="file-upload">
-                <label for="resume-upload" class="file-upload-label" id="resume-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  Choose File
-                </label>
-                <input type="file" id="resume-upload" name="resume" accept=".pdf,.doc,.docx" onchange="jsaUpdateFileName(this,'resume-file-name','resume-label')" required>
-                <div class="file-name" id="resume-file-name">Accepts only .pdf, .doc, .docx. Max size 2 MB.</div>
-              </div>
-              @if($errors->has('resume'))<div class="field-error">{{ $errors->first('resume') }}</div>@endif
-            </div>
-
-            {{-- Set Your Password / Confirm Your Password --}}
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label">Set Your Password <span class="required">*</span></label>
-                <div class="input-pass-wrap">
-                  <input type="password" name="password" id="signup-password" class="form-input{{ $errors->has('password') ? ' is-invalid' : '' }}" placeholder="Min. 6 characters" required>
-                  <button class="password-toggle" type="button" onclick="jsaTogglePass('signup-password', this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
+            <div class="g2" id="ctcrow" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl" id="ctc-cur-lbl">Current annual CTC <span class="req">*</span></label>
+                <div class="pfx {{ $errors->has('expect_ctc_lakhs') ? 'is-invalid' : '' }}">
+                  <div class="pfx-lbl">₹ L</div>
+                  <input class="pfx-inp" type="text" name="expect_ctc_lakhs" id="s2ctc" placeholder="e.g. 12.9"
+                         value="{{ old('expect_ctc_lakhs') }}" oninput="fmtLakhs(this)">
                 </div>
-                @if($errors->has('password'))<div class="field-error">{{ $errors->first('password') }}</div>@endif
+                <input type="hidden" name="expect_ctc_thousand" id="s2ctc_th" value="{{ old('expect_ctc_thousand', 0) }}">
+                <span class="hint">Enter in lakhs — e.g. 12.9 means ₹12,90,000</span>
+                @if($errors->has('expect_ctc_lakhs'))<span class="hint er">{{ $errors->first('expect_ctc_lakhs') }}</span>@endif
               </div>
-              <div class="form-group">
-                <label class="form-label">Confirm Your Password <span class="required">*</span></label>
-                <div class="input-pass-wrap">
-                  <input type="password" name="password_confirmation" id="signup-password-confirm" class="form-input{{ $errors->has('password_confirmation') ? ' is-invalid' : '' }}" placeholder="Re-enter password" required>
-                  <button class="password-toggle" type="button" onclick="jsaTogglePass('signup-password-confirm', this)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl" id="ctc-exp-lbl">Expected annual CTC <span class="req">*</span></label>
+                <div class="pfx {{ $errors->has('expect_ctc_lakhs3') ? 'is-invalid' : '' }}">
+                  <div class="pfx-lbl">₹ L</div>
+                  <input class="pfx-inp" type="text" name="expect_ctc_lakhs3" id="s2ectc" placeholder="e.g. 18.5"
+                         value="{{ old('expect_ctc_lakhs3') }}" oninput="fmtLakhs(this)">
                 </div>
-                @if($errors->has('password_confirmation'))<div class="field-error">{{ $errors->first('password_confirmation') }}</div>@endif
+                <input type="hidden" name="expect_ctc_thousand3" id="s2ectc_th" value="{{ old('expect_ctc_thousand3', 0) }}">
+                <span class="hint">Enter in lakhs — e.g. 18.5 means ₹18,50,000</span>
+                @if($errors->has('expect_ctc_lakhs3'))<span class="hint er">{{ $errors->first('expect_ctc_lakhs3') }}</span>@endif
+              </div>
+            </div>
+            <div class="gap9"></div>
+
+            <div class="f">
+              <label class="lbl">Key skills <span class="req">*</span><span id="skct" style="margin-left:auto;font-size:11px;font-weight:500;color:var(--text-4)">0 / 10 min</span></label>
+              <div class="skwrap">
+                <div class="skbox" id="sktags"></div>
+                <div class="skinpw">
+                  <input class="skinp" type="text" id="skinp"
+                         placeholder="Type a skill + Enter, or pick from suggestions below…"
+                         onkeydown="skKey(event)" 
+                         oninput="handleSkillsInput(this.value)"
+                         autocomplete="off">
+                  <div class="skdd" id="skdd"></div>
+                </div>
+              </div>
+              <div style="font-size:11px;color:var(--text-4);margin:8px 0 4px;font-weight:500">Suggestions for your domain</div>
+              <div class="sksugg" id="sksugg"></div>
+              <div class="skprog-wrap">
+                <div class="skprog-meta"><span>Skills progress</span><span id="skpct">0%</span></div>
+                <div class="skprog"><div class="skfill" id="skbar" style="width:0%"></div></div>
+              </div>
+              @if($errors->has('keyskills'))<span class="hint er">{{ $errors->first('keyskills') }}</span>@endif
+            </div>
+
+            <div class="sec"><span class="secbar"></span>Location &amp; preferences</div>
+            <div class="g2" style="margin-bottom:14px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Current city <span class="req">*</span></label>
+                <input type="text" id="jsa-city-input" name="current_city" placeholder="e.g. Mumbai"
+                       value="{{ old('current_city') }}" autocomplete="off" onblur="capitalizeFirst(this)"
+                       class="{{ $errors->has('current_city') ? 'is-invalid' : '' }}">
+                @if($errors->has('current_city'))<span class="hint er">{{ $errors->first('current_city') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Locality <span class="req">*</span></label>
+                <input type="text" id="jsa-locality-input" name="locality" placeholder="e.g. Andheri East"
+                       value="{{ old('locality') }}" autocomplete="off" onblur="capitalizeFirst(this)"
+                       class="{{ $errors->has('locality') ? 'is-invalid' : '' }}">
+                @if($errors->has('locality'))<span class="hint er">{{ $errors->first('locality') }}</span>@endif
               </div>
             </div>
 
-            {{-- Terms & Conditions --}}
-            <div class="checkbox-group">
-              <label class="checkbox-item">
-                <input type="checkbox" name="terms_of_use" value="1" {{ old('terms_of_use') ? 'checked' : '' }} required>
-                I have read and agreed to the <a href="#">Terms &amp; Conditions</a>. <span class="required">*</span>
+            <div class="f">
+              <label class="lbl">Preferred cities <span class="req">*</span><span id="cyct" style="margin-left:auto;font-size:11px;font-weight:500;color:var(--text-4)">0 / 3</span></label>
+              <div class="pills" id="cypills">
+                <span class="pill {{ in_array('Bengaluru',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Bengaluru')">Bengaluru</span>
+                <span class="pill {{ in_array('Hyderabad',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Hyderabad')">Hyderabad</span>
+                <span class="pill {{ in_array('Mumbai',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Mumbai')">Mumbai</span>
+                <span class="pill {{ in_array('Chennai',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Chennai')">Chennai</span>
+                <span class="pill {{ in_array('Delhi',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Delhi')">Delhi</span>
+                <span class="pill {{ in_array('Pune',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Pune')">Pune</span>
+                <span class="pill {{ in_array('Gurgaon',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Gurgaon')">Gurgaon</span>
+                <span class="pill {{ in_array('Kolkata',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Kolkata')">Kolkata</span>
+                <span class="pill {{ in_array('Remote / WFH',(array)old('prefered_city',[]))?'on':'' }}" onclick="togCity(this,'Remote / WFH')">Remote / WFH</span>
+              </div>
+              <div style="display:flex;gap:6px;margin-top:8px">
+                <input type="text" id="cityinp" placeholder="Any other city — press Enter to add"
+                       onblur="capitalizeFirst(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCity()}"
+                       style="max-width:280px">
+              </div>
+              <div class="cylimlbl" id="cylim">Max 3 cities — remove one to add another.</div>
+              <span class="hint" style="margin-top:4px">Select up to 3 cities you're open to working in</span>
+            </div>
+
+            <div class="f">
+              <label class="lbl">Preferred work mode <span class="req">*</span></label>
+              <div class="pills">
+                <span class="pill {{ old('work_option')=='WFO'   ?'on':'' }}" onclick="togP(this,'work_option','WFO')">Work from office</span>
+                <span class="pill {{ old('work_option')=='Hybrid'?'on':'' }}" onclick="togP(this,'work_option','Hybrid')">Hybrid</span>
+                <span class="pill {{ old('work_option')=='Remote'?'on':'' }}" onclick="togP(this,'work_option','Remote')">Remote</span>
+                <span class="pill {{ old('work_option')=='Flexible'?'on':'' }}" onclick="togP(this,'work_option','Flexible')">Flexible</span>
+                {{-- <span class="pill {{ old('work_option')=='Open to all'?'on':'' }}" onclick="togP(this,'work_option','Open to all')">Open to all</span> --}}
+              </div>
+              <input type="hidden" name="work_option" id="work_option_hidden" value="{{ old('work_option','') }}">
+              @if($errors->has('work_option'))<span class="hint er">{{ $errors->first('work_option') }}</span>@endif
+            </div>
+            <div class="f">
+              <label class="lbl">Preferred job type <span class="req">*</span></label>
+              <div class="pills">
+                <span class="pill {{ old('work_type')=='Full Time'  ?'on':'' }}" onclick="togP(this,'work_type','Full Time')">Permanent</span>
+                <span class="pill {{ old('work_type')=='Contract'   ?'on':'' }}" onclick="togP(this,'work_type','Contract')">Contract</span>
+                <span class="pill {{ old('work_type')=='Open to both'?'on':'' }}" onclick="togP(this,'work_type','Open to both')">Open to both</span>
+              </div>
+              <input type="hidden" name="work_type" id="work_type_hidden" value="{{ old('work_type','') }}">
+              @if($errors->has('work_type'))<span class="hint er">{{ $errors->first('work_type') }}</span>@endif
+            </div>
+            <div class="g2" style="margin-bottom:4px">
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Mode of separation <span class="req">*</span></label>
+                <select name="mode_of_separation" id="modesep"
+                        class="{{ $errors->has('mode_of_separation') ? 'is-invalid' : '' }}" required>
+                  <option value="">Select reason for leaving</option>
+                  <option value="Resignation"      {{ old('mode_of_separation')=='Resignation'     ?'selected':'' }}>Resignation</option>
+                  <option value="Layoff"           {{ old('mode_of_separation')=='Layoff'          ?'selected':'' }}>Layoff</option>
+                  <option value="Fresher"          {{ old('mode_of_separation')=='Fresher'         ?'selected':'' }}>Fresher (no prior employment)</option>
+                  <option value="Contract Closure" {{ old('mode_of_separation')=='Contract Closure'?'selected':'' }}>Contract closure</option>
+                  <option value="Internship Closure" {{ old('mode_of_separation')=='Internship Closure'?'selected':'' }}>Internship closure</option>
+                </select>
+                @if($errors->has('mode_of_separation'))<span class="hint er">{{ $errors->first('mode_of_separation') }}</span>@endif
+              </div>
+              <div class="f" style="margin-bottom:0">
+                <label class="lbl">Gender <span class="req">*</span></label>
+                <select name="gender_id" id="gender" class="{{ $errors->has('gender_id') ? 'is-invalid' : '' }}" required>
+                  <option value="">Select gender</option>
+                  <option value="1" {{ old('gender_id')=='1'?'selected':'' }}>Male</option>
+                  <option value="2" {{ old('gender_id')=='2'?'selected':'' }}>Female</option>
+                  {{-- <option value="3" {{ old('gender_id')=='3'?'selected':'' }}>Other</option> --}}
+                  <option value="4" {{ old('gender_id')=='4'?'selected':'' }}>Prefer not to say</option>
+                </select>
+                @if($errors->has('gender_id'))<span class="hint er">{{ $errors->first('gender_id') }}</span>@endif
+              </div>
+            </div>
+
+            <div class="errbox" id="s2err"><strong style="font-size:12.5px;color:#dc2626">Please fix before continuing:</strong><ul id="s2erl"></ul><div style="font-size:11px;color:#f87171;margin-top:4px">Your data is saved — nothing was lost.</div></div>
+            <div class="brow"><button type="button" class="bback" onclick="goStep(1)">← Back</button><button type="button" class="btn btnb" style="margin-top:0" onclick="valS2()">Continue — CV &amp; password →</button></div>
+          </div>
+          {{-- end step 2 --}}
+
+          {{-- ─── STEP 3: CV & Password ─── --}}
+          <div id="s3" style="display:none">
+            <div class="sec"><span class="secbar"></span>Upload your CV</div>
+            <div class="f">
+              <div class="upload" onclick="document.getElementById('cvmain').click()" style="padding:24px">
+                <div class="upload-ico">
+                  <svg width="22" height="22" fill="none" stroke="#3B5CCC" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 11 15 14"/></svg>
+                </div>
+                <div class="ut"><b>Click to upload your CV</b></div>
+                <div class="ut-sub">PDF, DOC or DOCX · Max 2MB</div>
+                <input type="file" id="cvmain" name="resume" style="display:none"
+                       accept=".pdf,.doc,.docx" onchange="readCV(this)">
+              </div>
+              <div id="cvok"></div>
+              <span class="hint" style="margin-top:6px">Visible only to employers you apply to or explicitly approve.</span>
+              @if($errors->has('resume'))<span class="hint er">{{ $errors->first('resume') }}</span>@endif
+            </div>
+
+            <div class="priv">
+              <input type="checkbox" id="hidecv" checked>
+              <label for="hidecv">Hide my CV from my current employer</label>
+            </div>
+
+            <div class="sec"><span class="secbar"></span>Set a password</div>
+            <div class="f">
+              <label class="lbl">Password <span class="req">*</span></label>
+              <div class="pw-wrap">
+                <input type="password" name="password" id="pw" placeholder="Min. 8 characters"
+                       oninput="chkPW(this.value)"
+                       class="{{ $errors->has('password') ? 'is-invalid' : '' }}">
+                <button type="button" class="pw-tog" onclick="jsaTogglePw('pw',this)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <div class="pwbars"><div class="pwb" id="pb1"></div><div class="pwb" id="pb2"></div><div class="pwb" id="pb3"></div><div class="pwb" id="pb4"></div></div>
+              <span class="hint" id="pwhint">Use letters, numbers and a symbol</span>
+              @if($errors->has('password'))<span class="hint er">{{ $errors->first('password') }}</span>@endif
+            </div>
+            <div class="f">
+              <label class="lbl">Confirm password <span class="req">*</span></label>
+              <div class="pw-wrap">
+                <input type="password" name="password_confirmation" id="pwc" placeholder="Re-enter password"
+                       class="{{ $errors->has('password_confirmation') ? 'is-invalid' : '' }}">
+                <button type="button" class="pw-tog" onclick="jsaTogglePw('pwc',this)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              @if($errors->has('password_confirmation'))<span class="hint er">{{ $errors->first('password_confirmation') }}</span>@endif
+            </div>
+
+            <div class="priv" style="margin-top:14px;align-items:flex-start;gap:11px;background:transparent;border-color:var(--border)">
+              <input type="checkbox" checked id="accuracyCheck" style="margin-top:3px;accent-color:#3B5CCC;width:15px;height:15px;flex-shrink:0;cursor:pointer">
+              <label for="accuracyCheck" style="font-size:12px;color:var(--text-4);font-weight:400;line-height:1.7;cursor:pointer">
+                I confirm that the details I've shared are accurate. I understand profiles with inaccurate notice period information may be deactivated.
               </label>
             </div>
-            @if($errors->has('terms_of_use'))<div class="field-error" style="margin-top:-10px; margin-bottom:10px;">{{ $errors->first('terms_of_use') }}</div>@endif
 
-            <div class="step-nav">
-              <button type="button" class="btn-secondary" onclick="jsaGoStep(2)">← Back</button>
-              <button type="submit" class="btn-primary" onclick="return jsaHandleSignUp()">Create your account</button>
+            <div style="margin-top:14px;padding:13px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm)">
+              <div style="font-size:11.5px;color:var(--text-3);line-height:1.8">
+                By creating your account you agree to ZeroNoticePeriod's
+                <a href="#" style="color:#3B5CCC;text-decoration:none;font-weight:600">Terms of Service</a> and
+                <a href="#" style="color:#3B5CCC;text-decoration:none;font-weight:600">Privacy Policy</a>.
+                You consent to receiving job match alerts by email. You can unsubscribe at any time.
+              </div>
+              <div class="optgrid">
+                <label class="optcheck">
+                  <input type="checkbox" checked name="terms_of_use" value="1" {{ old('terms_of_use')?'checked':'' }} required style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer">
+                  I agree to Terms &amp; Conditions <span style="color:#F2994A">*</span>
+                </label>
+                <label class="optcheck">
+                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Job match &amp; application alerts
+                </label>
+                <label class="optcheck">
+                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Platform tips, feature updates
+                </label>
+                <label class="optcheck">
+                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Promotions
+                </label>
+              </div>
+              @if($errors->has('terms_of_use'))<div class="hint er" style="margin-top:6px">{{ $errors->first('terms_of_use') }}</div>@endif
             </div>
-            <div class="alt-action">Already have an account? <a onclick="jsaTab('signin')">Sign in</a></div>
+
+            <div class="brow">
+              <button type="button" class="bback" onclick="goStep(2)">← Back</button>
+              <button type="button" class="btn btng" style="margin-top:0" onclick="submitForm()">Create account &amp; find jobs →</button>
+            </div>
+            <div class="terms">By continuing you agree to our <a href="{{ url('/terms-and-conditons') }}" target="_blank">Terms of service</a> &amp; <a href="{{ url('/privacy-policy') }}" target="_blank">Privacy policy</a></div>
           </div>
-          {{-- end step3 --}}
+          {{-- end step 3 --}}
+
+          {{-- Verify screen --}}
+          <div id="sverify" style="display:none;padding-top:0">
+            <div class="verbox">
+              <div style="width:52px;height:52px;background:var(--surface-2);border:1px solid rgba(59,92,204,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+                <svg width="22" height="22" fill="none" stroke="#3B5CCC" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.3px">Check your inbox</div>
+              <div style="font-size:13.5px;color:var(--text-3);line-height:1.7;margin-bottom:16px">
+                We've sent a verification link to <strong id="vemail" style="color:#3B5CCC"></strong>.<br><br>
+                Click the link to activate your account and start applying to jobs.
+              </div>
+              <button class="btn btnb" style="margin-top:0" onclick="swTab('si')">Go to sign in →</button>
+            </div>
+          </div>
 
         </form>
       </div>
-      {{-- end signup --}}
+      {{-- end sign-up panel --}}
 
+      {{-- ── SIGN IN PANEL ── --}}
+      <div class="pnl" id="psi">
+        @if(session('error_message1'))
+          <div class="znp-alert znp-alert-error">{{ session('error_message1') }}</div>
+        @endif
+        @if(session('error_message'))
+          <div class="znp-alert znp-alert-error">{{ session('error_message') }}</div>
+        @endif
+        @if(session('verify_message'))
+          <div class="znp-alert znp-alert-error">{!! session('verify_message') !!}</div>
+        @endif
+
+        <div style="text-align:center;margin-bottom:22px">
+          <div style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.3px;margin-bottom:5px">Welcome back</div>
+          <div style="font-size:13.5px;color:var(--text-3)">Sign in to your jobseeker account</div>
+        </div>
+
+        <form method="POST" action="{{ route('login') }}" id="jsa-signin-form">
+          @csrf
+          <div class="f">
+            <label class="lbl">Email address <span class="req">*</span></label>
+            <input type="email" name="email" placeholder="yourname@email.com"
+                   value="{{ old('email') }}"
+                   class="{{ $errors->has('email') ? 'is-invalid' : '' }}" required>
+            @if($errors->has('email'))<span class="hint er">{{ $errors->first('email') }}</span>@endif
+          </div>
+          <div class="f">
+            <label class="lbl" style="justify-content:space-between">
+              Password <span class="req">*</span>
+              <a href="{{ route('password.request') }}" style="font-size:11.5px;color:#3B5CCC;font-weight:500;text-decoration:none">Forgot password?</a>
+            </label>
+            <div class="pw-wrap">
+              <input type="password" name="password" id="si-pw" placeholder="Enter password" required>
+              <button type="button" class="pw-tog" onclick="jsaTogglePw('si-pw',this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btnb">Sign in →</button>
+        </form>
+
+        <div class="alt-action" style="margin-top:14px;text-align:center;font-size:12px;color:var(--text-3)">
+          Sign in as an Employer? <a href="{{ route('employer.auth') }}" style="color:#3B5CCC;font-weight:600">Employer sign in</a>
+        </div>
       </div>
-      {{-- end form-sections-stack --}}
+      {{-- end sign-in panel --}}
 
+      <div class="foot" id="foot">Already have an account? <a onclick="swTab('si')">Sign in here</a></div>
     </div>
-    {{-- end form-panel --}}
+    {{-- end card --}}
 
   </div>
-</main>
+</div>
+{{-- end znp-auth-v13 --}}
 
 @include('znp.footer')
 @endsection
 
 @push('scripts')
 <script>
-(function () {
-  'use strict';
+/* ─────────────────────────────────────────────────────────────────
+   ZNP Jobseeker Auth v13 — all UI logic
+   ───────────────────────────────────────────────────────────────── */
 
-  /* ── Tab switching ── */
-  window.jsaTab = function (tab) {
-    document.querySelectorAll('.znp-jobseeker-auth .tab-btn').forEach(function (btn) {
-      btn.classList.remove('active');
-    });
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelectorAll('.znp-jobseeker-auth .form-section').forEach(function (s) {
-      s.classList.remove('active');
-    });
-    document.getElementById('section-' + tab).classList.add('active');
-    if (tab === 'signup') jsaGoStep(1);
-  };
+/* ── Skill domain suggestions ── */
+var SD = {
+  it:      ['Java','Python','JavaScript','React','Node.js','SQL','AWS','Docker','Kubernetes','TypeScript','Angular'],
+  bfs:     ['Excel','Financial Modelling','SQL','Python','Risk Analysis','IFRS','Credit Analysis','Bloomberg','Power BI'],
+  health:  ['Clinical Research','Pharmacovigilance','Medical Writing','SAS','SPSS','GCP','Regulatory Affairs'],
+  ecom:    ['SQL','Python','Google Analytics','A/B Testing','Tableau','Power BI','Product Management','Jira'],
+  mfg:     ['AutoCAD','SolidWorks','SAP ERP','Six Sigma','Lean Manufacturing','Quality Control','Supply Chain'],
+  consult: ['PowerPoint','Excel','Stakeholder Management','Project Management','Agile','Business Analysis'],
+  edu:     ['Curriculum Design','LMS','eLearning','Instructional Design','Python','Public Speaking','Content Creation'],
+  startup: ['Product Management','Agile','Jira','Figma','Growth Hacking','SQLite','NoSQL','CI/CD','Firebase','React'],
+  other:   []
+};
 
-  /* ── Password toggle ── */
-  window.jsaTogglePass = function (inputId, btn) {
-    var input = document.getElementById(inputId);
-    var isPass = input.type === 'password';
-    input.type = isPass ? 'text' : 'password';
-    btn.style.color = isPass ? 'var(--blue)' : 'var(--text-light)';
-  };
+/* ── City preferred logic ── */
+var selCities = [];
+@if(old('prefered_city'))
+  selCities = @json(old('prefered_city', []));
+@endif
 
-  /* ── File name update ── */
-  window.jsaUpdateFileName = function (input, labelId, btnId) {
-    var label = document.getElementById(labelId);
-    var btn   = document.getElementById(btnId);
-    if (input.files && input.files[0]) {
-      label.textContent = input.files[0].name;
-      label.style.fontStyle = 'normal';
-      label.style.color = 'var(--blue)';
-      if (btn) btn.style.color = 'var(--blue)';
+/* ── Skills state ── */
+var jsaSkills = [];
+@if(old('keyskills'))
+  jsaSkills = @json(old('keyskills', []));
+@endif
+
+var emailCheckTimer = null;
+var emailCheckXhr = null;
+var emailExists = false;
+
+window.clearSocial = function () {
+  var banner = document.getElementById('social-banner');
+  if (banner) banner.style.display = 'none';
+};
+
+/* ─── swTab: switch between create-account / sign-in ─── */
+window.swTab = function (which) {
+  var classes = { su: { on: 'psu', off: 'psi', ton: 'tsu', toff: 'tsi' },
+                  si: { on: 'psi', off: 'psu', ton: 'tsi', toff: 'tsu' } };
+  var c = classes[which];
+  if (!c) return;
+  document.getElementById(c.on).classList.add('on');
+  document.getElementById(c.off).classList.remove('on');
+  document.getElementById(c.ton).classList.add('on');
+  document.getElementById(c.toff).classList.remove('on');
+  var foot = document.getElementById('foot');
+  if (foot) {
+    if (which === 'su') {
+      foot.innerHTML = 'Already have an account? <a onclick="swTab(\'si\')">Sign in here</a>';
+    } else {
+      foot.innerHTML = 'New to ZNP? <a onclick="swTab(\'su\')">Create a free account</a>';
     }
-  };
-
-  /* ── Notice period date toggle ── */
-  window.jsaNopChange = function (val) {
-    var immWrap   = document.getElementById('nop-date-wrap');
-    var lwdWrap   = document.getElementById('nop-lwd-wrap');
-    var proofWrap = document.getElementById('nop-lwd-proof-wrap');
-
-    // Set date constraints
-    var today = new Date().toISOString().split('T')[0];
-    var maxServing = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-    if (immWrap) {
-      var immInput = document.getElementById('nop-immediate-date');
-      if (val === 'Immediate Joiner') {
-        immWrap.classList.add('visible');
-        if (immInput) { immInput.max = today; immInput.min = ''; }
-      } else {
-        immWrap.classList.remove('visible');
-      }
-    }
-    if (lwdWrap) {
-      var lwdInput = document.getElementById('nop-lwd-date');
-      if (val === 'Serving Notice') {
-        lwdWrap.classList.add('visible');
-        if (lwdInput) { lwdInput.min = today; lwdInput.max = maxServing; }
-      } else {
-        lwdWrap.classList.remove('visible');
-      }
-    }
-    if (proofWrap) {
-      if (val === 'Immediate Joiner' || val === 'Serving Notice') {
-        proofWrap.classList.add('visible');
-      } else {
-        proofWrap.classList.remove('visible');
-      }
-    }
-  };
-
-  /* ── Multi-step navigation ── */
-  window.jsaGoStep = function (step) {
-    // Validate current step before proceeding forward
-    var currentStep = jsaCurrentStep();
-    if (step > currentStep && !jsaValidateStep(currentStep)) return;
-
-    [1, 2, 3].forEach(function (i) {
-      var el = document.getElementById('step' + i);
-      if (el) el.style.display = (i === step) ? 'block' : 'none';
-      var ps = document.getElementById('ps' + i);
-      if (ps) ps.classList.toggle('active', i <= step);
-    });
-
-    var labels = [
-      'Step 1 of 3 — Notice Period & Personal Info',
-      'Step 2 of 3 — Work Profile & Experience',
-      'Step 3 of 3 — Education & Account'
-    ];
-    var lbl = document.getElementById('progress-label');
-    if (lbl) lbl.textContent = labels[step - 1];
-
-    var panel = document.querySelector('.znp-jobseeker-auth .form-panel');
-    if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  function jsaCurrentStep() {
-    for (var i = 1; i <= 3; i++) {
-      var el = document.getElementById('step' + i);
-      if (el && el.style.display !== 'none') return i;
-    }
-    return 1;
   }
+};
 
-  function jsaValidateStep(step) {
-    if (step === 1) {
-      var req = ['first_name', 'last_name', 'nop_days', 'email', 'phone'];
-      var ok = true;
-      req.forEach(function (name) {
-        var el = document.querySelector('#step1 [name="' + name + '"]');
-        if (el && !el.value.trim()) {
-          el.classList.add('is-invalid');
-          ok = false;
-        } else if (el) {
-          el.classList.remove('is-invalid');
+/* ─── goStep: multi-step navigation ─── */
+var curStep = 1;
+window.goStep = function (n) {
+  [1, 2, 3].forEach(function (i) {
+    var s = document.getElementById('s' + i);
+    if (s) s.style.display = (i === n) ? '' : 'none';
+    var num = document.getElementById('n' + i);
+    var lbl = document.getElementById('l' + i);
+    var ln  = document.getElementById('ln' + (i < 3 ? i : ''));
+    if (num) {
+      num.className = 'snum ' + (i < n ? 'd' : i === n ? 'a' : 'i');
+      num.textContent = i < n ? '✓' : String(i);
+    }
+    if (lbl) lbl.className = 'slbl ' + (i < n ? 'd' : i === n ? 'a' : 'i');
+    if (ln)  ln.className  = 'sln' + (i < n ? ' d' : '');
+  });
+  curStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+/* ─── stepClick: allow clicking back to already-completed steps ─── */
+window.stepClick = function (n) {
+  if (n < curStep) goStep(n);
+};
+
+/* ─── setN: notice period card selection ─── */
+window.setN = function (type) {
+  ['npi', 'nps', 'npf'].forEach(function (id) { document.getElementById(id).classList.remove('on'); });
+  var today      = new Date().toISOString().split('T')[0];
+  var maxServing = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  var maxFuture  = new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  var lwdInp   = document.getElementById('lwdinp');
+  var lwdLbl   = document.getElementById('lwdlbl');
+  var lwdHint  = document.getElementById('lwdhint');
+  var proofRow = document.getElementById('proofrow');
+  var hidHid   = document.getElementById('nop_days_hidden');
+  var frNote   = document.getElementById('frnote');
+  var proofSel = document.querySelector('[name="lwd_proof"]');
+
+  if (type === 'i') {
+    document.getElementById('npi').classList.add('on');
+    if (hidHid)  hidHid.value = 'Immediate Joiner';
+    if (lwdInp)  { lwdInp.name = 'immediate_last_date'; lwdInp.max = today; lwdInp.min = ''; lwdInp.style.display = ''; }
+    if (lwdLbl)  lwdLbl.innerHTML = 'Last working date <span class="req">*</span>';
+    if (lwdHint) lwdHint.textContent = 'Must be today or earlier';
+    if (proofRow) proofRow.style.display = '';
+    if (proofSel && proofSel.value === 'Fresher') proofSel.value = '';
+    if (frNote)  frNote.style.display = 'none';
+  } else if (type === 's') {
+    document.getElementById('nps').classList.add('on');
+    if (hidHid)  hidHid.value = 'Serving Notice';
+    if (lwdInp)  { lwdInp.name = 'last_working_day'; lwdInp.max = maxServing; lwdInp.min = today; lwdInp.style.display = ''; }
+    if (lwdLbl)  lwdLbl.innerHTML = 'Last day of notice <span class="req">*</span>';
+    if (lwdHint) lwdHint.textContent = 'Must be a future date within 90 days';
+    if (proofRow) proofRow.style.display = '';
+    if (proofSel && proofSel.value === 'Fresher') proofSel.value = '';
+    if (frNote)  frNote.style.display = 'none';
+  } else {
+    document.getElementById('npf').classList.add('on');
+    if (hidHid)  hidHid.value = 'Fresher';
+    if (lwdInp)  { lwdInp.name = 'immediate_last_date'; lwdInp.min = ''; lwdInp.max = maxFuture; lwdInp.style.display = ''; }
+    if (lwdLbl)  lwdLbl.innerHTML = 'Course completion date';
+    if (lwdHint) lwdHint.textContent = 'Optional for freshers';
+    if (proofRow) proofRow.style.display = 'none';
+    if (proofSel) proofSel.value = 'Fresher';
+    if (frNote)  frNote.style.display = '';
+  }
+};
+
+/* ─── chkEm: real-time email check ─── */
+window.chkEm = function (inp) {
+  var el = document.getElementById('emst');
+  if (!el) return;
+  var v = inp.value.trim();
+  emailExists = false;
+  if (emailCheckTimer) clearTimeout(emailCheckTimer);
+  if (emailCheckXhr && emailCheckXhr.abort) emailCheckXhr.abort();
+  if (!v) { el.innerHTML = ''; inp.classList.remove('is-invalid'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+    inp.classList.add('is-invalid');
+    el.innerHTML = '<span style="color:#dc2626;font-size:11px">Invalid email format</span>';
+    return;
+  }
+  inp.classList.remove('is-invalid');
+  el.innerHTML = '<span style="color:#94a3b8;font-size:11px">Checking email…</span>';
+  emailCheckTimer = setTimeout(function () {
+    emailCheckXhr = $.ajax({
+      type: 'POST',
+      url: '{{ url("check-email") }}',
+      dataType: 'json',
+      data: { email: v, _token: '{{ csrf_token() }}' },
+      success: function (data) {
+        emailExists = !!(data && data.exists);
+        if (emailExists) {
+          inp.classList.add('is-invalid');
+          el.innerHTML = '<span style="color:#dc2626;font-size:11px">This email is registered. Please sign in.</span>';
+        } else {
+          inp.classList.remove('is-invalid');
+          el.innerHTML = '<span style="color:#16a34a;font-size:11px">✓ Looks good</span>';
         }
-      });
-      return ok;
-    }
-    if (step === 2) {
-      var req2 = ['current_city', 'locality', 'mode_of_separation', 'work_option',
-                  'gender_id', 'totalexp', 'totalexpmonth', 'latestcom', 'latestdesg',
-                  'work_type', 'expect_ctc_lakhs', 'expect_ctc_lakhs3'];
-      var ok2 = true;
-      req2.forEach(function (name) {
-        var el = document.querySelector('#step2 [name="' + name + '"]');
-        if (el && !el.value.trim()) {
-          el.classList.add('is-invalid');
-          ok2 = false;
-        } else if (el) {
-          el.classList.remove('is-invalid');
-        }
-      });
-      if (jsaSkills.length < 10) {
-        document.getElementById('skills-error').style.display = 'block';
-        ok2 = false;
+      },
+      error: function () {
+        el.innerHTML = '<span style="color:#94a3b8;font-size:11px">Could not verify email right now</span>';
       }
-      return ok2;
-    }
-    return true;
-  }
-
-  /* ── Skills tag input ── */
-  var jsaSkills = [];
-  window.jsaSkills = jsaSkills;
-
-  window.jsaHandleSkillInput = function (e) {
-    var input = document.getElementById('skill-input');
-    var val = input.value.trim().replace(/,$/, '');
-    if ((e.key === 'Enter' || e.key === ',') && val) {
-      e.preventDefault();
-      jsaAddSkill(val);
-      input.value = '';
-    } else if (e.key === 'Backspace' && input.value === '' && jsaSkills.length) {
-      jsaRemoveSkill(jsaSkills.length - 1);
-    }
-  };
-
-  window.jsaAddSkill = function (name) {
-    if (jsaSkills.indexOf(name) !== -1) return;
-    jsaSkills.push(name);
-    jsaRenderSkills();
-  };
-
-  window.jsaRemoveSkill = function (idx) {
-    jsaSkills.splice(idx, 1);
-    jsaRenderSkills();
-  };
-
-  function jsaRenderSkills() {
-    var container = document.getElementById('skills-container');
-    var input = document.getElementById('skill-input');
-    container.innerHTML = '';
-    jsaSkills.forEach(function (s, i) {
-      var tag = document.createElement('span');
-      tag.className = 'skill-tag';
-      tag.innerHTML = s + '<button type="button" onclick="jsaRemoveSkill(' + i + ')" title="Remove">×</button>';
-      container.appendChild(tag);
     });
-    container.appendChild(input);
-    input.focus();
+  }, 350);
+};
 
-    var err = document.getElementById('skills-error');
-    if (err) err.style.display = (jsaSkills.length > 0 && jsaSkills.length < 10) ? 'block' : 'none';
+// Populate year of completion dropdown based on education status
+window.populateEduYear = function (status, selected) {
+  var yr = document.getElementById('edu-year');
+  if (!yr) return;
+  var thisYear = new Date().getFullYear();
+  var html = '<option value="">Select year</option>';
+  if (status === 'Pursuing') {
+    for (var y = thisYear; y <= thisYear + 15; y++) html += '<option value="' + y + '">' + y + '</option>';
+  } else {
+    for (var y = thisYear + 5; y >= 1960; y--) html += '<option value="' + y + '">' + y + '</option>';
+  }
+  yr.innerHTML = html;
+  if (selected) yr.value = selected;
+};
 
-    // Sync hidden inputs
-    var wrap = document.getElementById('keyskills-hidden-wrap');
-    if (wrap) {
-      wrap.innerHTML = '';
-      jsaSkills.forEach(function (s) {
-        var inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = 'keyskills[]';
-        inp.value = s;
-        wrap.appendChild(inp);
-      });
+// Re-populate year dropdown when education status changes
+var _eduStatusEl = document.getElementById('edu-status');
+if (_eduStatusEl) {
+  _eduStatusEl.addEventListener('change', function () { populateEduYear(this.value); });
+}
+
+/* ─── cleanLI: strip full LinkedIn URL to just handle ─── */
+window.cleanLI = function (inp) {
+  inp.value = inp.value
+    .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//i, '')
+    .replace(/\/$/, '');
+};
+
+/* ─── fmtLakhs: CTC text input formatter (updates hidden thousands field) ─── */
+window.fmtLakhs = function (inp) {
+  // sanitize input: allow digits and at most one decimal digit; cap integer to 999
+  if (!inp) return;
+  var s = String(inp.value || '');
+  s = s.replace(/[^0-9.]/g, '');
+  var parts = s.split('.');
+  if (parts.length > 1) {
+    parts = [parts[0], parts.slice(1).join('')];
+    parts[1] = parts[1].slice(0, 1); // only one decimal digit
+  }
+  var intPart = parts[0] ? parts[0].replace(/^0+(?=\d)/, '') : '0';
+  if (intPart === '') intPart = '0';
+  var intNum = parseInt(intPart, 10) || 0;
+  if (intNum > 999) intNum = 999;
+  parts[0] = String(intNum);
+  s = parts.length > 1 ? parts[0] + '.' + parts[1] : parts[0];
+  if (inp.value !== s) inp.value = s;
+  var v = parseFloat(s);
+  if (!isNaN(v) && v >= 0) {
+    var name = inp.getAttribute('name');
+    var thName = name === 'expect_ctc_lakhs' ? 'expect_ctc_thousand' : 'expect_ctc_thousand3';
+    var hid = document.querySelector('[name="' + thName + '"]');
+    if (hid) {
+      var rs = Math.round(v * 100000);
+      hid.value = Math.round((rs % 100000) / 1000);
     }
   }
+};
 
-  /* ── City chip toggle ── */
-  window.jsaToggleCity = function (el) {
-    el.classList.toggle('selected');
-    jsaSyncPreferredCities();
-  };
+// Validate experience input: allow integer up to 40 and a single decimal digit (years.months)
+window.validateS2Exp = function (inp) {
+  if (!inp) return;
+  var s = String(inp.value || '');
+  s = s.replace(/[^0-9.]/g, '');
+  var parts = s.split('.');
+  if (parts.length > 1) {
+    parts = [parts[0], parts.slice(1).join('')];
+    parts[1] = parts[1].slice(0, 1);
+  }
+  var intPart = parts[0] ? parts[0].replace(/^0+(?=\d)/, '') : '0';
+  if (intPart === '') intPart = '0';
+  var intNum = parseInt(intPart, 10) || 0;
+  if (intNum > 40) intNum = 40;
+  parts[0] = String(intNum);
+  var out = parts.length > 1 ? parts[0] + '.' + parts[1] : parts[0];
+  if (inp.value !== out) inp.value = out;
+};
 
-  function jsaSyncPreferredCities() {
-    var wrap = document.getElementById('prefcity-hidden-wrap');
-    if (!wrap) return;
+// Attach input listener for experience field (if present)
+var _s2exp = document.getElementById('s2exp');
+if (_s2exp) _s2exp.addEventListener('input', function () { validateS2Exp(this); });
+
+/* ─── togP: exclusive pill selection for work mode / job type ─── */
+window.togP = function (el, hidName, val) {
+  var pills = el.closest('.pills');
+  if (pills) pills.querySelectorAll('.pill').forEach(function (p) { p.classList.remove('on'); });
+  el.classList.add('on');
+  var hid = document.querySelector('[name="' + hidName + '"]');
+  if (hid) hid.value = val;
+};
+
+/* ─── titleCase ─── */
+window.titleCase = function (inp) {
+  inp.value = inp.value.replace(/\w\S*/g, function (w) {
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  });
+};
+
+/* ─── capitalizeFirst: capitalize only first letter ─── */
+window.capitalizeFirst = function (inp) {
+  if (inp && inp.value) {
+    inp.value = inp.value.charAt(0).toUpperCase() + inp.value.slice(1);
+  }
+};
+
+/* ─── handleSkillsInput: main handler for skills input dropdown ─── */
+window.handleSkillsInput = function (val) {
+  val = (val || '').trim();
+  var dd = document.getElementById('skdd');
+  if (!dd) {
+    console.warn('Dropdown element not found');
+    return;
+  }
+  
+  console.log('handleSkillsInput called with:', val);
+  
+  // First try local domain suggestions
+  var domEl = document.getElementById('s2dom');
+  var pool  = domEl && SD[domEl.value] ? SD[domEl.value] : [];
+  var fl = pool.filter(function (s) {
+    return s.toLowerCase().indexOf(val.toLowerCase()) !== -1 && 
+           !jsaSkills.some(function (existing) { return existing.toLowerCase() === s.toLowerCase(); });
+  }).slice(0, 8);
+  
+  console.log('Local pool:', pool, 'Filtered:', fl);
+  
+  // If local suggestions found, show them immediately
+  if (fl.length > 0 && val.length >= 1) {
+    console.log('Showing local suggestions:', fl);
+    dd.innerHTML = fl.map(function (s) {
+      return '<div class="skddi" onclick="addSk(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>';
+    }).join('');
+    dd.classList.add('on');
+    return;
+  }
+  
+  // Clear and hide if less than 2 chars
+  if (!val || val.length < 2) {
+    console.log('Less than 2 chars, hiding dropdown');
+    dd.innerHTML = '';
+    dd.classList.remove('on');
+    return;
+  }
+  
+  // Otherwise, make AJAX call for 2+ characters
+  console.log('Calling AJAX for 2+ char input:', val);
+  $.ajax({
+    url: '{{ url("autocomplete/search") }}',
+    dataType: 'json',
+    data: { query: val },
+    success: function (data) {
+      console.log('AJAX returned:', data);
+      var results = $.map(data || [], function (v) { return v; })
+               .filter(function (s) { 
+                 return !jsaSkills.some(function (existing) { return existing.toLowerCase() === s.toLowerCase(); });
+               })
+               .slice(0, 8);
+      dd.innerHTML = results.map(function (s) {
+        return '<div class="skddi" onclick="addSk(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>';
+      }).join('');
+      dd.classList.toggle('on', results.length > 0);
+    },
+    error: function (xhr, status, error) {
+      console.error('AJAX error:', error);
+      dd.classList.remove('on');
+    }
+  });
+};
+
+/* ─── readCV: show file name on selection ─── */
+window.readCV = function (inp) {
+  var el = document.getElementById('cvok');
+  if (!el) return;
+  el.style.display = 'block';
+  if (inp.files && inp.files[0]) {
+    var f = inp.files[0];
+    var ok = f.size <= 2 * 1024 * 1024;
+    el.innerHTML = ok
+      ? '<div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:#16a34a"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>' + f.name + '</div>'
+      : '<div style="font-size:12px;color:#dc2626;margin-top:6px">File is too large (max 2MB). Please compress and re-upload.</div>';
+    if (!ok) inp.value = '';
+  } else {
+    el.style.display = 'none';
+  }
+};
+
+/* ─── chkPW: password strength indicator ─── */
+window.chkPW = function (v) {
+  var bars  = [document.getElementById('pb1'), document.getElementById('pb2'),
+               document.getElementById('pb3'), document.getElementById('pb4')];
+  var hints = ['Too Weak', 'Weak', 'Moderate', 'Strong'];
+  var cols  = ['#dc2626', '#f97316', '#f59e0b', '#16a34a'];
+  var score = 0;
+  if (v.length >= 8)        score++;
+  if (/[A-Z]/.test(v))      score++;
+  if (/\d/.test(v))         score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  bars.forEach(function (b, i) {
+    if (!b) return;
+    b.style.background = i < score ? cols[score - 1] : '';
+    b.style.opacity    = i < score ? '1' : '0.18';
+  });
+  var hint = document.getElementById('pwhint');
+  if (hint) hint.textContent = v.length ? hints[score > 0 ? score - 1 : 0] : 'Use letters, numbers and a symbol';
+};
+
+/* ─── Skills management ─── */
+window.addSk = function (name) {
+  if (!name) return;
+  // Capitalize first letter
+  name = name.charAt(0).toUpperCase() + name.slice(1);
+  // Check if skill already exists (case-insensitive)
+  var exists = jsaSkills.some(function (s) { return s.toLowerCase() === name.toLowerCase(); });
+  if (exists || jsaSkills.length >= 20) return;
+  jsaSkills.push(name);
+  renderSk();
+  var inp = document.getElementById('skinp');
+  if (inp) { inp.value = ''; }
+  var dd = document.getElementById('skdd');
+  if (dd) dd.innerHTML = '';
+};
+window.rmSk = function (i) {
+  jsaSkills.splice(i, 1);
+  renderSk();
+};
+window.renderSk = function () {
+  var box = document.getElementById('sktags');
+  if (!box) return;
+  box.innerHTML = '';
+  jsaSkills.forEach(function (s, i) {
+    var t = document.createElement('span');
+    t.className = 'sktag';
+    t.innerHTML = s + '<button type="button" onclick="rmSk(' + i + ')" title="Remove">×</button>';
+    box.appendChild(t);
+  });
+  // Sync hidden inputs
+  var wrap = document.getElementById('keyskills-hidden-wrap');
+  if (wrap) {
     wrap.innerHTML = '';
-    document.querySelectorAll('.znp-jobseeker-auth .city-chip.selected').forEach(function (chip) {
+    jsaSkills.forEach(function (s) {
       var inp = document.createElement('input');
-      inp.type = 'hidden';
-      inp.name = 'prefered_city[]';
-      inp.value = chip.dataset.city;
+      inp.type = 'hidden'; inp.name = 'keyskills[]'; inp.value = s;
       wrap.appendChild(inp);
     });
   }
+  // Update counter/progress
+  var ct   = document.getElementById('skct');
+  var pct  = document.getElementById('skpct');
+  var bar  = document.getElementById('skbar');
+  var MIN  = 10;
+  var pv   = Math.min(100, Math.round(jsaSkills.length / MIN * 100));
+  if (ct)  ct.textContent  = jsaSkills.length + ' / ' + MIN + ' min';
+  if (pct) pct.textContent = pv + '%';
+  if (bar) { bar.style.width = pv + '%'; bar.style.background = pv >= 100 ? '#16a34a' : '#3B5CCC'; }
+  // Update suggestion pills - case-insensitive comparison
+  document.querySelectorAll('.znp-auth-v13 .skpill').forEach(function (pill) {
+    var pillText = pill.textContent.trim();
+    var isSelected = jsaSkills.some(function (s) { return s.toLowerCase() === pillText.toLowerCase(); });
+    pill.classList.toggle('on', isSelected);
+  });
+};
 
-  /* ── Degree change: show/hide course/spec/org rows + load courses via AJAX ── */
-  window.jsaDegreeChange = function (val) {
-    var show = val !== '' && ['1','5'].indexOf(val) === -1; // show for degrees that have courses
-    var csRow  = document.getElementById('course-spec-row');
-    var orgRow = document.getElementById('org-row');
-    if (csRow)  csRow.style.display  = show ? '' : 'none';
-    if (orgRow) orgRow.style.display = show ? '' : 'none';
-    // Toggle required attributes
-    ['course_select', 'specilation_select'].forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.required = show;
-    });
-    var orgInput = document.getElementById('jsa-university-input');
-    if (orgInput) orgInput.required = show;
+/* fDD: filter skills dropdown - now works on all devices */
+window.fDD = function (term) {
+  var dd = document.getElementById('skdd');
+  if (!dd) return;
+  // Show dropdown for 2+ characters on all devices (mobile and desktop)
+  if (!term || term.length < 2) { dd.innerHTML = ''; dd.classList.remove('on'); return; }
+  // Combine domain suggestions + AJAX (simple local filter for now)
+  var domEl = document.getElementById('s2dom');
+  var pool  = domEl && SD[domEl.value] ? SD[domEl.value] : [];
+  var fl    = pool.filter(function (s) {
+    return s.toLowerCase().indexOf(term.toLowerCase()) !== -1 && 
+           !jsaSkills.some(function (existing) { return existing.toLowerCase() === s.toLowerCase(); });
+  }).slice(0, 8);
+  dd.innerHTML = fl.map(function (s) {
+    return '<div class="skddi" onclick="addSk(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>';
+  }).join('');
+  dd.classList.toggle('on', fl.length > 0);
+};
 
-    if (!show) return;
+/* skKey: keyboard handling inside skills input */
+window.skKey = function (e) {
+  var inp = document.getElementById('skinp');
+  if (!inp) return;
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    var v = inp.value.trim().replace(/,$/, '');
+    if (v) { 
+      // Capitalize first letter before adding
+      v = v.charAt(0).toUpperCase() + v.slice(1);
+      addSk(v); 
+    }
+  } else if (e.key === 'Backspace' && inp.value === '' && jsaSkills.length) {
+    rmSk(jsaSkills.length - 1);
+  }
+};
 
-    // Load courses for selected degree
-    var csEl = document.getElementById('course_select');
-    if (!csEl) return;
-    csEl.innerHTML = '<option value="">Loading...</option>';
-    $.ajax({
-      type: 'POST',
-      url: '{{ url("gety") }}',
-      data: { degree: val, _token: '{{ csrf_token() }}' },
-      success: function (data) {
-        var html = '<option value="">Select Course</option>';
-        $.each(data, function (i, item) {
-          html += '<option value="' + item.id + '">' + item.course + '</option>';
-        });
-        csEl.innerHTML = html;
-        // Clear specs
-        var spEl = document.getElementById('specilation_select');
-        if (spEl) spEl.innerHTML = '<option value="">Select Specialization</option>';
-      },
-      error: function () {
-        csEl.innerHTML = '<option value="">Select Course</option>';
-      }
-    });
-  };
+/* AJAX skills autocomplete for skill input */
+window.loadSuggAjax = function (term) {
+  if (!term || term.length < 2) return;
+  $.ajax({
+    url: '{{ url("autocomplete/cvskills") }}',
+    dataType: 'json',
+    data: { query: term },
+    success: function (data) {
+      var dd = document.getElementById('skdd');
+      if (!dd) return;
+      var fl = $.map(data, function (v) { return v; })
+               .filter(function (s) { 
+                 return !jsaSkills.some(function (existing) { return existing.toLowerCase() === s.toLowerCase(); });
+               })
+               .slice(0, 8);
+      dd.innerHTML = fl.map(function (s) {
+        return '<div class="skddi" onclick="addSk(\'' + s.replace(/'/g, "\\'") + '\')">' + s + '</div>';
+      }).join('');
+      dd.classList.toggle('on', fl.length > 0);
+    }
+  });
+};
 
-  /* ── Course change: load specializations via AJAX ── */
-  window.jsaCourseChange = function (courseId) {
-    var spEl = document.getElementById('specilation_select');
-    if (!spEl) return;
-    if (!courseId) {
-      spEl.innerHTML = '<option value="">Select Specialization</option>';
+/* loadSugg: populate domain suggestion pills */
+window.loadSugg = function (domain) {
+  var el = document.getElementById('sksugg');
+  if (!el) return;
+  var list = SD[domain] || [];
+  el.innerHTML = list.slice(0, 16).map(function (s) {
+    var on = jsaSkills.indexOf(s) !== -1 ? ' on' : '';
+    return '<span class="skpill' + on + '" data-skill="' + s.replace(/"/g, '&quot;') + '">' + s + '</span>';
+  }).join('');
+};
+
+// Delegate clicks on domain suggestion pills: on all screens, clicking a pill should add the skill
+document.addEventListener('click', function (e) {
+  var t = e.target;
+  if (!t || !t.classList) return;
+  if (t.classList.contains('skpill')) {
+    var skill = t.getAttribute('data-skill') || t.textContent.trim();
+    if (skill) {
+      try { addSk(skill); } catch (err) { console && console.warn && console.warn('addSk missing', err); }
+    }
+  }
+});
+
+/* Skills dropdown handler is now managed by the inline oninput handler */
+
+
+/* ─── City preferred pills ─── */
+window.togCity = function (el, name) {
+  if (el.classList.contains('on')) {
+    el.classList.remove('on');
+    selCities = selCities.filter(function (c) { return c !== name; });
+  } else {
+    if (selCities.length >= 3) {
+      document.getElementById('cylim') && (document.getElementById('cylim').style.display = 'block');
       return;
     }
-    spEl.innerHTML = '<option value="">Loading...</option>';
-    $.ajax({
-      type: 'POST',
-      url: '{{ url("getspecs") }}',
-      data: { course: courseId, _token: '{{ csrf_token() }}' },
-      success: function (data) {
-        var html = '<option value="">Select Specialization</option>';
-        $.each(data, function (i, item) {
-          html += '<option value="' + item.id + '">' + item.specs + '</option>';
-        });
-        spEl.innerHTML = html;
-      },
-      error: function () {
-        spEl.innerHTML = '<option value="">Select Specialization</option>';
-      }
+    el.classList.add('on');
+    selCities.push(name);
+  }
+  syncCities();
+};
+
+window.addCity = function () {
+  var inp = document.getElementById('cityinp');
+  if (!inp) return;
+  var v = inp.value.trim();
+  if (!v) return;
+  // Capitalize first letter
+  v = v.charAt(0).toUpperCase() + v.slice(1);
+  // Check for duplicates (case-insensitive)
+  var isDuplicate = selCities.some(function (city) {
+    return city.toLowerCase() === v.toLowerCase();
+  });
+  if (isDuplicate) {
+    alert('This city is already selected');
+    inp.value = '';
+    return;
+  }
+  if (selCities.length >= 3) {
+    document.getElementById('cylim') && (document.getElementById('cylim').style.display = 'block');
+    return;
+  }
+  selCities.push(v);
+  // Add pill to UI
+  var pills = document.getElementById('cypills');
+  if (pills) {
+    var sp = document.createElement('span');
+    sp.className = 'pill on added';
+    sp.textContent = v;
+    sp.onclick = function () { togCity(sp, v); };
+    pills.appendChild(sp);
+  }
+  inp.value = '';
+  syncCities();
+};
+
+function syncCities() {
+  var wrap = document.getElementById('prefcity-hidden-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  selCities.forEach(function (c) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = 'prefered_city[]'; inp.value = c;
+    wrap.appendChild(inp);
+  });
+  var ct = document.getElementById('cyct');
+  if (ct) ct.textContent = selCities.length + ' / 3';
+  var lim = document.getElementById('cylim');
+  if (lim) lim.style.display = selCities.length >= 3 ? 'block' : 'none';
+}
+
+/* ─── jsaTogglePw: toggle password visibility ─── */
+window.jsaTogglePw = function (id, btn) {
+  var inp = document.getElementById(id);
+  if (!inp) return;
+  var isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  btn.style.color = isPass ? 'var(--blue)' : '';
+};
+
+/* ─── sendMagicLink ─── */
+window.sendMagicLink = function (btn) {
+  var email = document.getElementById('otpEmail').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Please enter a valid email address');
+    return;
+  }
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+  $.ajax({
+    url: '{{ url("magic-link/send") }}', // configure this route when magic link feature is ready
+    method: 'POST',
+    data: { email: email, _token: '{{ csrf_token() }}' },
+    success: function () {
+      btn.textContent = 'Sent ✓';
+    },
+    error: function () {
+      btn.textContent = 'Send link';
+      btn.disabled = false;
+      alert('Could not send. Please try signing in with password.');
+    }
+  });
+};
+
+/* ─── valS1: validate step 1 and advance ─── */
+window.valS1 = function () {
+  var errs = [];
+  function req(id, label) {
+    var el = document.getElementById(id) || document.querySelector('[name="' + id + '"]');
+    if (!el || !el.value.trim()) errs.push(label + ' is required');
+  }
+  req('fn', 'First name');
+  req('ln', 'Last name');
+  var em = document.getElementById('em');
+  if (!em || !em.value.trim()) errs.push('Email is required');
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())) errs.push('Valid email is required');
+  else if (emailExists) errs.push('This email is already registered. Please sign in instead.');
+  var ph = document.querySelector('[name="phone"]');
+  if (!ph || !/^\d{10}$/.test(ph.value.trim())) errs.push('Valid 10-digit mobile is required');
+
+  // NOP date validation
+  var nop = document.getElementById('nop_days_hidden').value;
+  if (nop === 'Immediate Joiner') {
+    var d = document.getElementById('lwdinp');
+    if (!d || !d.value) errs.push('Last working date is required');
+  } else if (nop === 'Serving Notice') {
+    var dsrv = document.getElementById('lwdinp');
+    if (!dsrv || !dsrv.value) errs.push('Last working day is required');
+  }
+  if ((nop === 'Immediate Joiner' || nop === 'Serving Notice') && !document.querySelector('[name="lwd_proof"]').value) {
+    errs.push('Proof of last working date is required');
+  }
+  // Education
+  var eduSt = document.getElementById('edu-status');
+  if (!eduSt || !eduSt.value) errs.push('Education status is required');
+  var deg = document.getElementById('degree_title_select');
+  if (!deg || !deg.value) errs.push('Highest education is required');
+  var yr = document.getElementById('edu-year');
+  if (!yr || !yr.value) errs.push('Year of completion is required');
+
+  var errBox = document.getElementById('s1err');
+  var errList = document.getElementById('s1erl');
+  if (errs.length) {
+    errList.innerHTML = errs.map(function(e){ return '<li>' + e + '</li>'; }).join('');
+    errBox.style.display = 'block';
+    errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  errBox.style.display = 'none';
+  goStep(2);
+};
+
+/* ─── valS2: validate step 2 and advance ─── */
+window.valS2 = function () {
+  var errs = [];
+  function reqEl(name, label) {
+    var el = document.querySelector('[name="' + name + '"]');
+    if (!el || !el.value.trim()) errs.push(label + ' is required');
+  }
+  reqEl('latestdesg',        'Job title');
+  reqEl('latestcom',         'Company name');
+  // Validate s2exp and split into hidden fields
+  var expInp = document.getElementById('s2exp');
+  if (!expInp || expInp.value === '' || isNaN(parseFloat(expInp.value))) {
+    errs.push('Experience is required (e.g. 6.9 for 6 years 9 months)');
+  } else {
+    var expVal = parseFloat(expInp.value);
+    var expYr = Math.floor(expVal);
+    var expMo = Math.min(11, Math.round((expVal - expYr) * 10));
+    var expYrHid = document.getElementById('s2exp_yr');
+    var expMoHid = document.getElementById('s2exp_mo');
+    if (expYrHid) expYrHid.value = expYr;
+    if (expMoHid) expMoHid.value = expMo;
+    if (expVal > 40) errs.push('Experience cannot exceed 40 years');
+  }
+  // Validate CTC inputs are numeric and within sensible bounds
+  var ctcCurEl = document.querySelector('[name="expect_ctc_lakhs"]');
+  if (ctcCurEl && ctcCurEl.value.trim()) {
+    var cVal = parseFloat(ctcCurEl.value);
+    if (isNaN(cVal)) errs.push('Current CTC is invalid');
+    else if (cVal > 999) errs.push('Current CTC seems too large');
+  }
+  var ctcExpEl = document.querySelector('[name="expect_ctc_lakhs3"]');
+  if (ctcExpEl && ctcExpEl.value.trim()) {
+    var ceVal = parseFloat(ctcExpEl.value);
+    if (isNaN(ceVal)) errs.push('Expected CTC is invalid');
+    else if (ceVal > 999) errs.push('Expected CTC seems too large');
+  }
+  reqEl('gender_id',         'Gender');
+  reqEl('expect_ctc_lakhs',  'Current CTC');
+  reqEl('expect_ctc_lakhs3', 'Expected CTC');
+  reqEl('work_option',       'Work mode preference');
+  reqEl('work_type',         'Job type preference');
+  reqEl('mode_of_separation','Mode of separation');
+  reqEl('current_city',      'Current city');
+  reqEl('locality',          'Locality');
+  if (jsaSkills.length < 10) errs.push('At least 10 key skills are required (' + jsaSkills.length + ' added)');
+  if (selCities.length === 0) errs.push('At least 1 preferred city is required');
+
+  var errBox = document.getElementById('s2err');
+  var errList = document.getElementById('s2erl');
+  if (errs.length) {
+    errList.innerHTML = errs.map(function(e){ return '<li>' + e + '</li>'; }).join('');
+    errBox.style.display = 'block';
+    errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  errBox.style.display = 'none';
+  goStep(3);
+};
+
+/* ─── submitForm: final validation then submit ─── */
+window.submitForm = function () {
+  if (curStep < 3) {
+    if (curStep === 1) valS1();
+    if (curStep === 2) valS2();
+    if (curStep < 3) return;
+  }
+  var accCheck = document.getElementById('accuracyCheck');
+  if (!accCheck || !accCheck.checked) {
+    accCheck && accCheck.closest('.priv') && accCheck.closest('.priv').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    alert('Please confirm that the information you\'ve shared is accurate.');
+    return;
+  }
+  var terms = document.querySelector('[name="terms_of_use"]');
+  if (!terms || !terms.checked) {
+    alert('Please agree to the Terms & Conditions to create your account.');
+    return;
+  }
+  var resume = document.getElementById('cvmain');
+  if (!resume || !resume.files || !resume.files.length) {
+    alert('Please upload your CV before creating the account.');
+    return;
+  }
+  var pw = document.getElementById('pw');
+  var pwc = document.getElementById('pwc');
+  if (!pw || pw.value.length < 8) {
+    alert('Password must be at least 8 characters long.');
+    return;
+  }
+  if (!pwc || pw.value !== pwc.value) {
+    alert('Password and confirm password must match.');
+    return;
+  }
+  // show email in verify screen (soft transition, actual submit happens anyway)
+  var em = document.getElementById('em');
+  var vemail = document.getElementById('vemail');
+  if (vemail && em) vemail.textContent = em.value;
+  document.getElementById('jsa-signup-form').submit();
+};
+
+/* ─── Degree / Course AJAX ─── */
+window.jsaDegreeChange = function (val) {
+  var show   = val !== '' && ['1','5'].indexOf(val) === -1;
+  var csRow  = document.getElementById('course-spec-row');
+  if (csRow) csRow.style.display = show ? '' : 'none';
+  if (!show) return;
+  var csEl = document.getElementById('course_select');
+  if (!csEl) return;
+  csEl.innerHTML = '<option value="">Loading…</option>';
+  $.ajax({
+    type: 'POST', url: '{{ url("gety") }}',
+    data: { degree: val, _token: '{{ csrf_token() }}' },
+    success: function (data) {
+      var html = '<option value="">Select course</option>';
+      $.each(data, function (i, item) {
+        html += '<option value="' + item.id + '">' + item.course + '</option>';
+      });
+      csEl.innerHTML = html;
+      var spEl = document.getElementById('specilation_select');
+      if (spEl) spEl.innerHTML = '<option value="">Select specialization</option>';
+    },
+    error: function () { csEl.innerHTML = '<option value="">Select course</option>'; }
+  });
+
+  // Populate year of completion
+  populateEduYear(document.getElementById('edu-status') ? document.getElementById('edu-status').value : '', @if(old('year_of_completion'))'{{ old('year_of_completion') }}'@else null @endif);
+};
+
+window.jsaCourseChange = function (courseId) {
+  var spEl = document.getElementById('specilation_select');
+  if (!spEl) return;
+  if (!courseId) { spEl.innerHTML = '<option value="">Select specialization</option>'; return; }
+  spEl.innerHTML = '<option value="">Loading…</option>';
+  $.ajax({
+    type: 'POST', url: '{{ url("getspecs") }}',
+    data: { course: courseId, _token: '{{ csrf_token() }}' },
+    success: function (data) {
+      var html = '<option value="">Select specialization</option>';
+      $.each(data, function (i, item) {
+        html += '<option value="' + item.id + '">' + item.specs + '</option>';
+      });
+      spEl.innerHTML = html;
+    },
+    error: function () { spEl.innerHTML = '<option value="">Select specialization</option>'; }
+  });
+};
+
+/* ─── Restore old() values after validation error ─── */
+(function restoreOldValues() {
+  // Restore NOP state from old value
+  var nopVal = '{{ old('nop_days', 'Immediate Joiner') }}';
+  if (nopVal === 'Serving Notice') setN('s');
+  else if (nopVal === 'Fresher')   setN('f');
+  else                              setN('i');
+
+  // Restore skills
+  if (jsaSkills.length) renderSk();
+  goStep(1);
+  // Restore cities
+  if (selCities.length) {
+    selCities.forEach(function (c) {
+      var pill = document.querySelector('.znp-auth-v13 .pill[onclick*="' + c + '"]');
+      if (pill && !pill.classList.contains('on')) pill.classList.add('on');
     });
-  };
+    syncCities();
+  }
 
-  /* ── Final submit validation ── */
-  window.jsaHandleSignUp = function () {
-    if (jsaSkills.length < 10) {
-      document.getElementById('skills-error').style.display = 'block';
-      jsaGoStep(2);
-      return false;
-    }
-    var resumeInput = document.getElementById('resume-upload');
-    if (resumeInput && !resumeInput.files.length) {
-      alert('Please attach your resume before submitting.');
-      return false;
-    }
-    jsaSyncPreferredCities();
-    return true;
-  };
-
-  /* ── Restore state on validation error (page reload) ── */
-  (function restoreOnError() {
-    var hasErrors = document.querySelectorAll('.znp-jobseeker-auth .field-error').length > 0;
-    @if ($errors->any() && old('_from_signup'))
-    hasErrors = true;
-    @endif
-    if (hasErrors) {
-      // Switch to sign-up tab and advance to the step that has errors
-      jsaTab('signup');
-      // If step3 fields have errors, jump to step 3
-      @if ($errors->hasAny(['degree_title','education_status','course','specilation','organization','year_of_completion','resume','password','password_confirmation','terms_of_use']))
-      jsaGoStep(3);
-      @elseif ($errors->hasAny(['current_city','locality','mode_of_separation','work_option','gender_id','totalexp','totalexpmonth','latestcom','latestdesg','keyskills','work_type','expect_ctc_lakhs','expect_ctc_lakhs3']))
-      jsaGoStep(2);
-      @else
-      jsaGoStep(1);
-      @endif
-    }
-
-    // Restore previously-entered nop_days display
-    var nopSelect = document.getElementById('nop_days');
-    if (nopSelect && nopSelect.value) {
-      jsaNopChange(nopSelect.value);
-    }
-
-    // Restore degree-dependent fields (AJAX-driven, chain-load old values)
+  // Restore degree-dependent fields
+  @if(old('degree_title'))
+  (function () {
+    var oldCourse = '{{ old('course') }}';
+    var oldSpec   = '{{ old('specilation') }}';
     var degSelect = document.getElementById('degree_title_select');
-    @if(old('degree_title'))
-    if (degSelect) {
-      // jsaDegreeChange triggers AJAX for courses; we override success to also restore old course/spec
-      (function () {
-        var oldCourse = '{{ old('course') }}';
-        var oldSpec   = '{{ old('specilation') }}';
-        degSelect.value = '{{ old('degree_title') }}';
-        // Show rows immediately
-        var show = ['2','3','4'].indexOf('{{ old('degree_title') }}') !== -1;
-        var csRow  = document.getElementById('course-spec-row');
-        var orgRow = document.getElementById('org-row');
-        if (csRow)  csRow.style.display  = show ? '' : 'none';
-        if (orgRow) orgRow.style.display = show ? '' : 'none';
-        if (!show) return;
-        // Load courses then restore selection
+    if (!degSelect) return;
+    // Populate year dropdown for existing degree
+    var yr = document.getElementById('edu-year');
+    if (yr) populateEduYear(document.getElementById('edu-status') ? document.getElementById('edu-status').value : '', '{{ old('year_of_completion') }}');
+    // Show course-spec row
+    var csRow = document.getElementById('course-spec-row');
+    if (csRow) csRow.style.display = '';
+    // Load courses then restore
+    $.ajax({
+      type: 'POST', url: '{{ url("gety") }}',
+      data: { degree: '{{ old('degree_title') }}', _token: '{{ csrf_token() }}' },
+      success: function (data) {
+        var csEl = document.getElementById('course_select');
+        if (!csEl) return;
+        var html = '<option value="">Select course</option>';
+        $.each(data, function (i, item) {
+          html += '<option value="' + item.id + '"' + (oldCourse == item.id ? ' selected' : '') + '>' + item.course + '</option>';
+        });
+        csEl.innerHTML = html;
+        if (!oldCourse) return;
         $.ajax({
-          type: 'POST',
-          url: '{{ url("gety") }}',
-          data: { degree: '{{ old('degree_title') }}', _token: '{{ csrf_token() }}' },
-          success: function (data) {
-            var csEl = document.getElementById('course_select');
-            if (!csEl) return;
-            var html = '<option value="">Select Course</option>';
-            $.each(data, function (i, item) {
-              html += '<option value="' + item.id + '"' + (oldCourse == item.id ? ' selected' : '') + '>' + item.course + '</option>';
+          type: 'POST', url: '{{ url("getspecs") }}',
+          data: { course: oldCourse, _token: '{{ csrf_token() }}' },
+          success: function (sData) {
+            var spEl = document.getElementById('specilation_select');
+            if (!spEl) return;
+            var sHtml = '<option value="">Select specialization</option>';
+            $.each(sData, function (i, item) {
+              sHtml += '<option value="' + item.id + '"' + (oldSpec == item.id ? ' selected' : '') + '>' + item.specs + '</option>';
             });
-            csEl.innerHTML = html;
-            if (!oldCourse) return;
-            // Load specs for restored course
-            $.ajax({
-              type: 'POST',
-              url: '{{ url("getspecs") }}',
-              data: { course: oldCourse, _token: '{{ csrf_token() }}' },
-              success: function (sData) {
-                var spEl = document.getElementById('specilation_select');
-                if (!spEl) return;
-                var sHtml = '<option value="">Select Specialization</option>';
-                $.each(sData, function (i, item) {
-                  sHtml += '<option value="' + item.id + '"' + (oldSpec == item.id ? ' selected' : '') + '>' + item.specs + '</option>';
-                });
-                spEl.innerHTML = sHtml;
-              }
-            });
+            spEl.innerHTML = sHtml;
           }
         });
-      }());
-    }
-    @else
-    if (degSelect && degSelect.value) {
-      jsaDegreeChange(degSelect.value);
-    }
-    @endif
-
-    // Restore pre-checked city chips
-    document.querySelectorAll('.znp-jobseeker-auth .city-chip.selected').forEach(function () {
-      jsaSyncPreferredCities();
+      }
     });
   }());
+  @endif
 
-})();
+  // Navigate to correct step on validation error
+  @if($errors->any() && old('_from_signup'))
+  @if($errors->hasAny(['resume','password','password_confirmation','terms_of_use']))
+  goStep(3);
+  @elseif($errors->hasAny(['latestdesg','latestcom','totalexp','gender_id','expect_ctc_lakhs','expect_ctc_lakhs3','work_option','work_type','mode_of_separation','current_city','locality','keyskills']))
+  goStep(2);
+  @else
+  goStep(1);
+  @endif
+  swTab('su');
+  @elseif($errors->any() && !old('_from_signup'))
+  swTab('si');
+  @elseif(session('error_message') || session('error_message1') || session('verify_message'))
+  swTab('si');
+  @endif
+}());
 </script>
 
 <script>
 $(function () {
 
-  /* ─── helper for text highlight in dropdown ─── */
-  function jsaAcHighlight($menu, term) {
+  /* ─── helper: highlight matching text ─── */
+  function acHL($menu, term) {
     $menu.find('li').each(function () {
       var item = $(this).data('ui-autocomplete-item');
-      if (item) {
-        var hl = item.label.replace(
-          new RegExp($.ui.autocomplete.escapeRegex(term), 'gi'),
-          '<span class="highlight">$&</span>'
-        );
-        $(this).find('.ui-menu-item-wrapper').html(hl);
-      }
+      if (!item) return;
+      var hl = item.label.replace(
+        new RegExp($.ui.autocomplete.escapeRegex(term), 'gi'),
+        '<span class="highlight">$&</span>'
+      );
+      $(this).find('.ui-menu-item-wrapper').html(hl);
     });
   }
 
-  /* ─── 1. Current City ─────────────────────────────────────── */
+  /* 1. Current City */
   $('#jsa-city-input').autocomplete({
     minLength: 1,
-    appendTo: '.znp-jobseeker-auth',
+    appendTo: '.znp-auth-v13',
     source: function (req, res) {
-      $.ajax({
-        url: '{{ url("autocomplete/search-location-job1") }}',
-        dataType: 'json',
+      $.ajax({ url: '{{ url("autocomplete/search-location-job1") }}', dataType: 'json',
         data: { query: req.term },
-        success: function (data) {
-          res($.map(data, function (v) { return { label: v, value: v }; }));
-        }
+        success: function (data) { res($.map(data, function (v) { return { label: v, value: v }; })); }
       });
     },
     focus: function () { return false; },
-    open: function () { jsaAcHighlight($(this).autocomplete('widget'), this.value); },
+    open:  function () { acHL($(this).autocomplete('widget'), this.value); },
     select: function (e, ui) { this.value = ui.item.value; return false; }
   });
 
-  /* ─── 2. Latest Company ───────────────────────────────────── */
+  /* 2. Current Locality */
+  $('#jsa-locality-input').autocomplete({
+    minLength: 1,
+    appendTo: '.znp-auth-v13',
+    source: function (req, res) {
+      $.ajax({ url: '{{ url("autocomplete/search-location-job1") }}', dataType: 'json',
+        data: { query: req.term },
+        success: function (data) { res($.map(data, function (v) { return { label: v, value: v }; })); }
+      });
+    },
+    focus: function () { return false; },
+    open:  function () { acHL($(this).autocomplete('widget'), this.value); },
+    select: function (e, ui) { this.value = ui.item.value; return false; }
+  });
+
+  /* 3. Latest Company */
   $('#jsa-company-input').autocomplete({
     minLength: 1,
-    appendTo: '.znp-jobseeker-auth',
+    appendTo: '.znp-auth-v13',
     source: function (req, res) {
-      $.ajax({
-        url: '{{ url("search-companies") }}',
-        dataType: 'json',
+      $.ajax({ url: '{{ url("search-companies") }}', dataType: 'json',
         data: { q: req.term },
-        success: function (data) {
-          res($.map(data, function (c) { return { label: c.name, value: c.name, id: c.id }; }));
-        }
+        success: function (data) { res($.map(data, function (c) { return { label: c.name, value: c.name }; })); }
       });
     },
     focus: function () { return false; },
-    open: function () { jsaAcHighlight($(this).autocomplete('widget'), this.value); },
+    open:  function () { acHL($(this).autocomplete('widget'), this.value); },
     select: function (e, ui) { this.value = ui.item.value; return false; }
   });
 
-  /* ─── 3. Jobseeker Privacy (hide from companies) — multi-value ─ */
-  function splitIgnore(val) { return val.split(/,\s*/); }
-  function extractLastIgnore(term) { return splitIgnore(term).pop(); }
+  /* 4. Key Skills: Handled by inline oninput handler above */
 
-  $('#jsa-ignore-input')
-    .on('keydown', function (e) {
-      if (e.keyCode === $.ui.keyCode.TAB && $(this).autocomplete('instance').menu.active) {
-        e.preventDefault();
-      }
-    })
-    .autocomplete({
-      minLength: 1,
-      appendTo: '.znp-jobseeker-auth',
-      source: function (req, res) {
-        $.ajax({
-          url: '{{ url("search-companies") }}',
-          dataType: 'json',
-          data: { q: extractLastIgnore(req.term) },
-          success: function (data) {
-            res($.map(data, function (c) { return { label: c.name, value: c.name }; }));
-          }
-        });
-      },
-      focus: function () { return false; },
-      open: function () {
-        jsaAcHighlight($(this).autocomplete('widget'), extractLastIgnore(this.value));
-      },
-      select: function (e, ui) {
-        var terms = splitIgnore(this.value);
-        terms.pop();
-        terms.push(ui.item.value);
-        terms.push('');
-        this.value = terms.join(', ');
-        return false;
-      }
-    });
 
-  /* ─── 4. Key Skills ──────────────────────────────────────── */
-  $('#skill-input').autocomplete({
-    minLength: 2,
-    appendTo: '.znp-jobseeker-auth',
-    source: function (req, res) {
-      $.ajax({
-        url: '{{ url("autocomplete/cvskills") }}',
-        dataType: 'json',
-        data: { query: req.term },
-        success: function (data) {
-          res($.map(data, function (v) { return { label: v, value: v }; }));
-        }
-      });
-    },
-    focus: function () { return false; },
-    open: function () { jsaAcHighlight($(this).autocomplete('widget'), this.value); },
-    select: function (e, ui) {
-      jsaAddSkill(ui.item.value);
-      this.value = '';
-      $(this).autocomplete('close');
-      return false;
-    }
-  });
-
-  /* ─── 5. University / College ─────────────────────────────── */
+  /* 5. University */
   $('#jsa-university-input').autocomplete({
     minLength: 2,
-    appendTo: '.znp-jobseeker-auth',
+    appendTo: '.znp-auth-v13',
     source: function (req, res) {
-      $.ajax({
-        url: '{{ url("search-university") }}',
-        dataType: 'json',
+      $.ajax({ url: '{{ url("search-university") }}', dataType: 'json',
         data: { q: req.term },
-        success: function (data) {
-          res($.map(data, function (u) { return { label: u.educations, value: u.educations }; }));
-        }
+        success: function (data) { res($.map(data, function (u) { return { label: u.educations, value: u.educations }; })); }
       });
     },
     focus: function () { return false; },
-    open: function () { jsaAcHighlight($(this).autocomplete('widget'), this.value); },
+    open:  function () { acHL($(this).autocomplete('widget'), this.value); },
     select: function (e, ui) { this.value = ui.item.value; return false; }
   });
 
+  /* Close skill dropdown on outside click */
+  $(document).on('click', function (e) {
+    if (!$(e.target).closest('.skwrap').length) {
+      var dd = document.getElementById('skdd');
+      if (dd) {
+        dd.classList.remove('on');
+        // Don't clear innerHTML - let the input handler manage content
+      }
+    }
+  });
 });
 </script>
 
 <script>
-// ── Success modal (shown when session('new_message') exists) ──
+/* ── Success modal ── */
 document.addEventListener('DOMContentLoaded', function () {
   var AUTOCLOSE_MS = 6000;
   var modal = document.getElementById('znp-success-modal');
   if (!modal) return;
 
-  // Force Sign In tab to show behind the modal
-  var tabSignin = document.getElementById('tab-signin');
-  var tabSignup  = document.getElementById('tab-signup');
-  if (tabSignin) { tabSignin.classList.add('active');   tabSignup.classList.remove('active'); }
-  var secSignin = document.getElementById('section-signin');
-  var secSignup  = document.getElementById('section-signup');
-  if (secSignin) { secSignin.classList.add('active');   secSignup.classList.remove('active'); }
+  var bar = document.getElementById('jsa-modal-bar');
+  if (bar) bar.style.animationDuration = (AUTOCLOSE_MS / 1000) + 's';
 
-  // Set auto-close bar duration
-  var content = modal.querySelector('.znp-modal-content');
-  if (content) content.style.setProperty('--znp-bar-dur', (AUTOCLOSE_MS / 1000) + 's');
-
-  // Open with tiny delay so CSS transition fires
   setTimeout(function () { modal.classList.add('open'); }, 16);
 
   var prevFocus = document.activeElement;
-  var autoCloseTimer = null;
+  var timer = null;
 
-  function jsaClose () {
+  function jsaClose() {
     modal.classList.remove('open');
-    if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
+    if (timer) { clearTimeout(timer); timer = null; }
     if (prevFocus && prevFocus.focus) prevFocus.focus();
+    swTab('si');
   }
   window.jsaCloseSuccessModal = jsaClose;
 
-  // "Continue to Sign In" button
   var cta = document.getElementById('jsa-success-close');
   if (cta) { cta.focus(); cta.addEventListener('click', jsaClose); }
+  timer = setTimeout(jsaClose, AUTOCLOSE_MS);
 
-  // Auto-close
-  autoCloseTimer = setTimeout(jsaClose, AUTOCLOSE_MS);
-
-  // Pause on hover
   modal.addEventListener('mouseenter', function () {
-    modal.classList.add('paused');
-    if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
+    if (timer) { clearTimeout(timer); timer = null; }
   });
   modal.addEventListener('mouseleave', function () {
-    modal.classList.remove('paused');
-    if (!autoCloseTimer) autoCloseTimer = setTimeout(jsaClose, 2500);
+    if (!timer) timer = setTimeout(jsaClose, 2500);
   });
-
-  // ESC key
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') jsaClose();
   });

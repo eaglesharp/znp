@@ -415,16 +415,17 @@
 .znp-employer-auth .btn-primary {
     width: 100%;
     padding: 11px 20px;
-    background: var(--blue); border: none;
+    background: #eef2ff;
+    border: none;
     border-radius: 8px;
-    color: var(--white) !important;
-    font-size: 13px !important; font-weight: 700 !important;
+    color: var(--blue) !important;
+    font-weight: 600 !important;
     cursor: pointer;
     transition: all 0.2s;
     box-shadow: 0 4px 12px rgba(26,63,170,0.2);
 }
 .znp-employer-auth .btn-primary:hover {
-    background: var(--blue-dark);
+    background: #eef2ff;
     box-shadow: 0 6px 16px rgba(26,63,170,0.3);
     transform: translateY(-1px);
 }
@@ -945,8 +946,9 @@
                 <div class="form-group">
                   <label class="form-label" for="signup-email">Official Email <span class="required">*</span></label>
                   <input type="email" name="email" id="signup-email" class="form-input"
-                         placeholder="you@company.com"
-                         value="{{ old('email') }}" autocomplete="email" required>
+                           placeholder="you@company.com"
+                           value="{{ old('email') }}" autocomplete="email" required oninput="znpChkEm(this)">
+                    <div id="signup-emst" style="margin-top:6px"></div>
                   @if($errors->has('email'))
                     <div style="color:#dc2626;font-size:11px;margin-top:4px;">{{ $errors->first('email') }}</div>
                   @endif
@@ -1091,7 +1093,7 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="linkedin">LinkedIn Profile <span style="color:var(--text-muted);font-weight:400;">(Optional)</span></label>
+                <label class="form-label" for="linkedin">LinkedIn Profile</span><span class="required">*</span></label>
                 <input type="url" name="linkedin" id="linkedin" class="form-input"
                        placeholder="https://linkedin.com/company/your-company"
                        value="{{ old('linkedin') }}">
@@ -1108,16 +1110,16 @@
 
             {{-- ── STEP 3: Upload & Confirm ── --}}
             <div id="step3" style="display:none; margin-top: 22px;">
-              <div class="info-note">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="16" x2="12" y2="12"/>
-                  <line x1="12" y1="8" x2="12.01" y2="8"/>
-                </svg>
-                <div class="info-note-text">
-                  Your account will be reviewed within 24 hours. You'll receive a confirmation email once approved.
-                </div>
-              </div>
+              <!--<div class="info-note">-->
+              <!--  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
+              <!--    <circle cx="12" cy="12" r="10"/>-->
+              <!--    <line x1="12" y1="16" x2="12" y2="12"/>-->
+              <!--    <line x1="12" y1="8" x2="12.01" y2="8"/>-->
+              <!--  </svg>-->
+              <!--  <div class="info-note-text">-->
+              <!--    Your account will be reviewed within 24 hours. You'll receive a confirmation email once approved.-->
+              <!--  </div>-->
+              <!--</div>-->
 
               <div class="form-group">
                 <label class="form-label">Company Logo</label>
@@ -1142,11 +1144,11 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
                     <input type="checkbox" name="is_gptw_certified" value="1" {{ old('is_gptw_certified') ? 'checked' : '' }}>
-                    <span>GPTW Certified</span>
+                    <span>Great Place to Work Certification</span>
                   </label>
                   <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
                     <input type="checkbox" name="is_top_employer" value="1" {{ old('is_top_employer') ? 'checked' : '' }}>
-                    <span>Top Employer</span>
+                    <span>Linkedln Top Companies</span>
                   </label>
                   <label class="checkbox-item" style="padding: 8px 12px; background: #f8f9ff; border: 1px solid var(--border); border-radius: 8px;">
                     <input type="checkbox" name="is_disability_hiring" value="1" {{ old('is_disability_hiring') ? 'checked' : '' }}>
@@ -1167,8 +1169,8 @@
                 <label class="checkbox-item">
                   <input type="checkbox" name="terms" value="1" {{ old('terms') ? 'checked' : '' }}>
                   I have read and agree to the
-                  <a href="{{ url('/terms') }}" target="_blank">Terms &amp; Conditions</a>
-                  and <a href="{{ url('/privacy') }}" target="_blank">Privacy Policy</a>
+                  <a href="{{ url('/terms-and-conditons') }}" target="_blank">Terms &amp; Conditions</a>
+                  and <a href="{{ url('/privacy-policy') }}" target="_blank">Privacy Policy</a>
                 </label>
                 @if($errors->has('terms'))
                   <div style="color:#dc2626;font-size:11px;">{{ $errors->first('terms') }}</div>
@@ -1234,6 +1236,10 @@ function znpUpdateFileName(input) {
 // ── Validation helpers ──
 // ─────────────────────────────────────────
 var znpCurrentStep = 1;
+// Real-time email check state for employer signup
+var znpEmailCheckTimer = null;
+var znpEmailCheckXhr = null;
+var znpEmailExists = false;
 
 function znpMarkInvalid(el, msg) {
     el.classList.add('is-invalid');
@@ -1266,6 +1272,45 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+/* ─── znpChkEm: realtime email check for employer signup ─── */
+function znpChkEm(inp) {
+  var el = document.getElementById('signup-emst');
+  if (!el) return;
+  var v = (inp.value || '').trim();
+  znpEmailExists = false;
+  if (znpEmailCheckTimer) clearTimeout(znpEmailCheckTimer);
+  if (znpEmailCheckXhr && znpEmailCheckXhr.abort) znpEmailCheckXhr.abort();
+  if (!v) { el.innerHTML = ''; inp.classList.remove('is-invalid'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+    inp.classList.add('is-invalid');
+    el.innerHTML = '<div style="color:#dc2626;font-size:11px">Invalid email format</div>';
+    return;
+  }
+  inp.classList.remove('is-invalid');
+  el.innerHTML = '<div style="color:#94a3b8;font-size:11px">Checking email…</div>';
+  znpEmailCheckTimer = setTimeout(function () {
+    znpEmailCheckXhr = $.ajax({
+      type: 'POST',
+      url: '{{ url("check-email") }}',
+      dataType: 'json',
+      data: { email: v, _token: '{{ csrf_token() }}' },
+      success: function (data) {
+        znpEmailExists = !!(data && data.exists);
+        if (znpEmailExists) {
+          inp.classList.add('is-invalid');
+          el.innerHTML = '<div style="color:#dc2626;font-size:11px">This email is already registered. Please sign in.</div>';
+        } else {
+          inp.classList.remove('is-invalid');
+          el.innerHTML = '<div style="color:#16a34a;font-size:11px">✓ Looks good</div>';
+        }
+      },
+      error: function () {
+        el.innerHTML = '<div style="color:#94a3b8;font-size:11px">Could not verify email right now</div>';
+      }
+    });
+  }, 350);
+}
+
 function znpValidateStep(step) {
     var valid = true;
     var firstInvalid = null;
@@ -1289,6 +1334,13 @@ function znpValidateStep(step) {
         check('signup-email', 'Enter a valid email address', function(v) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
         });
+      // prevent proceeding if email was detected as already registered
+      var emEl = document.getElementById('signup-email');
+      if (emEl && znpEmailExists) {
+        znpMarkInvalid(emEl, 'This email is already registered. Please sign in.');
+        if (!firstInvalid) firstInvalid = emEl;
+        valid = false;
+      }
         check('signup-password', 'Password must be at least 6 characters', function(v) {
             return v.length >= 6;
         });

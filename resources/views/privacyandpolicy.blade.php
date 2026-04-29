@@ -4,7 +4,7 @@
 
 <!-- Header start -->
 
-@include('includes.header')
+{{-- @include('includes.header') --}}
 
 <style>
     h2 {
@@ -169,6 +169,6 @@
    
                 </div>
 </section>
-@include('includes.footer')
+{{-- @include('includes.footer') --}}
 
 @endsection

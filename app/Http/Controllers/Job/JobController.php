@@ -284,6 +284,17 @@ class JobController extends Controller
     public function jobsPage(Request $request)
     {
         $query = PostJob::with(['company', 'jobSkills'])->status();
+        $metroLocationMap = [
+            'Bengaluru' => ['bengaluru', 'bangalore'],
+            'Mumbai' => ['mumbai', 'navi mumbai'],
+            'Hyderabad' => ['hyderabad', 'secunderabad'],
+            'Delhi NCR' => ['delhi', 'new delhi', 'noida', 'gurgaon', 'gurugram', 'ghaziabad', 'faridabad'],
+            'Pune' => ['pune'],
+            'Chennai' => ['chennai'],
+            'Kolkata' => ['kolkata', 'calcutta'],
+            'Ahmedabad' => ['ahmedabad'],
+        ];
+        $metroKeywords = array_values(array_unique(array_merge(...array_values($metroLocationMap))));
 
         // ── Text search (q) — split comma-separated terms, match any
         if ($q = trim($request->input('q', ''))) {
@@ -368,8 +379,33 @@ class JobController extends Controller
         // ── Location sidebar filter (multi-select)
         if ($locations = array_filter((array) $request->input('location', []))) {
             $query->where(function ($sq) use ($locations) {
+                $metroLocationMap = [
+                    'Bengaluru' => ['bengaluru', 'bangalore'],
+                    'Mumbai' => ['mumbai', 'navi mumbai'],
+                    'Hyderabad' => ['hyderabad', 'secunderabad'],
+                    'Delhi NCR' => ['delhi', 'new delhi', 'noida', 'gurgaon', 'gurugram', 'ghaziabad', 'faridabad'],
+                    'Pune' => ['pune'],
+                    'Chennai' => ['chennai'],
+                    'Kolkata' => ['kolkata', 'calcutta'],
+                    'Ahmedabad' => ['ahmedabad'],
+                ];
+                $metroKeywords = array_values(array_unique(array_merge(...array_values($metroLocationMap))));
                 foreach ($locations as $l) {
-                    $sq->orWhere('search', 'LIKE', '%' . strtolower($l) . '%');
+                    if ($l === 'Others') {
+                        $sq->orWhere(function ($otherQ) use ($metroKeywords) {
+                            foreach ($metroKeywords as $keyword) {
+                                $otherQ->where('search', 'NOT LIKE', '%' . $keyword . '%');
+                            }
+                        });
+                    } elseif (isset($metroLocationMap[$l])) {
+                        $sq->orWhere(function ($metroQ) use ($metroLocationMap, $l) {
+                            foreach ($metroLocationMap[$l] as $keyword) {
+                                $metroQ->orWhere('search', 'LIKE', '%' . $keyword . '%');
+                            }
+                        });
+                    } else {
+                        $sq->orWhere('search', 'LIKE', '%' . strtolower($l) . '%');
+                    }
                 }
             });
         }
@@ -469,16 +505,31 @@ class JobController extends Controller
         }
 
         // Locations: unserialize the serialized array column, count occurrences
-        $locationCounts = [];
-        PostJob::status()->pluck('location')->each(function ($raw) use (&$locationCounts) {
+        $locationCounts = array_fill_keys(array_keys($metroLocationMap), 0);
+        $locationCounts['Others'] = 0;
+        PostJob::status()->pluck('location')->each(function ($raw) use (&$locationCounts, $metroLocationMap) {
             $arr = @unserialize($raw);
-            if (!is_array($arr)) return;
-            foreach ($arr as $l) {
-                $l = trim($l);
-                if ($l) $locationCounts[$l] = ($locationCounts[$l] ?? 0) + 1;
+            if (!is_array($arr)) {
+                return;
+            }
+            $joined = strtolower(implode(' | ', array_filter(array_map('trim', $arr))));
+            if ($joined === '') {
+                return;
+            }
+            $matchedMetro = false;
+            foreach ($metroLocationMap as $label => $keywords) {
+                foreach ($keywords as $keyword) {
+                    if (strpos($joined, $keyword) !== false) {
+                        $locationCounts[$label]++;
+                        $matchedMetro = true;
+                        break;
+                    }
+                }
+            }
+            if (!$matchedMetro) {
+                $locationCounts['Others']++;
             }
         });
-        arsort($locationCounts);
 
         return view('znp.jobs', compact(
             'jobs', 'expCounts', 'salaryCounts', 'workModeCounts', 'shiftCounts', 'jobTypeCounts', 'locationCounts'

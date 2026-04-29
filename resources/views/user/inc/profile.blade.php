@@ -53,6 +53,8 @@
 
     $data4=\App\ProfileNop::where('user_id',$user->id)->first();
 
+    $nop1 = ''; // Initialize default value
+
     if((isset($data4->nop_days)? $data4->nop_days : '') == '1')
 
     {                                    
