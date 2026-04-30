@@ -890,7 +890,7 @@
         </form>
 
         <div class="alt-action" style="margin-top:14px;text-align:center;font-size:12px;color:var(--text-3)">
-          Sign in as an Employer? <a href="{{ route('employer.auth') }}" style="color:#3B5CCC;font-weight:600">Employer sign in</a>
+          Sign in as an Employer? <a href="{{ route('employer.login') }}" style="color:#3B5CCC;font-weight:600">Employer sign in</a>
         </div>
       </div>
       {{-- end sign-in panel --}}

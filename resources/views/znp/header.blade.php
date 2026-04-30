@@ -134,7 +134,7 @@ header.znp-header .znp-btn-post:hover {
 
 <header class="znp-header">
     <div class="znp-header-inner">
-        <a class="znp-logo" href="#">
+        <a class="znp-logo" href="{{ url('/') }}">
             <span class="znp-logo-text"><span class="logo-blue">Zero</span><span class="logo-orange">Notice</span><span class="logo-blue">Period</span></span>
         </a>
         <nav></nav>

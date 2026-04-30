@@ -46,13 +46,13 @@ Route::get('view-applicants-profile/{job_id}/{id}', 'Job\JobPublishController@vi
 
 //User module  
 
-Route::get('jobs', 'Job\JobController@jobs')->name('job.list');
+Route::get('jobs-old', 'Job\JobController@jobs')->name('job.list');
 
-Route::get('jobs-page', 'Job\JobController@jobsPage')->name('jobs.page');
-Route::get('jobs-autocomplete', 'Job\JobController@jobsAutocomplete')->name('jobs.autocomplete');
+Route::get('jobs', 'Job\JobController@jobsPage')->name('jobs.page');
 
-Route::get('job/{slug}', 'Job\JobController@jobDetail')->name('job.detail');
-Route::get('job-detail/{slug}', 'Job\JobController@jobDetailZnp')->name('job.detail.znp');
+Route::get('job-old/{slug}', 'Job\JobController@jobDetail')->name('job.detail');
+
+Route::get('job/{slug}', 'Job\JobController@jobDetailZnp')->name('job.detail.znp');
 
 Route::post('applyjob', 'Job\JobController@postApplyJob')->name('post.apply.job');
 

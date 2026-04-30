@@ -959,7 +959,7 @@
             @empty
                 <p style="font-size:12px;color:#94a3b8;margin:0;">No similar jobs found right now.</p>
             @endforelse
-            <a href="{{ route('job.list') }}" class="bb">Browse all jobs →</a>
+            <a href="{{ route('jobs.page') }}" class="bb">Browse all jobs →</a>
         </div>
 
     </div>

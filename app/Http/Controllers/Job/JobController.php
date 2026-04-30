@@ -279,7 +279,7 @@ class JobController extends Controller
     }
 
     /**
-     * Jobs listing page — new ZNP design (temp URL: /jobs-page)
+     * Jobs listing page — new ZNP design (URL: /jobs)
      */
     public function jobsPage(Request $request)
     {

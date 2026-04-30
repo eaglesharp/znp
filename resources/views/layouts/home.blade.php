@@ -189,7 +189,7 @@
 
     <div class="nav-actions">
         <a class="btn-find-jobs" href="{{ url('/jobs') }}">Find Jobs</a>
-        <a class="btn-post"      href="{{ url('/employer-register') }}">Post Jobs</a>
+        <a class="btn-post"      href="{{ url('/employer-login') }}">Post Jobs</a>
     </div>
 </header>
 

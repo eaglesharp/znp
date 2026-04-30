@@ -51,9 +51,6 @@ Route::view('coming-soon', 'coming');
 
 
 $real_path = realpath(__DIR__) . DIRECTORY_SEPARATOR . 'front_routes' . DIRECTORY_SEPARATOR;
-Route::get('/jobs-page', 'Job\JobController@jobsPage')->name('jobs.page');
-
-
 
 /* * ******** IndexController ************ */
 
@@ -180,11 +177,11 @@ Route::post('subscribe-newsletter', 'SubscriptionController@getSubscription')->n
 
 
 
-Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerLoginForm')->name('employer.login');
+Route::get('/employer-login-old', 'Company\Auth\LoginController@showEmployerLoginForm')->name('employer.login.old');
 
 Route::get('/employer-register', 'Company\Auth\RegisterController@showRegistrationForm')->name('company.register.page');
 
-Route::get('/employer-auth', 'Company\Auth\LoginController@showEmployerAuth')->name('employer.auth');
+Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerAuth')->name('employer.login');
 Route::get('/jobseeker-auth', 'Auth\LoginController@showJobseekerAuth')->name('jobseeker.auth');
 
 /* * ******** OrderController ************ */
@@ -244,9 +241,36 @@ include_once($real_path . 'site_user.php');
 
 /* * ******** User Auth ************ */
 
+// Disable default Auth::routes and create custom ones
+// GET /login -> redirect to jobseeker-auth
+Route::get('/login', function() { 
+    return redirect()->route('jobseeker.auth'); 
+})->name('login');
 
+// POST /login -> use LoginController@login
+Route::post('/login', 'Auth\LoginController@login');
 
-Auth::routes(['verify' => true]);
+// GET /register -> redirect to jobseeker-auth  
+Route::get('/register', function() { 
+    return redirect()->route('jobseeker.auth'); 
+})->name('register');
+
+// POST /register -> use RegisterController@register
+Route::post('/register', 'Auth\RegisterController@register')->name('register.post');
+
+// Password reset routes (from Auth::routes)
+Route::post('/password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
+Route::post('/password/reset', 'Auth\ResetPasswordController@reset')->name('password.update');
+Route::get('/password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
+Route::get('/password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
+
+// Logout
+Route::post('/logout', 'Auth\LoginController@logout')->name('logout');
+
+// Email verification routes
+Route::get('/email/verify', 'Auth\VerificationController@show')->name('verification.notice');
+Route::get('/email/verify/{id}/{hash}', 'Auth\VerificationController@verify')->middleware(['signed'])->name('verification.verify');
+Route::post('/email/resend', 'Auth\VerificationController@resend')->middleware(['throttle:6,1'])->name('verification.resend');
 
 // Route::get('email/resend', 'Auth\VerificationController@resend')->name('verification.resend');
 

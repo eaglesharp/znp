@@ -491,7 +491,7 @@
                     ['label' => 'Permanent', 'keyword' => 'Full Time'],
                     ['label' => 'Freshers',  'keyword' => 'Fresher'],
                 ] as $tag)
-                    <a class="hero-tag" href="{{ url('/jobs') . '?searchfield=' . urlencode($tag['keyword']) }}" target="_blank" rel="noopener noreferrer">{{ $tag['label'] }}</a>
+                    <a class="hero-tag" href="{{ url('/jobs') . '?q=' . urlencode($tag['keyword']) }}" target="_blank" rel="noopener noreferrer">{{ $tag['label'] }}</a>
                 @endforeach
             </div>
         </div>
@@ -726,7 +726,7 @@
 
     <div class="cat-grid">
         @foreach ($categoryCards as $cat)
-            <a class="cat-card" href="{{ url('/jobs') . '?' . (($cat['query_key'] ?? 'searchfield') . '=' . urlencode($cat['keyword'])) }}" target="_blank" rel="noopener noreferrer">
+            <a class="cat-card" href="{{ url('/jobs') . '?' . (($cat['query_key'] ?? 'q') . '=' . urlencode($cat['keyword'])) }}" target="_blank" rel="noopener noreferrer">
                 <div class="cat-icon" style="background: {{ $cat['bg'] }};" aria-hidden="true">{{ $cat['icon'] }}</div>
                 <div>
                     <div class="cat-name">{{ $cat['name'] }}</div>
@@ -838,7 +838,7 @@
             <li><span class="dc-bullet" aria-hidden="true"></span>Find contractors and permanent hires</li>
             <li><span class="dc-bullet" aria-hidden="true"></span>Buy bulk job posts</li>
         </ul>
-        <a class="dc-cta" href="{{ url('/employer-register') }}">Post a job</a>
+        <a class="dc-cta" href="{{ url('/employer-login') }}">Post a job</a>
     </div>
 
 </div>
@@ -849,8 +849,8 @@
     <div class="email-title">Ready to <span>hire immediately?</span></div>
     <p class="email-sub">Join hundreds of employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
     <div class="cta-btns">
-            <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-register') }}'">I'm an Employer</button>
-      <button class="cta-btn-secondary" onclick="window.location='{{ url('/register') }}'">I'm a Jobseeker</button>
+            <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-login') }}'">I'm an Employer</button>
+      <button class="cta-btn-secondary" onclick="window.location='{{ url('/jobseeker-auth') }}'">I'm a Jobseeker</button>
     </div>
   </div>
 </section>
@@ -870,8 +870,8 @@
         var skill = $('#skillInput').val().trim();
         var city  = $('#cityInput').val().trim();
         var params = new URLSearchParams();
-        if (skill) params.set('searchfield', skill);
-        if (city)  params.set('location', city);
+        if (skill) params.set('q', skill);    // jobsPage() reads 'q' for keyword
+        if (city)  params.set('loc', city);   // jobsPage() reads 'loc' for location
         var url = '/jobs' + (params.toString() ? '?' + params.toString() : '');
         window.open(url, '_blank');
     }

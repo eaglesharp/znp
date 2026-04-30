@@ -185,7 +185,7 @@
 
     <div class="nav-actions">
         <a class="btn-find-jobs" href="{{ url('/jobs') }}">Find Jobs</a>
-        <a class="btn-post"      href="{{ url('/employer-register') }}">Post Jobs</a>
+        <a class="btn-post"      href="{{ url('/employer-login') }}">Post Jobs</a>
     </div>
 </header>
 
@@ -204,7 +204,7 @@
         <div class="email-title">Ready to <span>hire immediately?</span></div>
         <p class="email-sub">Join 1,800+ employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
         <div class="cta-btns">
-            <a class="cta-btn-primary" href="{{ url('/employer-register') }}">Post a Job — It's Free</a>
+            <a class="cta-btn-primary" href="{{ url('/employer-login') }}">Post a Job — It's Free</a>
             <a class="cta-btn-secondary" href="{{ url('/register') }}">I'm a Jobseeker</a>
         </div>
     </div>
