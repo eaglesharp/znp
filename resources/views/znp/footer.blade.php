@@ -123,6 +123,11 @@ footer.znp-footer a { text-decoration: none; }
     object-fit: contain;
     display: block;
 }
+.znp-social-svg{
+    width: 18px;
+    height: 18px;
+    display: block;
+}
 .footer-brand{
     font-size: 18px;
     font-weight: 800;
@@ -190,7 +195,11 @@ footer.znp-footer a { text-decoration: none; }
                 <a href="https://www.facebook.com/profile.php?id=100078635680624" class="znp-social-icon" title="Facebook" aria-label="Facebook"><img src="{{ asset('asset/images/fb.png') }}" alt="Facebook" class="znp-social-img"></a>
                 <a href="https://www.linkedin.com/company/zeronoticeperiod/" class="znp-social-icon" title="LinkedIn" aria-label="LinkedIn"><img src="{{ asset('asset/images/linkedin.png') }}" alt="LinkedIn" class="znp-social-img"></a>
                 <a href="https://twitter.com/ZNPTEAM" class="znp-social-icon" title="Twitter" aria-label="Twitter"><img src="{{ asset('asset/images/twitter.png') }}" alt="Twitter" class="znp-social-img"></a>
-                <a href="https://www.youtube.com/watch?v=6WZOxnYi4Cs" class="znp-social-icon" title="YouTube" aria-label="YouTube"><img src="{{ asset('asset/images/youtube.png') }}" alt="YouTube" class="znp-social-img"></a>
+                <a href="https://www.instagram.com/_zeronotice_/" class="znp-social-icon" title="Instagram" aria-label="Instagram">
+                    <svg class="znp-social-svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4A5.8 5.8 0 0 1 16.2 22H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm8.4 2H7.8A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm6.25-2.35a1.15 1.15 0 1 1 0 2.3 1.15 1.15 0 0 1 0-2.3Z"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </div>

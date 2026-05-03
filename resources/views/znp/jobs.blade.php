@@ -1,5 +1,7 @@
 @extends('layouts.znp')
 
+@section('page_title', 'Browse Immediate Joiner Jobs in India | ZeroNoticePeriod')
+
 @push('styles')
 <style>
 /* ── ZNP JOBS: SCOPE & RESET ── */
@@ -398,6 +400,7 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .znp-jobs .jc-meta-item svg { width: 13px; height: 13px; color: var(--text-light); flex-shrink: 0; }
+.znp-jobs .jc-exp-lbl { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .znp-jobs .jc-inr-icon { font-size: 12px; color: var(--text-light); flex-shrink: 0; font-weight: 600; }
 
 .znp-jobs .jc-details { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
@@ -471,7 +474,6 @@
 .znp-jobs .pg-num:hover       { border-color: var(--blue); color: var(--blue); }
 .znp-jobs .pg-num.active      { background: var(--blue); color: #fff; border-color: var(--blue); }
 .znp-jobs .pg-ellipsis        { color: var(--text-light); font-size: 13px; padding: 0 4px; }
-.znp-jobs .pbn-short          { display: none; }
 
 /* ── MOBILE ELEMENTS: hidden on desktop ── */
 .znp-jobs .mob-filter-overlay { display: none; }
@@ -667,8 +669,6 @@
     .znp-jobs .pg-num        { width: 26px; height: 26px; font-size: 10.5px; }
     .znp-jobs .pg-ellipsis   { padding: 0 1px; font-size: 10.5px; }
     .znp-jobs .pg-mob-hide   { display: none !important; }
-    .znp-jobs .pbn-long      { display: inline; }
-    .znp-jobs .pbn-short     { display: none; }
 }
 
 /* ── EXTRA SMALL (≤ 390px) ── */
@@ -736,7 +736,7 @@
     {{-- ── SEARCH HERO ── --}}
     <div class="search-hero">
         <div class="sh-inner">
-            <div class="sh-title">India's exclusive pool of <span>immediately available</span> talent, Apply Now!</div>
+            <div class="sh-title">Browse Immediate Joiner Jobs in India, <span>Apply Now!</span></div>
             <form method="GET" action="{{ route('jobs.page') }}" id="searchForm">
                 <div class="search-bar">
                     <div class="sb-field">
@@ -993,7 +993,7 @@
                                  onclick="applyFilterEl(this)" data-param="edu" data-val="{{ $eduVal }}">
                                 <div class="fo-box">{{ $eduActive ? '✓' : '' }}</div>
                                 <span class="fo-label">{{ $eduVal }}</span>
-                                <span class="fo-count">0</span>
+                                <span class="fo-count">{{ $eduCounts[$eduVal] ?? 0 }}</span>
                             </div>
                         @endforeach
                         </div>
@@ -1014,7 +1014,7 @@
                                  onclick="applyFilterEl(this)" data-param="posted_by" data-val="{{ $pbVal }}">
                                 <div class="fo-box">{{ $pbActive ? '✓' : '' }}</div>
                                 <span class="fo-label">{{ $pbVal }}</span>
-                                <span class="fo-count">0</span>
+                                <span class="fo-count">{{ $postedByCounts[$pbVal] ?? 0 }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -1198,9 +1198,9 @@
                                     <span class="jc-company">{{ $companyName }}</span>
                                 @endif
                                 @if($job->experience)
-                                    <span class="jc-meta-item">
+                                    <span class="jc-meta-item" title="Experience required for this role">
                                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                                        {{ $job->experience }}
+                                        <span class="jc-exp-lbl">Exp. required:</span> {{ $job->experience }}
                                     </span>
                                 @endif
                                 @if($salaryStr)
@@ -1268,7 +1268,7 @@
             <div class="pagination">
                 <button class="pg-btn" {{ $jobs->onFirstPage() ? 'disabled' : '' }}
                         @if($jobs->previousPageUrl()) onclick="window.location.href='{{ $jobs->previousPageUrl() }}'" @endif>
-                    <span class="pbn-long">← Previous</span><span class="pbn-short">←</span>
+                    <span>Previous</span>
                 </button>
 
                 @if($pgStart > 1)
@@ -1288,7 +1288,7 @@
 
                 <button class="pg-btn" {{ !$jobs->hasMorePages() ? 'disabled' : '' }}
                         @if($jobs->nextPageUrl()) onclick="window.location.href='{{ $jobs->nextPageUrl() }}'" @endif>
-                    <span class="pbn-long">Next →</span><span class="pbn-short">→</span>
+                    <span>Next</span>
                 </button>
             </div>
             @endif

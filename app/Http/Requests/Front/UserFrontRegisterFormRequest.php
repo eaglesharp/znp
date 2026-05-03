@@ -62,11 +62,11 @@ class UserFrontRegisterFormRequest extends Request
 
            // 'last_name' => 'alpha |max:80',
 
-            'email' => 'required|unique:users,email|email|max:100',
+            'email' => 'required|unique:users,email|unique:companies,email|email|max:100',
 
-            'password' => 'required|min:6|max:50',
+            'password' => 'required|min:8|max:50',
 
-            'password_confirmation' => 'required|same:password|min:6|max:50',
+            'password_confirmation' => 'required|same:password|min:8|max:50',
 
             'phone'     =>'required|numeric|digits:10',
 
@@ -76,8 +76,9 @@ class UserFrontRegisterFormRequest extends Request
 
             'terms_of_use' => 'required',
 
-             'immediate_last_date' => 'required_if:nop_days,1',
-             'last_working_day'    => 'required_if:nop_days,2,3,4,5,6',
+             'immediate_last_date' => 'required_if:nop_days,1,3',
+             'last_working_day'    => 'required_if:nop_days,2',
+             'lwd_proof'           => 'required_if:nop_days,1,2',
              
            //  'confirm_nop' => 'required_if:nop_days,1',
 
@@ -105,6 +106,8 @@ class UserFrontRegisterFormRequest extends Request
 
              'degree_title'  => 'required',
 
+             'year_of_completion' => 'required',
+
              'education_status' => 'required',
 
              'course'  => 'required_if:degree_title,2,3,4',
@@ -118,6 +121,15 @@ class UserFrontRegisterFormRequest extends Request
              'gender_id'  => 'required',
 
              'reason_moved' => 'nullable',
+
+            // V2-only fields (must be captured)
+            'industry_domain' => 'required',
+            'hide_cv_from_current_employer' => 'nullable|boolean',
+            'accuracy_confirmed' => 'required|accepted',
+            'pref_job_alerts' => 'nullable|boolean',
+            'pref_platform_tips' => 'nullable|boolean',
+            'pref_promotions' => 'nullable|boolean',
+            'date_of_birth' => 'required|date|before:today',
 
          
 
@@ -147,15 +159,15 @@ class UserFrontRegisterFormRequest extends Request
 
             'email.email' => __('The email must be a valid email address'),
 
-            'email.unique' => __('This Email has already been taken'),
+            'email.unique' => __('This email is already registered. Please sign in or use a different address.'),
 
             'password.required' => __('Password is required'),
 
-            'password.min' => __('The password must be at least 6 characters.'),
+            'password.min' => __('The password must be at least 8 characters.'),
 
             'password_confirmation.required' => __('Confirm Password is required'),
 
-            'password_confirmation.min' => __('The password must be at least 6 characters.'),
+            'password_confirmation.min' => __('The password must be at least 8 characters.'),
 
             'password_confirmation.same' => __(' The password confirmation does not match.'),
 
@@ -183,8 +195,9 @@ class UserFrontRegisterFormRequest extends Request
             
             'work_type.required'   => 'Work Type is required',
             
-            'immediate_last_date.required_if'  => 'Last Working Date is required',
+            'immediate_last_date.required_if'  => 'Last working date or course completion date is required',
             'last_working_day.required_if'      => 'Last Working Date is required when serving notice',
+            'lwd_proof.required_if'            => 'Proof of last working date is required',
             
            // 'confirm_nop.required_if' => 'Please confirm',
 
@@ -206,6 +219,12 @@ class UserFrontRegisterFormRequest extends Request
             
             'degree_title.required'  => 'Education is required',
 
+            'year_of_completion.required'  => 'Year of completion is required',
+
+            'date_of_birth.required'  => 'Date of birth is required',
+
+            'date_of_birth.before'  => 'Please enter a valid date of birth',
+
             'course.required'  => 'Course is required',
 
             'specilation.required'  => 'Specialization is required',
@@ -215,6 +234,9 @@ class UserFrontRegisterFormRequest extends Request
             'work_option.required'   => 'Preferred Mode is required',
 
             'gender_id.required'   => 'Gender is required',
+
+            'industry_domain.required' => 'Industry / domain is required',
+            'accuracy_confirmed.accepted' => 'Please confirm your details are accurate',
 
            
 

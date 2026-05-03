@@ -1,5 +1,7 @@
 @extends('layouts.znp')
 
+@section('page_title', 'Immediate joiner jobs in India | ZeroNoticePeriod')
+
 {{-- ══════════════════════════════════════
      PAGE-SPECIFIC STYLES
 ══════════════════════════════════════ --}}
@@ -699,7 +701,7 @@
                     </div>
                     <div class="jc-footer">
                         <span class="jc-exp">
-                            @if ($expName){{ $expName }} &nbsp;&middot;&nbsp;@endif
+                            @if ($expName)<span class="jc-exp-lbl">Exp. required:</span> {{ $expName }} &nbsp;&middot;&nbsp;@endif
                             <span class="salary">{{ $salaryStr }}</span>
                         </span>
                         <button class="btn-apply" type="button" onclick="event.preventDefault(); window.location.href='{{ url('/job/' . $job->slug) }}'">Apply now</button>
@@ -730,7 +732,7 @@
                 <div class="cat-icon" style="background: {{ $cat['bg'] }};" aria-hidden="true">{{ $cat['icon'] }}</div>
                 <div>
                     <div class="cat-name">{{ $cat['name'] }}</div>
-                    <div class="cat-count">{{ number_format($cat['count']) }} jobs</div>
+                    <div class="cat-count">{{ number_format($cat['count']) }} {{ $cat['count'] === 1 ? 'job' : 'jobs' }}</div>
                 </div>
             </a>
         @endforeach
@@ -825,7 +827,7 @@
             <li><span class="dc-bullet" aria-hidden="true"></span>Announce your interview availability</li>
             <li><span class="dc-bullet" aria-hidden="true"></span>100% free for jobseekers</li>
         </ul>
-        <a class="dc-cta" href="{{ url('/jobs') }}">Browse jobs now</a>
+        <a class="dc-cta" href="{{ url('/jobs') }}" target="_blank" rel="noopener noreferrer">Browse jobs now</a>
     </div>
 
     <div class="dual-card dc-peach">
@@ -838,7 +840,7 @@
             <li><span class="dc-bullet" aria-hidden="true"></span>Find contractors and permanent hires</li>
             <li><span class="dc-bullet" aria-hidden="true"></span>Buy bulk job posts</li>
         </ul>
-        <a class="dc-cta" href="{{ url('/employer-login') }}">Post a job</a>
+        <a class="dc-cta" href="{{ url('/employer-login') }}" target="_blank" rel="noopener noreferrer">Post a job</a>
     </div>
 
 </div>
@@ -849,8 +851,8 @@
     <div class="email-title">Ready to <span>hire immediately?</span></div>
     <p class="email-sub">Join hundreds of employers already hiring zero notice period talent on ZeroNoticePeriod.</p>
     <div class="cta-btns">
-            <button class="cta-btn-primary" onclick="window.location='{{ url('/employer-login') }}'">I'm an Employer</button>
-      <button class="cta-btn-secondary" onclick="window.location='{{ url('/jobseeker-auth') }}'">I'm a Jobseeker</button>
+            <button class="cta-btn-primary" onclick="window.open('{{ url('/employer-login') }}','_blank','noopener')">I'm an Employer</button>
+      <button class="cta-btn-secondary" onclick="window.open('{{ url('/jobseeker-auth') }}','_blank','noopener')">I'm a Jobseeker</button>
     </div>
   </div>
 </section>

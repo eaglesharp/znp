@@ -1,5 +1,7 @@
 @extends('layouts.znp')
 
+@section('page_title', 'Create your jobseeker account | ZeroNoticePeriod')
+
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,300;6..12,400;6..12,500;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
 <style>
@@ -359,7 +361,7 @@
         <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" id="jsa-signup-form">
           @csrf
           <input type="hidden" name="_from_signup" value="1">
-          <input type="hidden" name="nop_days" id="nop_days_hidden" value="{{ old('nop_days', 'Immediate Joiner') }}">
+          <input type="hidden" name="nop_days" id="nop_days_hidden" value="{{ old('nop_days', 1) }}">
           <div id="keyskills-hidden-wrap"></div>
           <div id="prefcity-hidden-wrap"></div>
 
@@ -382,7 +384,7 @@
 
             @if ($errors->any() && old('_from_signup'))
               <div class="znp-alert znp-alert-error">
-                <div><strong>Please fix the following errors:</strong>
+                <div><strong>Please update the following:</strong>
                   <ul style="margin:6px 0 0 16px;padding:0;">
                     @foreach ($errors->all() as $err)<li>{{ $err }}</li>@endforeach
                   </ul>
@@ -410,20 +412,19 @@
               <div class="f" style="margin-bottom:0">
                 <label class="lbl" id="lwdlbl">Last working date <span class="req">*</span></label>
                 <input type="date" name="immediate_last_date" id="lwdinp"
-                  value="{{ old('nop_days') == 'Serving Notice' ? old('last_working_day') : old('immediate_last_date') }}"
+                  value="{{ (string)old('nop_days') === '2' ? old('last_working_day') : old('immediate_last_date') }}"
                        class="{{ $errors->has('immediate_last_date') ? 'is-invalid' : '' }}">
                 <span class="hint" id="lwdhint">Must be today or earlier</span>
                 @if($errors->has('immediate_last_date'))<span class="hint er">{{ $errors->first('immediate_last_date') }}</span>@endif
                 @if($errors->has('last_working_day'))<span class="hint er">{{ $errors->first('last_working_day') }}</span>@endif
               </div>
               <div class="f" style="margin-bottom:0" id="proofrow">
-                <label class="lbl">Proof of last working date</label>
+                <label class="lbl" id="prooflbl">Proof of last working date <span class="req">*</span></label>
                 <select name="lwd_proof" class="{{ $errors->has('lwd_proof') ? 'is-invalid' : '' }}">
                   <option value="">Select proof</option>
                   <option value="Resignation Acceptance Mail" {{ old('lwd_proof')=='Resignation Acceptance Mail'?'selected':'' }}>Resignation acceptance email</option>
                   <option value="Relieving Letter" {{ old('lwd_proof')=='Relieving Letter'?'selected':'' }}>Relieving letter</option>
                   <option value="EPFO Service History" {{ old('lwd_proof')=='EPFO Service History'?'selected':'' }}>EPFO service history</option>
-                  <option value="Fresher" {{ old('lwd_proof')=='Fresher'?'selected':'' }}>Fresher</option>
                 </select>
               </div>
             </div>
@@ -445,8 +446,10 @@
                 @if($errors->has('last_name'))<span class="hint er">{{ $errors->first('last_name') }}</span>@endif
               </div>
               <div class="f" style="margin-bottom:0">
-                <label class="lbl">Date of birth</label>
-                <input type="date" name="date_of_birth" id="dob" value="{{ old('date_of_birth') }}">
+                <label class="lbl">Date of birth <span class="req">*</span></label>
+                <input type="date" name="date_of_birth" id="dob" value="{{ old('date_of_birth') }}"
+                       class="{{ $errors->has('date_of_birth') ? 'is-invalid' : '' }}">
+                @if($errors->has('date_of_birth'))<span class="hint er">{{ $errors->first('date_of_birth') }}</span>@endif
               </div>
             </div>
             <div class="gap9"></div>
@@ -543,15 +546,15 @@
               </div>
             </div>
 
-            <div class="errbox" id="s1err"><strong style="font-size:12.5px;color:#dc2626">Please fix before continuing:</strong><ul id="s1erl"></ul></div>
+            <div class="errbox" id="s1err"><strong style="font-size:12.5px;color:#dc2626">Please update before continuing:</strong><ul id="s1erl"></ul></div>
             <button type="button" class="btn btnb" onclick="valS1()">Continue — professional details →</button>
-            <div class="terms">By continuing you agree to our <a href="#">Terms of service</a> &amp; <a href="#">Privacy policy</a></div>
+            <div class="terms">By continuing you agree to our <a href="{{ url('terms-and-conditons') }}" target="_blank" rel="noopener noreferrer">Terms of Service</a> &amp; <a href="{{ url('privacy-policy') }}" target="_blank" rel="noopener noreferrer">Privacy Policy</a></div>
           </div>
           {{-- end step 1 --}}
 
           {{-- ─── STEP 2: Professional ─── --}}
           <div id="s2" style="display:none">
-            <div id="frnote">As a fresher, CTC fields are for stipend — add any internship experience below.</div>
+            <div id="frnote">You selected <strong>Fresher</strong> (no prior full-time role yet — internships are fine). Use CTC fields for stipend or internship pay if applicable, and describe any internship or project work in your title, company, and skills below.</div>
 
             <div class="sec"><span class="secbar"></span>Professional details</div>
             <div class="g2" id="wfields" style="margin-bottom:14px">
@@ -578,11 +581,13 @@
                        value="{{ old('totalexp') !== null && old('totalexp') !== '' ? (old('totalexpmonth') ? old('totalexp').'.'.old('totalexpmonth') : old('totalexp')) : '' }}">
                 <input type="hidden" name="totalexp" id="s2exp_yr" value="{{ old('totalexp', '') }}">
                 <input type="hidden" name="totalexpmonth" id="s2exp_mo" value="{{ old('totalexpmonth', '') }}">
+                <span class="hint" id="exphint-fr" style="display:none">Use decimals for months after the dot — e.g. 2.6 = 2 years 6 months; 0.6 = 6 months.</span>
                 @if($errors->has('totalexp'))<span class="hint er">{{ $errors->first('totalexp') }}</span>@endif
               </div>
               <div class="f" style="margin-bottom:0">
                 <label class="lbl">Industry / domain <span class="req">*</span></label>
-                <select id="s2dom" onchange="loadSugg(this.value)">
+                <select id="s2dom" name="industry_domain" onchange="loadSugg(this.value)"
+                        class="{{ $errors->has('industry_domain') ? 'is-invalid' : '' }}">
                   <option value="">Select domain</option>
                   <option value="it">Information Technology</option>
                   <option value="bfs">Banking &amp; Financial Services</option>
@@ -594,6 +599,7 @@
                   <option value="startup">Startup / Product</option>
                   <option value="other">Other</option>
                 </select>
+                @if($errors->has('industry_domain'))<span class="hint er">{{ $errors->first('industry_domain') }}</span>@endif
               </div>
             </div>
 
@@ -715,7 +721,7 @@
                   <option value="">Select reason for leaving</option>
                   <option value="Resignation"      {{ old('mode_of_separation')=='Resignation'     ?'selected':'' }}>Resignation</option>
                   <option value="Layoff"           {{ old('mode_of_separation')=='Layoff'          ?'selected':'' }}>Layoff</option>
-                  <option value="Fresher"          {{ old('mode_of_separation')=='Fresher'         ?'selected':'' }}>Fresher (no prior employment)</option>
+                  <option value="Fresher"          {{ old('mode_of_separation')=='Fresher'         ?'selected':'' }}>Fresher — no prior full-time employment (internships OK)</option>
                   <option value="Contract Closure" {{ old('mode_of_separation')=='Contract Closure'?'selected':'' }}>Contract closure</option>
                   <option value="Internship Closure" {{ old('mode_of_separation')=='Internship Closure'?'selected':'' }}>Internship closure</option>
                 </select>
@@ -734,14 +740,14 @@
               </div>
             </div>
 
-            <div class="errbox" id="s2err"><strong style="font-size:12.5px;color:#dc2626">Please fix before continuing:</strong><ul id="s2erl"></ul><div style="font-size:11px;color:#f87171;margin-top:4px">Your data is saved — nothing was lost.</div></div>
+            <div class="errbox" id="s2err"><strong style="font-size:12.5px;color:#dc2626">Please update before continuing:</strong><ul id="s2erl"></ul><div style="font-size:11px;color:#f87171;margin-top:4px">Your data is saved — nothing was lost.</div></div>
             <div class="brow"><button type="button" class="bback" onclick="goStep(1)">← Back</button><button type="button" class="btn btnb" style="margin-top:0" onclick="valS2()">Continue — CV &amp; password →</button></div>
           </div>
           {{-- end step 2 --}}
 
           {{-- ─── STEP 3: CV & Password ─── --}}
           <div id="s3" style="display:none">
-            <div class="sec"><span class="secbar"></span>Upload your CV</div>
+            <div class="sec"><span class="secbar"></span>Upload your CV <span class="req">*</span></div>
             <div class="f">
               <div class="upload" onclick="document.getElementById('cvmain').click()" style="padding:24px">
                 <div class="upload-ico">
@@ -758,13 +764,14 @@
             </div>
 
             <div class="priv">
-              <input type="checkbox" id="hidecv" checked>
+              <input type="checkbox" id="hidecv" name="hide_cv_from_current_employer" value="1" {{ old('hide_cv_from_current_employer', 1) ? 'checked' : '' }}>
               <label for="hidecv">Hide my CV from my current employer</label>
             </div>
 
             <div class="sec"><span class="secbar"></span>Set a password</div>
             <div class="f">
               <label class="lbl">Password <span class="req">*</span></label>
+              <span class="hint" style="margin-bottom:2px">Min. 8 characters — strength indicator below.</span>
               <div class="pw-wrap">
                 <input type="password" name="password" id="pw" placeholder="Min. 8 characters"
                        oninput="chkPW(this.value)"
@@ -790,7 +797,9 @@
             </div>
 
             <div class="priv" style="margin-top:14px;align-items:flex-start;gap:11px;background:transparent;border-color:var(--border)">
-              <input type="checkbox" checked id="accuracyCheck" style="margin-top:3px;accent-color:#3B5CCC;width:15px;height:15px;flex-shrink:0;cursor:pointer">
+              <input type="checkbox" checked id="accuracyCheck" name="accuracy_confirmed" value="1"
+                     {{ old('accuracy_confirmed', 1) ? 'checked' : '' }}
+                     style="margin-top:3px;accent-color:#3B5CCC;width:15px;height:15px;flex-shrink:0;cursor:pointer" required>
               <label for="accuracyCheck" style="font-size:12px;color:var(--text-4);font-weight:400;line-height:1.7;cursor:pointer">
                 I confirm that the details I've shared are accurate. I understand profiles with inaccurate notice period information may be deactivated.
               </label>
@@ -809,13 +818,13 @@
                   I agree to Terms &amp; Conditions <span style="color:#F2994A">*</span>
                 </label>
                 <label class="optcheck">
-                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Job match &amp; application alerts
+                  <input type="checkbox" name="pref_job_alerts" value="1" {{ old('pref_job_alerts', 1) ? 'checked' : '' }} checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Job match &amp; application alerts
                 </label>
                 <label class="optcheck">
-                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Platform tips, feature updates
+                  <input type="checkbox" name="pref_platform_tips" value="1" {{ old('pref_platform_tips', 1) ? 'checked' : '' }} checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Platform tips, feature updates
                 </label>
                 <label class="optcheck">
-                  <input type="checkbox" checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Promotions
+                  <input type="checkbox" name="pref_promotions" value="1" {{ old('pref_promotions', 1) ? 'checked' : '' }} checked style="accent-color:#3B5CCC;width:13px;height:13px;cursor:pointer"> Promotions
                 </label>
               </div>
               @if($errors->has('terms_of_use'))<div class="hint er" style="margin-top:6px">{{ $errors->first('terms_of_use') }}</div>@endif
@@ -911,6 +920,13 @@
 /* ─────────────────────────────────────────────────────────────────
    ZNP Jobseeker Auth v13 — all UI logic
    ───────────────────────────────────────────────────────────────── */
+$.ajaxSetup({
+  headers: {
+    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+    'X-Requested-With': 'XMLHttpRequest',
+    Accept: 'application/json'
+  }
+});
 
 /* ── Skill domain suggestions ── */
 var SD = {
@@ -961,7 +977,7 @@ window.swTab = function (which) {
     if (which === 'su') {
       foot.innerHTML = 'Already have an account? <a onclick="swTab(\'si\')">Sign in here</a>';
     } else {
-      foot.innerHTML = 'New to ZNP? <a onclick="swTab(\'su\')">Create a free account</a>';
+      foot.innerHTML = 'Don\'t have an account? <a onclick="swTab(\'su\')">Create one now</a>';
     }
   }
 };
@@ -1005,33 +1021,47 @@ window.setN = function (type) {
   var frNote   = document.getElementById('frnote');
   var proofSel = document.querySelector('[name="lwd_proof"]');
 
+  var expHintFr = document.getElementById('exphint-fr');
+  var ctcCurLbl = document.getElementById('ctc-cur-lbl');
   if (type === 'i') {
     document.getElementById('npi').classList.add('on');
-    if (hidHid)  hidHid.value = 'Immediate Joiner';
+    if (hidHid)  hidHid.value = '1';
     if (lwdInp)  { lwdInp.name = 'immediate_last_date'; lwdInp.max = today; lwdInp.min = ''; lwdInp.style.display = ''; }
     if (lwdLbl)  lwdLbl.innerHTML = 'Last working date <span class="req">*</span>';
     if (lwdHint) lwdHint.textContent = 'Must be today or earlier';
     if (proofRow) proofRow.style.display = '';
-    if (proofSel && proofSel.value === 'Fresher') proofSel.value = '';
+    if (proofSel) proofSel.value = proofSel.value || '';
     if (frNote)  frNote.style.display = 'none';
+    if (expHintFr) expHintFr.style.display = 'none';
+    if (ctcCurLbl) ctcCurLbl.innerHTML = 'Current annual CTC <span class="req">*</span>';
+    var modesepI = document.getElementById('modesep');
+    if (modesepI && modesepI.value === 'Fresher') modesepI.value = '';
   } else if (type === 's') {
     document.getElementById('nps').classList.add('on');
-    if (hidHid)  hidHid.value = 'Serving Notice';
+    if (hidHid)  hidHid.value = '2';
     if (lwdInp)  { lwdInp.name = 'last_working_day'; lwdInp.max = maxServing; lwdInp.min = today; lwdInp.style.display = ''; }
     if (lwdLbl)  lwdLbl.innerHTML = 'Last day of notice <span class="req">*</span>';
     if (lwdHint) lwdHint.textContent = 'Must be a future date within 90 days';
     if (proofRow) proofRow.style.display = '';
-    if (proofSel && proofSel.value === 'Fresher') proofSel.value = '';
+    if (proofSel) proofSel.value = proofSel.value || '';
     if (frNote)  frNote.style.display = 'none';
+    if (expHintFr) expHintFr.style.display = 'none';
+    if (ctcCurLbl) ctcCurLbl.innerHTML = 'Current annual CTC <span class="req">*</span>';
+    var modesepS = document.getElementById('modesep');
+    if (modesepS && modesepS.value === 'Fresher') modesepS.value = '';
   } else {
     document.getElementById('npf').classList.add('on');
-    if (hidHid)  hidHid.value = 'Fresher';
+    if (hidHid)  hidHid.value = '3';
     if (lwdInp)  { lwdInp.name = 'immediate_last_date'; lwdInp.min = ''; lwdInp.max = maxFuture; lwdInp.style.display = ''; }
-    if (lwdLbl)  lwdLbl.innerHTML = 'Course completion date';
-    if (lwdHint) lwdHint.textContent = 'Optional for freshers';
+    if (lwdLbl)  lwdLbl.innerHTML = 'Course completion date <span class="req">*</span>';
+    if (lwdHint) lwdHint.textContent = 'Expected graduation / course end date (required)';
     if (proofRow) proofRow.style.display = 'none';
-    if (proofSel) proofSel.value = 'Fresher';
+    if (proofSel) proofSel.value = '';
     if (frNote)  frNote.style.display = '';
+    if (expHintFr) expHintFr.style.display = '';
+    if (ctcCurLbl) ctcCurLbl.innerHTML = 'Current annual CTC / stipend <span class="req">*</span>';
+    var modesep = document.getElementById('modesep');
+    if (modesep) modesep.value = 'Fresher';
   }
 };
 
@@ -1533,18 +1563,22 @@ window.valS1 = function () {
   else if (emailExists) errs.push('This email is already registered. Please sign in instead.');
   var ph = document.querySelector('[name="phone"]');
   if (!ph || !/^\d{10}$/.test(ph.value.trim())) errs.push('Valid 10-digit mobile is required');
+  var dob = document.getElementById('dob');
+  if (!dob || !dob.value) errs.push('Date of birth is required');
 
-  // NOP date validation
+  // NOP date validation (hidden uses 1 / 2 / 3)
   var nop = document.getElementById('nop_days_hidden').value;
-  if (nop === 'Immediate Joiner') {
-    var d = document.getElementById('lwdinp');
-    if (!d || !d.value) errs.push('Last working date is required');
-  } else if (nop === 'Serving Notice') {
-    var dsrv = document.getElementById('lwdinp');
-    if (!dsrv || !dsrv.value) errs.push('Last working day is required');
+  var lwdEl = document.getElementById('lwdinp');
+  if (nop === '1') {
+    if (!lwdEl || !lwdEl.value) errs.push('Last working date is required');
+  } else if (nop === '2') {
+    if (!lwdEl || !lwdEl.value) errs.push('Last day of notice is required');
+  } else if (nop === '3') {
+    if (!lwdEl || !lwdEl.value) errs.push('Course completion date is required');
   }
-  if ((nop === 'Immediate Joiner' || nop === 'Serving Notice') && !document.querySelector('[name="lwd_proof"]').value) {
-    errs.push('Proof of last working date is required');
+  if ((nop === '1' || nop === '2')) {
+    var prf = document.querySelector('[name="lwd_proof"]');
+    if (!prf || !prf.value) errs.push('Proof of last working date is required');
   }
   // Education
   var eduSt = document.getElementById('edu-status');
@@ -1553,6 +1587,17 @@ window.valS1 = function () {
   if (!deg || !deg.value) errs.push('Highest education is required');
   var yr = document.getElementById('edu-year');
   if (!yr || !yr.value) errs.push('Year of completion is required');
+
+  var csRow = document.getElementById('course-spec-row');
+  var csVisible = csRow && csRow.offsetParent !== null && window.getComputedStyle(csRow).display !== 'none';
+  if (csVisible) {
+    var crs = document.getElementById('course_select');
+    var spc = document.getElementById('specilation_select');
+    if (!crs || !crs.value) errs.push('Course is required');
+    if (!spc || !spc.value) errs.push('Specialization is required');
+    var org = document.getElementById('jsa-university-input');
+    if (!org || !org.value.trim()) errs.push('University / college is required');
+  }
 
   var errBox = document.getElementById('s1err');
   var errList = document.getElementById('s1erl');
@@ -1610,6 +1655,16 @@ window.valS2 = function () {
   reqEl('mode_of_separation','Mode of separation');
   reqEl('current_city',      'Current city');
   reqEl('locality',          'Locality');
+  var csRow2 = document.getElementById('course-spec-row');
+  var csVis2 = csRow2 && csRow2.offsetParent !== null && window.getComputedStyle(csRow2).display !== 'none';
+  if (csVis2) {
+    var crs2 = document.getElementById('course_select');
+    var spc2 = document.getElementById('specilation_select');
+    if (!crs2 || !crs2.value) errs.push('Course is required');
+    if (!spc2 || !spc2.value) errs.push('Specialization is required');
+    var org2 = document.getElementById('jsa-university-input');
+    if (!org2 || !org2.value.trim()) errs.push('University / college is required');
+  }
   if (jsaSkills.length < 10) errs.push('At least 10 key skills are required (' + jsaSkills.length + ' added)');
   if (selCities.length === 0) errs.push('At least 1 preferred city is required');
 
@@ -1667,26 +1722,40 @@ window.submitForm = function () {
 
 /* ─── Degree / Course AJAX ─── */
 window.jsaDegreeChange = function (val) {
-  var show   = val !== '' && ['1','5'].indexOf(val) === -1;
   var csRow  = document.getElementById('course-spec-row');
-  if (csRow) csRow.style.display = show ? '' : 'none';
-  if (!show) return;
   var csEl = document.getElementById('course_select');
+  var spEl = document.getElementById('specilation_select');
+  if (!val) {
+    if (csRow) csRow.style.display = 'none';
+    if (csEl) csEl.innerHTML = '<option value="">Select course</option>';
+    if (spEl) spEl.innerHTML = '<option value="">Select specialization</option>';
+    return;
+  }
+  if (csRow) csRow.style.display = '';
   if (!csEl) return;
   csEl.innerHTML = '<option value="">Loading…</option>';
+  if (spEl) spEl.innerHTML = '<option value="">Select specialization</option>';
   $.ajax({
     type: 'POST', url: '{{ url("gety") }}',
     data: { degree: val, _token: '{{ csrf_token() }}' },
     success: function (data) {
+      var list = data || [];
+      if (!list.length) {
+        if (csRow) csRow.style.display = 'none';
+        csEl.innerHTML = '<option value="">Select course</option>';
+        if (spEl) spEl.innerHTML = '<option value="">Select specialization</option>';
+        return;
+      }
       var html = '<option value="">Select course</option>';
-      $.each(data, function (i, item) {
+      $.each(list, function (i, item) {
         html += '<option value="' + item.id + '">' + item.course + '</option>';
       });
       csEl.innerHTML = html;
-      var spEl = document.getElementById('specilation_select');
-      if (spEl) spEl.innerHTML = '<option value="">Select specialization</option>';
     },
-    error: function () { csEl.innerHTML = '<option value="">Select course</option>'; }
+    error: function () {
+      if (csRow) csRow.style.display = 'none';
+      csEl.innerHTML = '<option value="">Select course</option>';
+    }
   });
 
   // Populate year of completion
@@ -1715,10 +1784,10 @@ window.jsaCourseChange = function (courseId) {
 /* ─── Restore old() values after validation error ─── */
 (function restoreOldValues() {
   // Restore NOP state from old value
-  var nopVal = '{{ old('nop_days', 'Immediate Joiner') }}';
-  if (nopVal === 'Serving Notice') setN('s');
-  else if (nopVal === 'Fresher')   setN('f');
-  else                              setN('i');
+  var nopVal = '{{ old('nop_days', 1) }}';
+  if (String(nopVal) === '2') setN('s');
+  else if (String(nopVal) === '3')   setN('f');
+  else                                setN('i');
 
   // Restore skills
   if (jsaSkills.length) renderSk();
@@ -1742,18 +1811,22 @@ window.jsaCourseChange = function (courseId) {
     // Populate year dropdown for existing degree
     var yr = document.getElementById('edu-year');
     if (yr) populateEduYear(document.getElementById('edu-status') ? document.getElementById('edu-status').value : '', '{{ old('year_of_completion') }}');
-    // Show course-spec row
     var csRow = document.getElementById('course-spec-row');
-    if (csRow) csRow.style.display = '';
-    // Load courses then restore
     $.ajax({
       type: 'POST', url: '{{ url("gety") }}',
       data: { degree: '{{ old('degree_title') }}', _token: '{{ csrf_token() }}' },
       success: function (data) {
+        var list = data || [];
         var csEl = document.getElementById('course_select');
         if (!csEl) return;
+        if (!list.length) {
+          if (csRow) csRow.style.display = 'none';
+          csEl.innerHTML = '<option value="">Select course</option>';
+          return;
+        }
+        if (csRow) csRow.style.display = '';
         var html = '<option value="">Select course</option>';
-        $.each(data, function (i, item) {
+        $.each(list, function (i, item) {
           html += '<option value="' + item.id + '"' + (oldCourse == item.id ? ' selected' : '') + '>' + item.course + '</option>';
         });
         csEl.innerHTML = html;
@@ -1771,7 +1844,8 @@ window.jsaCourseChange = function (courseId) {
             spEl.innerHTML = sHtml;
           }
         });
-      }
+      },
+      error: function () { if (csRow) csRow.style.display = 'none'; }
     });
   }());
   @endif

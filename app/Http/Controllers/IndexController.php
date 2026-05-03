@@ -115,12 +115,16 @@ class IndexController extends Controller
                       ->take(3)
                       ->get();
 
-        // Stats counters — managed via admin panel (Counters section)
-        $siteCounter   = Counter::first();
-        $totalJobs     = $siteCounter ? $siteCounter->active_jobs    : PostJob::status()->count();
-        $permanentJobs = $siteCounter ? $siteCounter->permanent_jobs : 0;
-        $contractJobs  = $siteCounter ? $siteCounter->contract_jobs  : 0;
-        $fresherJobs   = $siteCounter ? $siteCounter->fresher_jobs   : 0;
+        // Stats counters — must reflect real, currently active jobs (client reported mismatches).
+        // Use live DB counts so "Browse by category" and homepage stats are always accurate.
+        $totalJobs     = PostJob::status()->count();
+        $permanentJobs = PostJob::status()->where(function ($q) {
+            $q->where('job_type', 'LIKE', '%Permanent%')
+              ->orWhere('job_type', 'LIKE', '%Full Time%')
+              ->orWhere('job_type', 'LIKE', '%Full time%');
+        })->count();
+        $contractJobs  = PostJob::status()->where('job_type', 'LIKE', '%Contract%')->count();
+        $fresherJobs   = PostJob::status()->where('job_type', 'LIKE', '%Fresher%')->count();
 
         $countBySearchTerms = function (array $terms) {
             return PostJob::status()->where(function ($query) use ($terms) {
@@ -139,13 +143,17 @@ class IndexController extends Controller
                       ->orWhereRaw('LOWER(search) LIKE ?', ['%remote%']);
             })->count()],
             ['icon' => '🏡', 'bg' => '#fde68a', 'name' => 'Temp WFH',          'keyword' => 'Temp WFH',                  'count' => $countBySearchTerms(['temp wfh', 'wfh during covid'])],
-            ['icon' => '⚡', 'bg' => '#e2e8f0', 'name' => 'Permanent Jobs',    'keyword' => 'Full Time',                 'count' => PostJob::status()->where('job_type', 'like', '%Permanent%')->orWhere('job_type', 'like', '%Full Time%')->count()],
-            ['icon' => '📝', 'bg' => '#e9d5ff', 'name' => 'Contract Jobs',     'keyword' => 'Contract',                  'count' => PostJob::status()->where('job_type', 'like', '%contract%')->count()],
-            ['icon' => '🎓', 'bg' => '#fef08a', 'name' => 'Fresher Jobs',      'keyword' => 'Fresher',                   'count' => PostJob::status()->where('min_salary', '<=', 3)->count()],
+            ['icon' => '⚡', 'bg' => '#e2e8f0', 'name' => 'Permanent Jobs',    'keyword' => 'Full Time',                 'count' => PostJob::status()->where(function ($q) {
+                $q->where('job_type', 'LIKE', '%Permanent%')
+                  ->orWhere('job_type', 'LIKE', '%Full Time%')
+                  ->orWhere('job_type', 'LIKE', '%Full time%');
+            })->count()],
+            ['icon' => '📝', 'bg' => '#e9d5ff', 'name' => 'Contract Jobs',     'keyword' => 'Contract',                  'count' => PostJob::status()->where('job_type', 'like', '%Contract%')->count()],
+            ['icon' => '🎓', 'bg' => '#fef08a', 'name' => 'Fresher Jobs',      'keyword' => 'Fresher',                   'count' => PostJob::status()->where('job_type', 'LIKE', '%Fresher%')->count()],
             ['icon' => '💼', 'bg' => '#99f6e4', 'name' => 'Internship Jobs',   'keyword' => 'Internship',                'count' => $countBySearchTerms(['internship'])],
             ['icon' => '🤝', 'bg' => '#fbcfe8', 'name' => 'Contract To Hire',  'keyword' => 'Contract To Hire',          'count' => $countBySearchTerms(['contract to hire'])],
-            ['icon' => '🌙', 'bg' => '#fecaca', 'name' => 'Night Shift Jobs',  'keyword' => 'Night Shift (9 PM Onwards)','count' => $countBySearchTerms(['night shift', '9 pm onwards'])],
-            ['icon' => '☀️', 'bg' => '#bfdbfe', 'name' => 'Day Shift Jobs',    'keyword' => 'Day Shift',                 'count' => $countBySearchTerms(['day shift'])],
+            ['icon' => '🌙', 'bg' => '#fecaca', 'name' => 'Night Shift Jobs',  'keyword' => 'Night Shift',               'count' => PostJob::status()->where('job_shift', 'LIKE', '%Night Shift%')->count()],
+            ['icon' => '☀️', 'bg' => '#bfdbfe', 'name' => 'Day Shift Jobs',    'keyword' => 'Day Shift',                 'count' => PostJob::status()->where('job_shift', 'LIKE', '%Day Shift%')->count()],
             ['icon' => '🚶', 'bg' => '#ddd6fe', 'name' => 'Walkin Jobs',       'keyword' => 'Walkin',                    'query_key' => 'location', 'count' => PostJob::status()->where(function ($query) {
                 $query->whereRaw('LOWER(location) LIKE ?', ['%walkin%'])
                       ->orWhereRaw('LOWER(search) LIKE ?', ['%walkin%']);

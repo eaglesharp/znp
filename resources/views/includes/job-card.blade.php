@@ -71,7 +71,7 @@
         </div>
         <div class="jc-footer">
             <span class="jc-exp">
-                @if ($expName){{ $expName }} &nbsp;&middot;&nbsp;@endif
+                @if ($expName)<span class="jc-exp-lbl">Exp. required:</span> {{ $expName }} &nbsp;&middot;&nbsp;@endif
                 <span class="salary">{{ $salaryStr }}</span>
             </span>
             <button class="btn-apply" type="button" onclick="event.preventDefault(); window.location.href='{{ url('/job/' . $job->slug) }}'">Apply now</button>

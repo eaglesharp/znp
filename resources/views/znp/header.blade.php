@@ -139,8 +139,8 @@ header.znp-header .znp-btn-post:hover {
         </a>
         <nav></nav>
         <div class="znp-nav-actions">
-            <a class="znp-btn-jobs" href="{{ url('/jobs') }}">Find Jobs</a>
-            <a class="znp-btn-post" href="{{ url('/employer-login') }}">Post Jobs</a>
+            <a class="znp-btn-jobs" href="{{ url('/jobseeker-auth') }}" target="_blank" rel="noopener noreferrer">Find Jobs</a>
+            <a class="znp-btn-post" href="{{ url('/employer-login') }}" target="_blank" rel="noopener noreferrer">Post Jobs</a>
         </div>
     </div>
 </header>

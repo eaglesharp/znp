@@ -179,7 +179,9 @@ Route::post('subscribe-newsletter', 'SubscriptionController@getSubscription')->n
 
 Route::get('/employer-login-old', 'Company\Auth\LoginController@showEmployerLoginForm')->name('employer.login.old');
 
-Route::get('/employer-register', 'Company\Auth\RegisterController@showRegistrationForm')->name('company.register.page');
+Route::get('/employer-register', function () {
+    return redirect()->route('employer.login', [], 301);
+})->name('company.register.page');
 
 Route::get('/employer-login', 'Company\Auth\LoginController@showEmployerAuth')->name('employer.login');
 Route::get('/jobseeker-auth', 'Auth\LoginController@showJobseekerAuth')->name('jobseeker.auth');
@@ -345,7 +347,9 @@ Route::get('pricing', 'PriceController@indexPrice')->name('pricing');
 
 
 
-Route::get('about-us', 'PriceController@indexwhyus')->name('about-us'); 
+Route::get('about-us', function () {
+    return redirect('/', 301);
+})->name('about-us'); 
 
 
 

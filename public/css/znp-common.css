@@ -100,3 +100,5 @@ html { scroll-behavior: smooth; }
 .t-contract { background: #f3e8ff; color: #7e22ce; }
 .t-full     { background: #f0f9ff; color: #0369a1; }
 .t-c2h      { background: #fdf4ff; color: #86198f; }
+
+.jc-exp-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 4px; }

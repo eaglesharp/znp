@@ -118,7 +118,7 @@ class RegisterController extends Controller
             $request,
             [
                 'company_name' => 'required',
-                'email' => 'required|email|unique:companies,email',
+                'email' => 'required|email|unique:companies,email|unique:users,email',
                 'mobile' => 'required|numeric|digits:10',
                 'person_name' => 'required',
                 'size' => 'required',

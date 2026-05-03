@@ -328,7 +328,8 @@ class JobController extends Controller
                 'Hybrid'           => ['work_mode', 'Hybrid'],
                 'Work From Office' => ['work_mode', 'Work From Office'],
                 'Contract'         => ['job_type',  'Contract'],
-                'Night Shift'      => ['job_shift',  '%shift%'],
+                // was '%shift%' which matched Day Shift too
+                'Night Shift'      => ['job_shift',  '%Night Shift%'],
             ];
             if (isset($tagMap[$tag])) {
                 [$col, $val] = $tagMap[$tag];
@@ -434,6 +435,44 @@ class JobController extends Controller
             }
         }
 
+        $educationKeywordMap = $this->educationFilterKeywordMap();
+
+        // ── Education (sidebar uses same labels — match against searchable copy)
+        if ($edus = array_filter((array) $request->input('edu', []))) {
+            $query->where(function ($outer) use ($edus, $educationKeywordMap) {
+                foreach ($edus as $eduLabel) {
+                    if (! isset($educationKeywordMap[$eduLabel])) {
+                        continue;
+                    }
+                    $outer->orWhere(function ($oq) use ($educationKeywordMap, $eduLabel) {
+                        foreach ($educationKeywordMap[$eduLabel] as $term) {
+                            $oq->orWhereRaw(
+                                'LOWER(CONCAT(" ", COALESCE(job_title, ""), " ", COALESCE(search, ""), " ", COALESCE(job_description, ""), " ", COALESCE(job_overview, ""))) LIKE ?',
+                                ['%' . $term . '%']
+                            );
+                        }
+                    });
+                }
+            });
+        }
+
+        // ── Posted by: company recruiter flag lives in companies.size (“Recruitment Firm” vs employer)
+        if ($postedBy = array_filter((array) $request->input('posted_by', []))) {
+            $query->where(function ($sq) use ($postedBy) {
+                foreach ($postedBy as $pb) {
+                    if ($pb === 'Direct Employer') {
+                        $sq->orWhereHas('company', function ($cq) {
+                            $cq->whereNull('size')->orWhere('size', '!=', 'Recruitment Firm');
+                        });
+                    } elseif ($pb === 'Recruitment Agency') {
+                        $sq->orWhereHas('company', function ($cq) {
+                            $cq->where('size', 'Recruitment Firm');
+                        });
+                    }
+                }
+            });
+        }
+
         // ── Sort
         $sort = $request->input('sort', 'relevance');
         if ($sort === 'salary_high') {
@@ -504,36 +543,91 @@ class JobController extends Controller
             $jobTypeCounts[$key] = PostJob::status()->where('job_type', 'LIKE', '%'.$like.'%')->count();
         }
 
-        // Locations: unserialize the serialized array column, count occurrences
+        // Locations: counts must match the actual filter logic above (which uses the `search` column),
+        // otherwise sidebar will show mismatched numbers (e.g., Bengaluru popular count != sidebar count).
         $locationCounts = array_fill_keys(array_keys($metroLocationMap), 0);
-        $locationCounts['Others'] = 0;
-        PostJob::status()->pluck('location')->each(function ($raw) use (&$locationCounts, $metroLocationMap) {
-            $arr = @unserialize($raw);
-            if (!is_array($arr)) {
-                return;
-            }
-            $joined = strtolower(implode(' | ', array_filter(array_map('trim', $arr))));
-            if ($joined === '') {
-                return;
-            }
-            $matchedMetro = false;
-            foreach ($metroLocationMap as $label => $keywords) {
-                foreach ($keywords as $keyword) {
-                    if (strpos($joined, $keyword) !== false) {
-                        $locationCounts[$label]++;
-                        $matchedMetro = true;
-                        break;
+        foreach ($metroLocationMap as $label => $keywords) {
+            $locationCounts[$label] = PostJob::status()
+                ->where(function ($sq) use ($keywords) {
+                    foreach ($keywords as $keyword) {
+                        $sq->orWhere('search', 'LIKE', '%' . strtolower($keyword) . '%');
                     }
+                })
+                ->count();
+        }
+        // Others = jobs not matching any metro keyword in `search`
+        $locationCounts['Others'] = PostJob::status()
+            ->where(function ($sq) use ($metroKeywords) {
+                foreach ($metroKeywords as $keyword) {
+                    $sq->where('search', 'NOT LIKE', '%' . strtolower($keyword) . '%');
                 }
-            }
-            if (!$matchedMetro) {
-                $locationCounts['Others']++;
-            }
-        });
+            })
+            ->count();
+
+        $eduCounts = [];
+        foreach ($educationKeywordMap as $eduLabel => $_terms) {
+            $eduCounts[$eduLabel] = PostJob::status()
+                ->where(function ($oq) use ($educationKeywordMap, $eduLabel) {
+                    foreach ($educationKeywordMap[$eduLabel] as $term) {
+                        $oq->orWhereRaw(
+                            'LOWER(CONCAT(" ", COALESCE(job_title, ""), " ", COALESCE(search, ""), " ", COALESCE(job_description, ""), " ", COALESCE(job_overview, ""))) LIKE ?',
+                            ['%' . $term . '%']
+                        );
+                    }
+                })
+                ->count();
+        }
+
+        $postedByCounts = [
+            'Direct Employer' => PostJob::status()->whereHas('company', function ($cq) {
+                $cq->whereNull('size')->orWhere('size', '!=', 'Recruitment Firm');
+            })->count(),
+            'Recruitment Agency' => PostJob::status()->whereHas('company', function ($cq) {
+                $cq->where('size', 'Recruitment Firm');
+            })->count(),
+        ];
 
         return view('znp.jobs', compact(
-            'jobs', 'expCounts', 'salaryCounts', 'workModeCounts', 'shiftCounts', 'jobTypeCounts', 'locationCounts'
+            'jobs',
+            'expCounts',
+            'salaryCounts',
+            'workModeCounts',
+            'shiftCounts',
+            'jobTypeCounts',
+            'locationCounts',
+            'eduCounts',
+            'postedByCounts'
         ));
+    }
+
+    /**
+     * @return array<string, list<string>> Lower-case phrases matched in job title + search blob + descriptions.
+     */
+    private function educationFilterKeywordMap(): array
+    {
+        return [
+            'Any Postgraduate' => ['postgraduate', 'post graduate', 'post-graduate', 'postgrad', "master's degree", 'masters degree', 'masters in', 'm.phil', 'mphil', 'ph.d', 'phd candidates'],
+            'B.Tech / B.E.' => ['b.tech', 'b.tech.', 'b.e.', ' b.e ', ' b.e.', ' b e ', 'bachelor of engineering', 'bachelors in engineering'],
+            'Any Graduate' => ['any graduate', 'graduates preferred', 'graduate degree', 'bachelor\'s degree', 'bachelors degree'],
+            'M.Tech' => ['m.tech', ' m.tech.', 'masters in technology', 'master of technology', 'mtech'],
+            'MCA' => [' mca ', 'mca/', 'masters in computer application', '(mca)', 'MCA '],
+            'MS / M.Sc' => [' m.sc ', 'm.sc.', 'msc ', '(m.sc)', ' m.s.', 'masters in science'],
+            'BCA' => [' bca ', 'bachelor of computer application'],
+            'MBA / PGDM' => [' mba ', 'mba/', 'masters in business', 'mba graduate', 'pgdm', '(mba)'],
+            'B.Sc.' => ['b.sc.', ' bsc ', '(b.sc)', 'bachelor of science'],
+            'B.Com' => ['b.com', ' bcom ', '(b.com)', 'bachelor of commerce'],
+            'M.Com' => ['m.com', ' mcom ', '(m.com)'],
+            'B.B.A / B.M.S' => [' bba ', '(bba)', 'b.b.a.', ' bachelor of business', ' bms ', '(b.ms)'],
+            'Diploma' => ['diploma in', 'diploma holder', '(diploma)'],
+            'PG Diploma' => ['pg diploma', 'post graduate diploma', ' pgd '],
+            'LLM' => [' llm ', '(llm)'],
+            'CA' => ['chartered accountant', ' ca ', '(ca)', 'icai qualified', 'cpa '],
+            'B.A' => [' b.a ', '(b.a)', 'bachelor of arts'],
+            'BS' => [' bachelor of science', ' b.s ', '(b.s)'],
+            'ITI Certification' => ['iti holder', '(iti)', ' iti trained'],
+            'Master in IT Mgmt' => ['master in information technology management', 'm.sc (it)', 'msc it management'],
+            'No Graduation Reqd' => ['no graduation', 'graduation not mandatory', 'education not mandatory', '12th pass', 'higher secondary'],
+        ];
     }
 
     /**

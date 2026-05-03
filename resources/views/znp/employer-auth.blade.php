@@ -1,5 +1,7 @@
 @extends('layouts.znp')
 
+@section('page_title', 'Employer sign in & registration | ZeroNoticePeriod')
+
 @push('styles')
 <style>
 /* ── ZNP EMPLOYER-AUTH: SCOPE & RESET ── */
@@ -1197,6 +1199,13 @@
 
 @push('scripts')
 <script>
+$.ajaxSetup({
+  headers: {
+    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+    'X-Requested-With': 'XMLHttpRequest',
+    Accept: 'application/json'
+  }
+});
 // ── Tab switcher ──
 function znpSwitchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(function(btn) {
@@ -1293,7 +1302,7 @@ function znpChkEm(inp) {
       type: 'POST',
       url: '{{ url("check-email") }}',
       dataType: 'json',
-      data: { email: v, _token: '{{ csrf_token() }}' },
+      data: { email: v, account_type: 'employer', _token: '{{ csrf_token() }}' },
       success: function (data) {
         znpEmailExists = !!(data && data.exists);
         if (znpEmailExists) {

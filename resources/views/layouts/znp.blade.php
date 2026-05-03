@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>ZeroNoticePeriod</title>
+    <title>@yield('page_title', 'Immediate joiner & zero-notice jobs in India | ZeroNoticePeriod')</title>
 
     {{-- Bootstrap 4 --}}
     <link href="{{ asset('asset/css/bootstrap.min.css') }}" rel="stylesheet">

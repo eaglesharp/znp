@@ -208,6 +208,22 @@ use RegistersUsers;
 
             'mode_of_separation' => $request->mode_of_separation,
 
+            'date_of_birth' => $request->input('date_of_birth'),
+
+            'industry_domain' => $request->input('industry_domain'),
+
+            'hide_cv_from_current_employer' => $request->boolean('hide_cv_from_current_employer'),
+
+            'accuracy_confirmed' => $request->boolean('accuracy_confirmed'),
+
+            'pref_job_alerts' => $request->boolean('pref_job_alerts'),
+
+            'pref_platform_tips' => $request->boolean('pref_platform_tips'),
+
+            'pref_promotions' => $request->boolean('pref_promotions'),
+
+            'terms_accepted_at' => now(),
+
             'is_active' => 1,
 
             'verified'   => 0,

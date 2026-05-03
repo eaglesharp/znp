@@ -188,8 +188,8 @@
     </nav>
 
     <div class="nav-actions">
-        <a class="btn-find-jobs" href="{{ url('/jobs') }}">Find Jobs</a>
-        <a class="btn-post"      href="{{ url('/employer-login') }}">Post Jobs</a>
+        <a class="btn-find-jobs" href="{{ url('/jobs') }}" target="_blank" rel="noopener noreferrer">Find Jobs</a>
+        <a class="btn-post"      href="{{ url('/employer-login') }}" target="_blank" rel="noopener noreferrer">Post Jobs</a>
     </div>
 </header>
 

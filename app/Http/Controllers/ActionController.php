@@ -103,21 +103,24 @@ class ActionController extends Controller
     
     public function checkEmail(Request $request)
     {
-        $email = $request->input('email');
-
-      //  dd($request->all());
-
-        $user = User::where('email', $email)->first();
-
-        if ($user) {
-            return response()->json([
-                'exists' => true
-            ]);
-        } else {
-            return response()->json([
-                'exists' => false
-            ]);
+        $email = trim((string) $request->input('email'));
+        if ($email === '') {
+            return response()->json(['exists' => false]);
         }
+        $normalized = mb_strtolower($email);
+
+        // Employer signup: block if taken as jobseeker OR employer (case-insensitive).
+        if ($request->input('account_type') === 'employer') {
+            $exists = User::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])->exists()
+                || Company::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])->exists();
+
+            return response()->json(['exists' => $exists]);
+        }
+
+        $exists = User::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])->exists()
+            || Company::whereRaw('LOWER(TRIM(email)) = ?', [$normalized])->exists();
+
+        return response()->json(['exists' => $exists]);
     }
     
     
