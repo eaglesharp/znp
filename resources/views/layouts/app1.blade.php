@@ -6,6 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@hasSection('title') @yield('title') — @else ZeroNoticePeriod — India's Exclusive Platform for Immediately Available Talent @endif</title>
     <meta name="description" content="@yield('meta_description', 'India\'s only job portal built exclusively for zero notice period talent. Find jobs & hire immediately available candidates.')">
+    <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" type="image/png">
 
     {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">

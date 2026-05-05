@@ -284,17 +284,40 @@ class JobController extends Controller
     public function jobsPage(Request $request)
     {
         $query = PostJob::with(['company', 'jobSkills'])->status();
+
+        // ── SINGLE SOURCE OF TRUTH for all location logic ──────────────────────
+        // This map is used by: popular tag filter, sidebar location filter,
+        // AND sidebar location counts — all three MUST use the same keywords
+        // so clicking a tag, ticking a checkbox, or reading a sidebar count
+        // always produce the same number.
         $metroLocationMap = [
             'Bengaluru' => ['bengaluru', 'bangalore'],
-            'Mumbai' => ['mumbai', 'navi mumbai'],
+            'Mumbai'    => ['mumbai', 'navi mumbai'],
             'Hyderabad' => ['hyderabad', 'secunderabad'],
             'Delhi NCR' => ['delhi', 'new delhi', 'noida', 'gurgaon', 'gurugram', 'ghaziabad', 'faridabad'],
-            'Pune' => ['pune'],
-            'Chennai' => ['chennai'],
-            'Kolkata' => ['kolkata', 'calcutta'],
+            'Pune'      => ['pune'],
+            'Chennai'   => ['chennai'],
+            'Kolkata'   => ['kolkata', 'calcutta'],
             'Ahmedabad' => ['ahmedabad'],
         ];
         $metroKeywords = array_values(array_unique(array_merge(...array_values($metroLocationMap))));
+
+        // ── SINGLE SOURCE OF TRUTH for all non-location filter logic ───────────
+        // Each value uses LIKE (%…%) so it matches the same way as the sidebar
+        // checkbox filter AND sidebar counts (which also all use LIKE).
+        // Previously Remote/Hybrid/WFO/Contract used exact = which caused
+        // popular-tag counts to differ from sidebar counts.
+        $workModeMap = [
+            'Remote'           => ['col' => 'work_mode', 'val' => '%Remote%'],
+            'Hybrid'           => ['col' => 'work_mode', 'val' => '%Hybrid%'],
+            'Work From Office' => ['col' => 'work_mode', 'val' => '%Work From Office%'],
+        ];
+        $jobTypeTagMap = [
+            'Contract'  => ['col' => 'job_type',  'val' => '%Contract%'],
+        ];
+        $shiftTagMap = [
+            'Night Shift' => ['col' => 'job_shift', 'val' => '%Night Shift%'],
+        ];
 
         // ── Text search (q) — split comma-separated terms, match any
         if ($q = trim($request->input('q', ''))) {
@@ -315,25 +338,23 @@ class JobController extends Controller
             $query->where('search', 'LIKE', '%' . strtolower($loc) . '%');
         }
 
-        // ── Popular tag quick filter
+        // ── Popular tag quick filter ───────────────────────────────────────────
+        // Uses $metroLocationMap for city tags so results == sidebar checkbox.
+        // Uses $workModeMap / $jobTypeTagMap / $shiftTagMap (all LIKE) for
+        // non-location tags so results == sidebar LIKE-based filters & counts.
         if ($tag = $request->input('tag', '')) {
-            $tagMap = [
-                'Bengaluru'        => ['search',    '%bengaluru%'],
-                'Mumbai'           => ['search',    '%mumbai%'],
-                'Hyderabad'        => ['search',    '%hyderabad%'],
-                'Delhi NCR'        => ['search',    '%delhi%'],
-                'Pune'             => ['search',    '%pune%'],
-                'Chennai'          => ['search',    '%chennai%'],
-                'Remote'           => ['work_mode', 'Remote/WFH'],
-                'Hybrid'           => ['work_mode', 'Hybrid'],
-                'Work From Office' => ['work_mode', 'Work From Office'],
-                'Contract'         => ['job_type',  'Contract'],
-                // was '%shift%' which matched Day Shift too
-                'Night Shift'      => ['job_shift',  '%Night Shift%'],
-            ];
-            if (isset($tagMap[$tag])) {
-                [$col, $val] = $tagMap[$tag];
-                str_contains($val, '%') ? $query->where($col, 'LIKE', $val) : $query->where($col, $val);
+            if (isset($metroLocationMap[$tag])) {
+                $query->where(function ($metroQ) use ($metroLocationMap, $tag) {
+                    foreach ($metroLocationMap[$tag] as $keyword) {
+                        $metroQ->orWhere('search', 'LIKE', '%' . $keyword . '%');
+                    }
+                });
+            } elseif (isset($workModeMap[$tag])) {
+                $query->where('work_mode', 'LIKE', $workModeMap[$tag]['val']);
+            } elseif (isset($jobTypeTagMap[$tag])) {
+                $query->where('job_type', 'LIKE', $jobTypeTagMap[$tag]['val']);
+            } elseif (isset($shiftTagMap[$tag])) {
+                $query->where('job_shift', 'LIKE', $shiftTagMap[$tag]['val']);
             }
         }
 
@@ -379,18 +400,7 @@ class JobController extends Controller
 
         // ── Location sidebar filter (multi-select)
         if ($locations = array_filter((array) $request->input('location', []))) {
-            $query->where(function ($sq) use ($locations) {
-                $metroLocationMap = [
-                    'Bengaluru' => ['bengaluru', 'bangalore'],
-                    'Mumbai' => ['mumbai', 'navi mumbai'],
-                    'Hyderabad' => ['hyderabad', 'secunderabad'],
-                    'Delhi NCR' => ['delhi', 'new delhi', 'noida', 'gurgaon', 'gurugram', 'ghaziabad', 'faridabad'],
-                    'Pune' => ['pune'],
-                    'Chennai' => ['chennai'],
-                    'Kolkata' => ['kolkata', 'calcutta'],
-                    'Ahmedabad' => ['ahmedabad'],
-                ];
-                $metroKeywords = array_values(array_unique(array_merge(...array_values($metroLocationMap))));
+            $query->where(function ($sq) use ($locations, $metroLocationMap, $metroKeywords) {
                 foreach ($locations as $l) {
                     if ($l === 'Others') {
                         $sq->orWhere(function ($otherQ) use ($metroKeywords) {

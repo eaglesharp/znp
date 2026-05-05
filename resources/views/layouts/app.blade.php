@@ -69,7 +69,7 @@ if (!isset($seo)) {
     <meta property='og:image' content='{{ asset('asset/images/link.png') }}' />
     <meta property='og:description' content='ZeroNoticePeriod' />
     <meta property='og:url' content='{{ url('/') }}' />
-    <!--<link rel="icon" href="{{ asset('asset/images/favicon.png') }}" type="image/x-icon">-->
+    <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" type="image/png">
 
 
     @stack('styles')

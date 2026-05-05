@@ -404,7 +404,7 @@
               </div>
               <div class="nopt" id="npf" onclick="setN('f')">
                 <div class="nlbl">Fresher</div>
-                <div class="nsub">No prior employment</div>
+                <div class="nsub">No prior employment or has internships</div>
               </div>
             </div>
 

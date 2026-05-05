@@ -144,6 +144,7 @@
     line-height: 25px;
     min-width: 130px;
     background: #fff;
+    white-space: nowrap;
 }  
 .btn-apply:hover {
     color: #fff !important;

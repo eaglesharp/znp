@@ -251,6 +251,7 @@
         background: transparent; border: 1px solid #bfcfef; color: var(--blue);
         padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
         cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+        white-space: nowrap;
     }
     .btn-apply:hover { background: var(--blue); color: var(--white); border-color: var(--blue); }
 

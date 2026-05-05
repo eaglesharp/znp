@@ -157,28 +157,28 @@ footer.znp-footer a { text-decoration: none; }
                 <div class="znp-footer-col-title">Jobs by Metros</div>
                 <ul class="znp-footer-links">
                     <li><a href="{{ url('/jobs?location=Bengaluru') }}">Jobs in Bengaluru</a></li>
-                    <li><a href="{{ url('/jobs?location=Hyderabad') }}">Jobs in Hyderabad</a></li>
-                    <li><a href="{{ url('/jobs?location=Chennai') }}">Jobs in Chennai</a></li>
-                    <li><a href="{{ url('/jobs?location=Mumbai') }}">Jobs in Mumbai</a></li>
-                    <li><a href="{{ url('/jobs?location=Delhi') }}">Jobs in Delhi</a></li>
+                    <li><a href="{{ url('/jobs?location[]=Hyderabad') }}">Jobs in Hyderabad</a></li>
+                    <li><a href="{{ url('/jobs?location[]=Chennai') }}">Jobs in Chennai</a></li>
+                    <li><a href="{{ url('/jobs?location[]=Mumbai') }}">Jobs in Mumbai</a></li>
+                    <li><a href="{{ url('/jobs?location[]=Delhi+NCR') }}">Jobs in Delhi</a></li>
                 </ul>
             </div>
 
             <div>
                 <div class="znp-footer-col-title">Jobs by Work Mode</div>
                 <ul class="znp-footer-links">
-                    <li><a href="{{ url('/jobs?searchfield=Hybrid') }}">Jobs (Hybrid)</a></li>
-                    <li><a href="{{ url('/jobs?searchfield=Work From Office') }}">Jobs (Work From Office)</a></li>
-                    <li><a href="{{ url('/jobs?searchfield=Remote') }}">Jobs (Remote/WFH)</a></li>
-                    <li><a href="{{ url('/jobs?searchfield=WFH during Covid') }}">Jobs (Temp WFH)</a></li>
+                    <li><a href="{{ url('/jobs?tag=Hybrid') }}">Jobs (Hybrid)</a></li>
+                    <li><a href="{{ url('/jobs?tag=Work+From+Office') }}">Jobs (Work From Office)</a></li>
+                    <li><a href="{{ url('/jobs?tag=Remote') }}">Jobs (Remote/WFH)</a></li>
+                    <li><a href="{{ url('/jobs?mode[]=Temp+WFH') }}">Jobs (Temp WFH)</a></li>
                 </ul>
             </div>
 
             <div>
                 <div class="znp-footer-col-title">Jobs by Job Type</div>
                 <ul class="znp-footer-links">
-                    <li><a href="{{ url('/jobs?searchfield=Full time') }}">Jobs (Full time)</a></li>
-                    <li><a href="{{ url('/jobs?searchfield=Contract') }}">Jobs (Contract)</a></li>
+                    <li><a href="{{ url('/jobs?type[]=Permanent') }}">Jobs (Full time/Permanent)</a></li>
+                    <li><a href="{{ url('/jobs?tag=Contract') }}">Jobs (Contract)</a></li>
                 </ul>
                 <div class="znp-footer-col-title" style="margin-top:20px;">Links</div>
                 <ul class="znp-footer-links">

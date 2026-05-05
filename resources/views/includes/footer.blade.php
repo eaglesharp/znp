@@ -39,15 +39,15 @@
                     </div>
                     <div class="col-lg-4 footerlinks workmode">
                         <h2 class="py-3">Jobs by Work Mode</h2>
-                        <p><a href="{{ url('/jobs?searchfield=Hybrid') }}">Jobs (Hybrid)</a></p>
-                        <p><a href="{{ url('/jobs?searchfield=Work From Office') }}">Jobs (Work From Office)</a></p>
-                        <p><a href="{{ url('/jobs?searchfield=Remote') }}">Jobs (Remote/WFH)</a></p>
-                        <p><a href="{{ url('/jobs?searchfield=WFH during Covid') }}">Jobs (Temp WFH)</a></p>                    
+                        <p><a href="{{ url('/jobs?tag=Hybrid') }}">Jobs (Hybrid)</a></p>
+                        <p><a href="{{ url('/jobs?tag=Work+From+Office') }}">Jobs (Work From Office)</a></p>
+                        <p><a href="{{ url('/jobs?tag=Remote') }}">Jobs (Remote/WFH)</a></p>
+                        <p><a href="{{ url('/jobs?mode[]=Temp+WFH') }}">Jobs (Temp WFH)</a></p>
                     </div>
                     <div class="col-lg-3 footerlinks">
                         <h2 class="py-3">Jobs by Job Type</h2>
-                        <p><a href="{{ url('/jobs?searchfield=Full time') }}">Jobs (Full time)</a></p>
-                        <p><a href="{{ url('/jobs?searchfield=Contract') }}">Jobs (Contract)</a> </p>
+                        <p><a href="{{ url('/jobs?type[]=Permanent') }}">Jobs (Full time/Permanent)</a></p>
+                        <p><a href="{{ url('/jobs?tag=Contract') }}">Jobs (Contract)</a></p>
                     </div>
                     <div class="col-lg-2 footerlinks">
                         <h2 class="py-3">Links</h2>
