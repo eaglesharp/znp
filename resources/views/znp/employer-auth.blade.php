@@ -849,11 +849,18 @@
           {{-- <h2 class="form-title">Welcome back</h2>
           <p class="form-subtitle">Sign in to access your employer dashboard and manage your job postings.</p> --}}
 
-          @if(session('error_message'))
-            <div class="znp-alert znp-alert-error" style="margin-top:16px;">{{ session('error_message') }}</div>
-          @endif
-          @if ($errors->has('email') && !session('signup_errors'))
-            <div class="znp-alert znp-alert-error" style="margin-top:16px;">{{ $errors->first('email') }}</div>
+          @if(!session('signup_errors'))
+            @php
+              $signinError =
+                session('error_message1')
+                ?? session('error_message')
+                ?? ($errors->has('email') ? $errors->first('email') : null)
+                ?? ($errors->has('password') ? $errors->first('password') : null);
+            @endphp
+
+            @if(!empty($signinError))
+              <div class="znp-alert znp-alert-error" style="margin-top:16px;">{{ $signinError }}</div>
+            @endif
           @endif
 
           <form method="POST" action="{{ route('company.login.new') }}" style="margin-top:20px;">

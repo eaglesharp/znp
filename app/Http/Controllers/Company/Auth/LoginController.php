@@ -389,7 +389,7 @@ class LoginController extends Controller
 
         if (Auth::check()) {
 
-            return redirect("employer-auth")->with('error_message1', 'Please Logout the User Account First');
+            return redirect("employer-login")->with('error_message1', 'Please Logout the User Account First');
 
         } else {
 
@@ -417,7 +417,7 @@ class LoginController extends Controller
 
             if ($user) {
                 if (!$user->email_verified) {
-                    return redirect("employer-auth")->with('error_message', 'Please verify your email address!');
+                    return redirect("employer-login")->with('error_message', 'Please verify your email address!');
                 }
 
                 if ($user->is_active == 1) {
@@ -462,11 +462,11 @@ class LoginController extends Controller
 
 
 
-                        return redirect()->intended('/employer-dashboard');
+                        return redirect('/employer-dashboard');
 
                     } else {
 
-                        return redirect("employer-auth")->with('error_message1', 'You have entered invalid credentials!');
+                        return redirect("employer-login")->with('error_message1', 'You have entered invalid credentials!');
 
 
 
@@ -474,11 +474,11 @@ class LoginController extends Controller
 
                 } else {
                     //  dd('user is not active');
-                    return redirect("employer-auth")->with('error_message', 'Your account deactivated!');
+                    return redirect("employer-login")->with('error_message', 'Your account deactivated!');
                 }
             } else {
 
-                return redirect("employer-auth")->with('error_message1', 'Please enter valid email!');
+                return redirect("employer-login")->with('error_message1', 'Please enter valid email!');
 
 
 
