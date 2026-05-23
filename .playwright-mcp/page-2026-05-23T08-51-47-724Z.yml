@@ -1,0 +1,175 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e6]:
+    - link "ZeroNoticePeriod" [ref=e7] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000
+      - img "ZeroNoticePeriod" [ref=e8]
+    - button "Toggle navigation" [ref=e9] [cursor=pointer]
+    - text:                       
+  - generic [ref=e12]:
+    - generic [ref=e15]:
+      - 'heading "KYC Verification ( Status : Not Verified )" [level=2] [ref=e16]':
+        - text: KYC Verification
+        - paragraph [ref=e17]: "( Status : Not Verified )"
+      - paragraph [ref=e18]:
+        - text: Please Update Your KYC Information Within 7 days. View the List of Documents
+        - link "HERE" [ref=e19] [cursor=pointer]:
+          - /url: "#Interview"
+        - text: .
+    - generic [ref=e20]:
+      - generic [ref=e24]:
+        - generic [ref=e25]:
+          - link [ref=e26] [cursor=pointer]:
+            - /url: javascript:void(0);
+            - img [ref=e27]
+          - heading "ZNP Test Company" [level=2] [ref=e29]
+          - generic [ref=e30]:
+            - generic [ref=e31]: 
+            - text: znp_pj_test_1779526157@example.com
+          - generic [ref=e32]:
+            - generic [ref=e33]: 
+            - text: "9999999999"
+        - generic [ref=e35]:
+          - generic [ref=e36]: CV Access
+          - generic [ref=e38]: NaN%
+      - generic [ref=e40]:
+        - generic [ref=e42]:
+          - heading "Subscription" [level=6] [ref=e44]
+          - link "Buy now" [ref=e45] [cursor=pointer]:
+            - /url: http://127.0.0.1:8000/pricing
+        - generic [ref=e46]:
+          - generic [ref=e48]:
+            - heading "Resumes Access Quota" [level=3] [ref=e49]
+            - heading "0" [level=2] [ref=e50]
+          - generic [ref=e52]:
+            - heading "Unlocked Resumes" [level=3] [ref=e53]
+            - heading "0" [level=2] [ref=e54]
+          - generic [ref=e56]:
+            - heading "Remaining Resume Access" [level=3] [ref=e57]
+            - heading "0" [level=2] [ref=e58]
+          - generic [ref=e60]:
+            - heading "Total Job Applicants" [level=3] [ref=e61]
+            - heading "0" [level=2] [ref=e62]
+          - generic [ref=e64]:
+            - heading "Bulk Email Quota" [level=3] [ref=e65]
+            - heading "0" [level=2] [ref=e66]
+          - generic [ref=e68]:
+            - heading "Emails Utilized" [level=3] [ref=e69]
+            - heading "0" [level=2] [ref=e70]
+          - generic [ref=e72]:
+            - heading "Remaining Email Quota" [level=3] [ref=e73]
+            - heading "0" [level=2] [ref=e74]
+          - generic [ref=e76]:
+            - heading "Active Jobs" [level=3] [ref=e77]
+            - heading "0/0" [level=2] [ref=e78]
+        - generic [ref=e79]:
+          - paragraph [ref=e81]:
+            - text: "For queries/support, mail us:"
+            - link "hello@zeronoticeperiod.com" [ref=e82] [cursor=pointer]:
+              - /url: mailto:hello@zeronoticeperiod.com
+            - link "+91-9035479715" [ref=e83] [cursor=pointer]:
+              - /url: tel:+91 9035479715
+              - generic [ref=e84]: 
+              - text: +91-9035479715
+          - generic [ref=e85]:
+            - link "Post Job" [ref=e86] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/post-job
+              - text: Post Job
+              - generic [ref=e87]: 
+            - link "Search CVs" [ref=e88] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/cv-search
+              - text: Search CVs
+              - generic [ref=e89]: 
+  - generic [ref=e92]:
+    - generic [ref=e93]:
+      - link [ref=e94] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000
+        - img [ref=e95]
+      - paragraph [ref=e96]: We are an exclusive online hiring platform connecting Job seekers with ZERO Notice Period with employers looking for Immediate hires. That’s our niche. With a focused & verified database of Talent with Zero Notice Period, Hire now at a very fast pace without having to lose time on "searching" talent with Zero notice period .
+      - paragraph [ref=e97]: ZeroNoticePeriod equals Fastest Hiring.
+      - list [ref=e98]:
+        - listitem [ref=e99]:
+          - img "call" [ref=e101]
+          - paragraph [ref=e103]: "Kokarya Business Synergy Center, Nagananda Commercial Complex, # 07/03, 15/1, Second Floor, 18th Main Road, Jayanagar 9th Block, Bengaluru, Karnataka 560041"
+        - listitem [ref=e104]:
+          - link "callhello@zeronoticeperiod.com" [ref=e105] [cursor=pointer]:
+            - /url: mailto:hello@zeronoticeperiod.com
+            - img "call" [ref=e106]
+            - text: hello@zeronoticeperiod.com
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - heading "Jobs by Metros" [level=2] [ref=e110]
+          - paragraph [ref=e111]:
+            - link "Jobs in Bengaluru" [ref=e112] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?location=Bengaluru
+          - paragraph
+          - paragraph [ref=e113]:
+            - link "Jobs in Hyderabad" [ref=e114] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?location=Hyderabad
+          - paragraph
+          - paragraph [ref=e115]:
+            - link "Jobs in Chennai" [ref=e116] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?location=Chennai
+          - paragraph
+          - paragraph [ref=e117]:
+            - link "Jobs in Mumbai" [ref=e118] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?location=Mumbai
+          - paragraph
+          - paragraph [ref=e119]:
+            - link "Jobs in Delhi" [ref=e120] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?location=Delhi
+          - paragraph
+        - generic [ref=e121]:
+          - heading "Jobs by Work Mode" [level=2] [ref=e122]
+          - paragraph [ref=e123]:
+            - link "Jobs (Hybrid)" [ref=e124] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?tag=Hybrid
+          - paragraph [ref=e125]:
+            - link "Jobs (Work From Office)" [ref=e126] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?tag=Work+From+Office
+          - paragraph [ref=e127]:
+            - link "Jobs (Remote/WFH)" [ref=e128] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?tag=Remote
+          - paragraph [ref=e129]:
+            - link "Jobs (Temp WFH)" [ref=e130] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?mode[]=Temp+WFH
+        - generic [ref=e131]:
+          - heading "Jobs by Job Type" [level=2] [ref=e132]
+          - paragraph [ref=e133]:
+            - link "Jobs (Full time/Permanent)" [ref=e134] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?type[]=Permanent
+          - paragraph [ref=e135]:
+            - link "Jobs (Contract)" [ref=e136] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/jobs?tag=Contract
+        - generic [ref=e137]:
+          - heading "Links" [level=2] [ref=e138]
+          - paragraph [ref=e139]:
+            - link "About" [ref=e140] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/about-us
+          - paragraph [ref=e141]:
+            - link "Contact" [ref=e142] [cursor=pointer]:
+              - /url: http://127.0.0.1:8000/contact-us
+      - list [ref=e143]:
+        - listitem [ref=e144]:
+          - link "call" [ref=e145] [cursor=pointer]:
+            - /url: https://www.facebook.com/profile.php?id=100078635680624
+            - img "call" [ref=e146]
+        - listitem [ref=e147]:
+          - link "call" [ref=e148] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/zeronoticeperiod/
+            - img "call" [ref=e149]
+        - listitem [ref=e150]:
+          - link "call" [ref=e151] [cursor=pointer]:
+            - /url: https://twitter.com/ZNPTEAM
+            - img "call" [ref=e152]
+        - listitem [ref=e153]:
+          - link "call" [ref=e154] [cursor=pointer]:
+            - /url: https://www.youtube.com/channel/UCA_pykWTYsltpgdinRQMOgg
+            - img "call" [ref=e155]
+  - generic [ref=e157]:
+    - text: © Copyrights reserved 2023 ZeroNoticePeriod. All Rights Reserved |
+    - link "Terms & Conditions" [ref=e158] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000/terms-and-conditons
+    - text: "|"
+    - link "Privacy Policy" [ref=e159] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000/privacy-policy

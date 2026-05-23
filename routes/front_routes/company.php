@@ -113,6 +113,18 @@ Route::post('candidate-list-search','Company\CompanyController@candidatelistsear
 
 Route::get('employer-dashboard','Company\CompanyController@employerdashboard')->name('employer.dashboard');
 
+Route::get('employer-dashboard-page', 'Company\CompanyController@employerDashboardNew')->name('employer.dashboard.page');
+
+Route::get('employer-job-pricing', 'Company\CompanyController@jobPricingZNP')->name('employer.job.pricing');
+
+/* ── ZNP New "Post a Job" form (temp URL until UI is signed off) ── */
+Route::get('post-job-page', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
+Route::post('post-job-page', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');
+
+/* New ZNP "Edit Job" page — drives the same blade with prefilled values. */
+Route::get('post-job-page/{id}/edit', 'Company\CompanyController@editJobZNP')->name('employer.post.job.edit')->where('id', '[0-9]+');
+Route::post('post-job-page/{id}/edit', 'Company\CompanyController@updateJobZNP')->name('employer.post.job.update')->where('id', '[0-9]+');
+
 
 
 Route::post('home-search','Company\CompanyController@homesearch')->name('home.search');
