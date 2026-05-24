@@ -12,7 +12,7 @@ import { test, expect } from '@playwright/test';
 import {
   ENV, Scenario, dbAvailable, dbFindCompanyIdByEmail,
   dbVerifyLatestJob, dbCleanupJob, dbClose, dbGetJobSkillNames,
-  login, fillJobForm, submitOrPreview, assertPreviewMatches,
+  login, fillJobForm, openPreview, submitOrPreview, assertPreviewMatches,
 } from './helpers';
 
 test.describe('Post-a-Job variety', () => {
@@ -156,7 +156,7 @@ test.describe('Post-a-Job variety', () => {
 
     /* Custom DB skill-count assertion. */
     await fillJobForm(page, s);
-    await page.evaluate(() => (window as any).ZnpPostJob.showPreview());
+    await openPreview(page);
     await assertPreviewMatches(page, s);
     await page.evaluate(() => (window as any).ZnpPostJob.closePreview());
 
@@ -231,7 +231,7 @@ test.describe('Post-a-Job variety', () => {
 
 async function runScenario(page: import('@playwright/test').Page, s: Scenario): Promise<void> {
   await fillJobForm(page, s);
-  await page.evaluate(() => (window as any).ZnpPostJob.showPreview());
+  await openPreview(page);
   await assertPreviewMatches(page, s);
   await page.evaluate(() => (window as any).ZnpPostJob.closePreview());
   const outcome = await submitOrPreview(page);

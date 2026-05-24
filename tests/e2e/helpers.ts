@@ -263,8 +263,14 @@ export async function fillJobForm(page: Page, s: Scenario): Promise<void> {
         row.appendChild(sp);
       });
     }
-    if (scenario.perks?.length)               tickCheckboxes('perks[]', scenario.perks);
-    if (scenario.profile_requirements?.length) tickCheckboxes('profile_requirements[]', scenario.profile_requirements);
+    if (scenario.perks?.length) tickCheckboxes('perks[]', scenario.perks);
+    /* Profile Requirements have no defaults — but step-5 validation requires
+       at least one. If the scenario doesn't specify any, tick a sensible default
+       so existing tests don't all need updating. */
+    const profileReqs = scenario.profile_requirements?.length
+      ? scenario.profile_requirements
+      : ['Current CTC'];
+    tickCheckboxes('profile_requirements[]', profileReqs);
 
     const cq = JSON.stringify(scenario.custom_questions || []);
     (document.getElementById('customQuestionsField') as HTMLInputElement).value = cq;
@@ -449,8 +455,12 @@ async function fillJobFormDemoMode(page: Page, s: Scenario): Promise<void> {
       });
     }
     const tick = (name: string, wanted: string[]) => { const set = new Set(wanted); document.querySelectorAll(`input[name="${name}"]`).forEach((cb: any) => { cb.checked = set.has(cb.value); cb.dispatchEvent(new Event('change',{bubbles:true})); }); };
-    if (scenario.perks?.length)                tick('perks[]', scenario.perks);
-    if (scenario.profile_requirements?.length) tick('profile_requirements[]', scenario.profile_requirements);
+    if (scenario.perks?.length) tick('perks[]', scenario.perks);
+    /* Profile Requirements default — see fillJobForm for rationale. */
+    const profileReqs = scenario.profile_requirements?.length
+      ? scenario.profile_requirements
+      : ['Current CTC'];
+    tick('profile_requirements[]', profileReqs);
     const cq = JSON.stringify(scenario.custom_questions || []);
     (document.getElementById('customQuestionsField') as HTMLInputElement).value = cq;
     const w: any = window;
@@ -463,16 +473,55 @@ async function fillJobFormDemoMode(page: Page, s: Scenario): Promise<void> {
   }, s as any);
 }
 
+/* ─── Step wizard navigation ─────────────────────────────────────────── */
+
+/**
+ * Walk through every wizard step in order, clicking "Next" between each.
+ * Each click runs that step's validation, so this also exercises the
+ * step-by-step gating. Throws (with a friendly message) if any step
+ * blocks navigation due to a missing field.
+ */
+export async function navigateStepsToEnd(page: Page): Promise<void> {
+  const totalSteps = 5;
+  for (let s = 1; s < totalSteps; s++) {
+    await demoStep(page, `Wizard step ${s} → ${s + 1}: clicking Next (validates step ${s})`);
+    await page.evaluate(() => (window as any).ZnpPostJob.nextStep());
+    const current = await page.evaluate(() => Number((window as any).ZnpPostJob._step));
+    if (current !== s + 1) {
+      throw new Error(`Step ${s} validation failed — expected to advance to step ${s + 1} but stayed on ${current}.`);
+    }
+  }
+}
+
 /* ─── Submit (or dry-run) ─────────────────────────────────────────────── */
 
-export async function submitOrPreview(page: Page): Promise<'submitted' | 'previewed'> {
-  await demoStep(page, 'Opening Preview overlay (validation runs first)');
-  /* Open preview first (form validation runs here). */
+/**
+ * Open the preview overlay. If we're not already on the final step, walks
+ * the wizard step-by-step first so per-step validation runs. Safe to call
+ * multiple times — closes any existing preview first.
+ */
+export async function openPreview(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as any;
+    /* Make sure any prior preview is closed before we (re-)open it. */
+    w.ZnpPostJob.closePreview?.();
+  });
+
+  const onStep = await page.evaluate(() => Number((window as any).ZnpPostJob._step));
+  if (onStep !== 5) {
+    await navigateStepsToEnd(page);
+  }
+
+  await demoStep(page, 'Opening Preview overlay (final validation runs first)');
   const opened = await page.evaluate(() => {
     (window as any).ZnpPostJob.showPreview();
     return document.getElementById('pjPreviewOverlay')?.classList.contains('show') === true;
   });
   if (!opened) throw new Error('Preview overlay did not open — form has validation errors.');
+}
+
+export async function submitOrPreview(page: Page): Promise<'submitted' | 'previewed'> {
+  await openPreview(page);
 
   if (ENV.mode === 'dryrun') {
     await demoStep(page, 'DRYRUN — closing preview without saving');

@@ -233,7 +233,9 @@
 
 /* ── STEP INDICATOR ── */
 .znp-pj .steps { display: flex; align-items: center; gap: 0; margin-bottom: 22px; }
-.znp-pj .step { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.znp-pj .step { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; cursor: pointer; transition: opacity .15s ease; }
+.znp-pj .step.is-locked { cursor: not-allowed; opacity: .85; }
+.znp-pj .step:not(.is-locked):hover .step-num { transform: scale(1.06); transition: transform .15s ease; }
 .znp-pj .step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
 .znp-pj .step-num.done { background: #1c3faa; color: #fff; }
 .znp-pj .step-num.active { background: #ea580c; color: #fff; }
@@ -243,6 +245,60 @@
 .znp-pj .step-label.done { color: #1c3faa; }
 .znp-pj .step-line { flex: 1; height: 1px; background: #e2e8f0; margin: 0 8px; }
 .znp-pj .step-line.done { background: #1c3faa; }
+
+/* ── Step wizard panes ──
+   Only the active step pane is visible; everything else is fully hidden
+   from layout (display:none) so it doesn't take up scroll height. Fields
+   inside are still in the DOM, so JS-driven autofill / tests still work. */
+.znp-pj .pj-step-pane { display: none; }
+.znp-pj .pj-step-pane.is-active { display: block; animation: pjStepFade .22s ease-out; }
+@keyframes pjStepFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── Step navigation row (Back / Next / Save Draft) ── */
+.znp-pj .step-nav-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 14px 18px; margin: 16px 0 10px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+}
+.znp-pj .step-nav-left, .znp-pj .step-nav-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.znp-pj .step-pill {
+    font-size: 12px; font-weight: 700; color: #1c3faa;
+    background: #eef2ff; padding: 6px 12px; border-radius: 999px;
+}
+.znp-pj .step-btn {
+    background: #fff; color: #475569; border: 1px solid #cbd5e1;
+    padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+    font-family: inherit; line-height: 1; white-space: nowrap;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    outline: none; /* custom focus ring below */
+}
+.znp-pj .step-btn:hover:not(:disabled) { border-color: #1c3faa; color: #1c3faa; background: #f8fafc; }
+.znp-pj .step-btn:focus-visible:not(:disabled) { box-shadow: 0 0 0 3px rgba(28,63,170,.18); }
+.znp-pj .step-btn:active:not(:disabled) { transform: translateY(1px); }
+.znp-pj .step-btn:disabled { opacity: .45; cursor: not-allowed; }
+.znp-pj .step-btn svg { stroke: currentColor; flex-shrink: 0; }
+
+/* Primary (Next) button — gradient background, white text/icon always. */
+.znp-pj .step-btn-primary,
+.znp-pj .step-btn-primary:hover:not(:disabled),
+.znp-pj .step-btn-primary:focus:not(:disabled) {
+    background: linear-gradient(135deg, #1c3faa, #3b5ccc);
+    color: #fff;
+    border-color: transparent;
+}
+.znp-pj .step-btn-primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 4px 12px rgba(28,63,170,.25); }
+.znp-pj .step-btn-primary svg { stroke: #fff; }
+
+/* Step 5's auto-save reassurance banner (no buttons inside — buttons live in the footer nav). */
+.znp-pj .save-info-banner {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #ecfdf5; border: 1px solid #bbf7d0; border-radius: 12px;
+    padding: 12px 16px; margin-top: 14px;
+}
+.znp-pj .save-info-banner .save-info-title { font-size: 13px; font-weight: 700; color: #166534; }
+.znp-pj .save-info-banner .save-info-sub   { font-size: 11.5px; color: #15803d; margin-top: 1px; }
 
 /* ── CLONE BANNER ── */
 .znp-pj .clone-bar { background: #fff; border: 1.5px solid #D6DEFC; border-radius: 14px; padding: 16px 20px; margin-bottom: 18px; position: relative; overflow: hidden; }
@@ -384,32 +440,20 @@
                 @endif
             </div>
 
-            {{-- ── STEP INDICATOR (1 of 5) ── --}}
-            <div class="steps" aria-label="Job posting progress">
-                <div class="step">
-                    <div class="step-num active">1</div>
-                    <div class="step-label active">Job Details</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-num idle">2</div>
-                    <div class="step-label">Description</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-num idle">3</div>
-                    <div class="step-label">Company</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-num idle">4</div>
-                    <div class="step-label">Perks</div>
-                </div>
-                <div class="step-line"></div>
-                <div class="step">
-                    <div class="step-num idle">5</div>
-                    <div class="step-label">Profile Update</div>
-                </div>
+            {{-- ── STEP INDICATOR (1 of 5) — clickable; classes are managed by JS ── --}}
+            @php
+                $stepLabels = ['Job Details', 'Description', 'Company', 'Perks', 'Profile Update'];
+            @endphp
+            <div class="steps" aria-label="Job posting progress" id="pjSteps">
+                @foreach($stepLabels as $i => $label)
+                    @if($i > 0)
+                        <div class="step-line"></div>
+                    @endif
+                    <div class="step" data-step="{{ $i + 1 }}" onclick="ZnpPostJob.gotoStep({{ $i + 1 }})" role="button" tabindex="0">
+                        <div class="step-num idle">{{ $i + 1 }}</div>
+                        <div class="step-label">{{ $label }}</div>
+                    </div>
+                @endforeach
             </div>
 
             {{-- ── CLONE BANNER (one-click: clones the latest posted job) ── --}}
@@ -489,6 +533,9 @@
             </div>
             @endif
             @endif {{-- !$isEdit --}}
+
+            {{-- ════════════════════ STEP 1 — JOB DETAILS ════════════════════ --}}
+            <div class="pj-step-pane is-active" data-step="1">
 
             {{-- ════════════════════ SECTION 1 — JOB BASICS ════════════════════ --}}
             <div class="sec">
@@ -658,13 +705,14 @@
                             <span class="fhint">Leave blank to display as "Confidential" on the listing.</span>
                         </div>
                         <div class="field">
-                            <label class="flabel">Client Industry</label>
+                            <label class="flabel">Client Industry <span class="req">*</span></label>
                             <select class="fselect" name="client_industry">
                                 <option value="">— Select —</option>
                                 @foreach(['Information Technology','Banking & Financial Services','Healthcare & Pharma','E-commerce & Retail','Manufacturing','Consulting','Other'] as $ci)
                                     <option value="{{ $ci }}" {{ old('client_industry') === $ci ? 'selected' : '' }}>{{ $ci }}</option>
                                 @endforeach
                             </select>
+                            @error('client_industry') <span class="field-error">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
@@ -708,11 +756,11 @@
                     @error('keyskills') <span class="field-error">{{ $message }}</span> @enderror
                 </div>
 
-                {{-- Interview modes --}}
-                <div class="field">
-                    <label class="flabel">Mode of Interview <span class="req">*</span> <span style="font-size:11px;font-weight:400;color:#94a3b8;">select multiple</span></label>
-                    <div class="check-grid">
-                        @php $oldInterview = (array) old('interview_modes', ['Video Interview']); @endphp
+                {{-- Interview modes ── nothing preselected by default. --}}
+                <div class="field" id="interviewModesField">
+                    <label class="flabel">Mode of Interview <span class="req">*</span> <span style="font-size:11px;font-weight:400;color:#94a3b8;">select one or more</span></label>
+                    <div class="check-grid" id="interviewModes">
+                        @php $oldInterview = (array) old('interview_modes', []); @endphp
                         @foreach([
                             'CV Screening','Video Interview','Technical Assessment','HR Interview',
                             'Coding Test','Client Interview','Case Study Challenge','White Paper Challenge',
@@ -725,8 +773,14 @@
                             </label>
                         @endforeach
                     </div>
+                    @error('interview_modes') <span class="field-error">{{ $message }}</span> @enderror
                 </div>
             </div>
+
+            </div>{{-- /pj-step-pane STEP 1 --}}
+
+            {{-- ════════════════════ STEP 2 — DESCRIPTION ════════════════════ --}}
+            <div class="pj-step-pane" data-step="2">
 
             {{-- ════════════════════ SECTION 2 — DESCRIPTION ════════════════════ --}}
             <div class="sec">
@@ -769,6 +823,11 @@
                     @error('job_overview') <span class="field-error">{{ $message }}</span> @enderror
                 </div>
             </div>
+
+            </div>{{-- /pj-step-pane STEP 2 --}}
+
+            {{-- ════════════════════ STEP 3 — COMPANY ════════════════════ --}}
+            <div class="pj-step-pane" data-step="3">
 
             {{-- ════════════════════ SECTION 3 — COMPANY (auto-saved) ════════════════════ --}}
             <div class="sec">
@@ -877,6 +936,11 @@
                     <span class="fhint">Helps candidates understand the company's international footprint.</span>
                 </div>
             </div>
+
+            </div>{{-- /pj-step-pane STEP 3 --}}
+
+            {{-- ════════════════════ STEP 4 — PERKS (awards + perks) ════════════════════ --}}
+            <div class="pj-step-pane" data-step="4">
 
             {{-- ════════════════════ SECTION 4 — AWARDS (auto-saved) ════════════════════ --}}
             <div class="sec">
@@ -1036,6 +1100,11 @@
                 </div>
             </div>
 
+            </div>{{-- /pj-step-pane STEP 4 --}}
+
+            {{-- ════════════════════ STEP 5 — PROFILE UPDATE (questionnaire + profile reqs) ════════════════════ --}}
+            <div class="pj-step-pane" data-step="5">
+
             {{-- ════════════════════ SECTION 6 — QUESTIONNAIRE ════════════════════ --}}
             <div class="sec">
                 <div class="sec-bar green"></div>
@@ -1138,17 +1207,22 @@
                         'Preferred Work Mode','Total Years of Experience','Resume / CV (updated)',
                         'LinkedIn Profile URL','Highest Qualification','Preferred Job Location',
                     ];
-                    $oldProfileReqs = (array) old('profile_requirements', ['Expected CTC','Notice Period','Current Location']);
+                    /* No defaults — recruiters must explicitly pick what they want. */
+                    $oldProfileReqs = (array) old('profile_requirements', []);
                 @endphp
 
-                <div class="check-grid col2">
-                    @foreach($profileReqs as $pr)
-                        <label class="check-item {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}">
-                            <input type="checkbox" name="profile_requirements[]" value="{{ $pr }}" {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}>
-                            <span class="check-box"></span>
-                            <span class="check-label">{{ $pr }}</span>
-                        </label>
-                    @endforeach
+                <div class="field" id="profileReqsField">
+                    <label class="flabel" style="font-weight:600;color:#475569;">Pick at least one <span class="req">*</span></label>
+                    <div class="check-grid col2" id="profileReqsGrid">
+                        @foreach($profileReqs as $pr)
+                            <label class="check-item {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}">
+                                <input type="checkbox" name="profile_requirements[]" value="{{ $pr }}" {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}>
+                                <span class="check-box"></span>
+                                <span class="check-label">{{ $pr }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('profile_requirements') <span class="field-error">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="toggle-row" style="margin-top:12px;margin-bottom:0;">
@@ -1161,24 +1235,40 @@
                 </div>
             </div>
 
-            {{-- ════════════════════ SUBMIT ════════════════════ --}}
-            <div class="submit-row">
-                <div class="sr-left">
-                    <div class="save-info">
-                        <svg width="16" height="16" fill="none" stroke="#15803d" stroke-width="2.5" viewBox="0 0 12 12"><polyline points="1.5,6 4.5,9 10.5,3"/></svg>
-                        <div>
-                            <div class="save-info-title">Auto-save enabled</div>
-                            <div class="save-info-sub">Company info, awards &amp; perks are saved for future job posts.</div>
-                        </div>
-                    </div>
+            {{-- Auto-save reassurance banner (informational only — no buttons here to avoid duplicates). --}}
+            <div class="save-info-banner">
+                <svg width="16" height="16" fill="none" stroke="#15803d" stroke-width="2.5" viewBox="0 0 12 12"><polyline points="1.5,6 4.5,9 10.5,3"/></svg>
+                <div>
+                    <div class="save-info-title">Auto-save enabled</div>
+                    <div class="save-info-sub">Company info, awards &amp; perks are saved for future job posts.</div>
                 </div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            </div>
+
+            </div>{{-- /pj-step-pane STEP 5 --}}
+
+            {{-- ── UNIFIED STEP NAVIGATION (Back / Next | Preview) — single action row for every step. --}}
+            <div class="step-nav-row" id="pjStepNavRow">
+                <div class="step-nav-left">
+                    <button type="button" class="step-btn" id="pjBackBtn" onclick="ZnpPostJob.prevStep()" disabled>
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+                        Back
+                    </button>
+                    <span class="step-pill">Step <span id="pjStepCur">1</span> of 5 · <span id="pjStepCurLabel">Job Details</span></span>
+                </div>
+                <div class="step-nav-right">
                     @if(!$isEdit)
-                        <button class="save-draft" type="button" onclick="ZnpPostJob.saveDraft()">Save as Draft</button>
+                        <button type="button" class="step-btn" id="pjDraftBtnNav" onclick="ZnpPostJob.saveDraft()">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save as Draft
+                        </button>
                     @endif
-                    <button class="submit-btn" type="button" onclick="ZnpPostJob.showPreview()">
-                        <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                        {{ $submitButtonLabel }} →
+                    <button type="button" class="step-btn step-btn-primary" id="pjNextBtn" onclick="ZnpPostJob.nextStep()">
+                        Next
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <button type="button" class="step-btn step-btn-primary" id="pjPreviewBtn" onclick="ZnpPostJob.showPreview()" style="display:none;background:linear-gradient(135deg,#ea580c,#f97316);">
+                        <svg width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        {{ $submitButtonLabel }}
                     </button>
                 </div>
             </div>
@@ -1400,8 +1490,91 @@
         _syncRich: function () {
             var desc = document.getElementById('jobDesc');
             var ovr  = document.getElementById('jobOverview');
-            document.getElementById('jobDescriptionField').value = desc ? desc.innerHTML.trim() : '';
-            document.getElementById('jobOverviewField').value    = ovr  ? ovr.innerHTML.trim()  : '';
+            document.getElementById('jobDescriptionField').value =
+                desc ? ZnpPostJob._sanitizeRich(desc.innerHTML).trim() : '';
+            document.getElementById('jobOverviewField').value =
+                ovr  ? ZnpPostJob._sanitizeRich(ovr.innerHTML).trim()  : '';
+        },
+
+        /**
+         * Strip everything except a tiny whitelist of formatting tags.
+         * Removes inline styles, classes, MS-Word junk (mso-* attrs), <script>,
+         * <style>, font tags, colors — anything that would visibly leak alien
+         * formatting into the public job-detail page.
+         *
+         * Whitelist: p, br, strong, b, em, i, u, ul, ol, li
+         * Everything else is unwrapped (children preserved, tag removed).
+         */
+        _sanitizeRich: function (html) {
+            if (!html) return '';
+            var tmp = document.createElement('div');
+            tmp.innerHTML = String(html);
+
+            /* Drop dangerous / noisy elements outright. */
+            tmp.querySelectorAll('script, style, link, meta, iframe, object, embed').forEach(function (n) { n.remove(); });
+
+            var allowed = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, U: 1, UL: 1, OL: 1, LI: 1 };
+            var walk = function (node) {
+                /* Snapshot children up-front so removing during iteration is safe. */
+                Array.prototype.slice.call(node.children).forEach(walk);
+                if (node.nodeType !== 1 || node === tmp) return;
+                /* Always strip attributes — even on whitelisted tags. */
+                if (node.attributes) {
+                    Array.prototype.slice.call(node.attributes).forEach(function (a) {
+                        node.removeAttribute(a.name);
+                    });
+                }
+                if (!allowed[node.tagName]) {
+                    /* Unwrap: replace the node with its children. */
+                    var parent = node.parentNode;
+                    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+                    parent.removeChild(node);
+                }
+            };
+            walk(tmp);
+
+            /* Collapse non-breaking spaces and excessive whitespace. */
+            return tmp.innerHTML
+                .replace(/&nbsp;/g, ' ')
+                .replace(/\s{2,}/g, ' ')
+                .replace(/<p>\s*<\/p>/g, '')
+                .trim();
+        },
+
+        /** Bind a paste handler that runs every drop through _sanitizeRich. */
+        _bindRichPasteSanitizer: function (areaId) {
+            var area = document.getElementById(areaId);
+            if (!area) return;
+            area.addEventListener('paste', function (e) {
+                e.preventDefault();
+                /* Prefer plain text if available — it's always safe.
+                   Fall back to sanitized HTML so a user can still paste bullets etc. */
+                var dt = e.clipboardData || window.clipboardData;
+                if (!dt) return;
+                var html = dt.getData('text/html');
+                var text = dt.getData('text/plain');
+                var clean;
+                if (html) {
+                    clean = ZnpPostJob._sanitizeRich(html);
+                    /* If the sanitised HTML stripped everything, fall back to text. */
+                    if (!clean.replace(/<[^>]+>/g, '').trim()) {
+                        clean = ZnpPostJob._escapeHtml(text || '').replace(/\n/g, '<br>');
+                    }
+                } else {
+                    clean = ZnpPostJob._escapeHtml(text || '').replace(/\n/g, '<br>');
+                }
+                /* Insert at caret position via execCommand to preserve undo stack. */
+                try { document.execCommand('insertHTML', false, clean); } catch (err) {
+                    area.innerHTML += clean;
+                }
+                ZnpPostJob._syncRich();
+            });
+        },
+
+        _escapeHtml: function (s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         },
 
         /* ───────── Custom questions ───────── */
@@ -1605,6 +1778,101 @@
             ZnpPostJob.toast('Cloned details applied.', 'success');
         },
 
+        /* ═══════════════════════ Step Wizard ═══════════════════════
+           5-step UI:  1) Job Details  2) Description  3) Company
+                       4) Perks        5) Profile Update
+           • Step indicator at the top is clickable (going back is free;
+             going forward validates the current step first).
+           • Next/Back buttons live in the persistent footer bar.
+           • Preview & Post Job appears only on step 5.
+        ============================================================= */
+        _step: 1,
+        _stepLabels: ['Job Details', 'Description', 'Company', 'Perks', 'Profile Update'],
+        _stepsTotal: 5,
+
+        gotoStep: function (n, opts) {
+            opts = opts || {};
+            n = Math.max(1, Math.min(ZnpPostJob._stepsTotal, parseInt(n, 10) || 1));
+            if (n === ZnpPostJob._step && !opts.force) return;
+
+            /* Going forward — validate every step between current and target. */
+            if (n > ZnpPostJob._step && opts.validate !== false) {
+                for (var s = ZnpPostJob._step; s < n; s++) {
+                    var stepErrors = ZnpPostJob._validateStep(s);
+                    if (stepErrors.length) {
+                        ZnpPostJob._step = s;
+                        ZnpPostJob._renderStep();
+                        ZnpPostJob._scrollToFirstError();
+                        ZnpPostJob.toast(
+                            'Please complete this step before continuing (' +
+                            stepErrors.length + ' field' + (stepErrors.length > 1 ? 's' : '') + ' missing).',
+                            'error'
+                        );
+                        return;
+                    }
+                }
+            }
+
+            ZnpPostJob._step = n;
+            ZnpPostJob._renderStep();
+        },
+
+        nextStep: function () { ZnpPostJob.gotoStep(ZnpPostJob._step + 1); },
+        prevStep: function () { ZnpPostJob.gotoStep(ZnpPostJob._step - 1, { validate: false }); },
+
+        _scrollToFirstError: function () {
+            var first = document.querySelector('.znp-pj .pj-step-pane.is-active .has-error');
+            if (first && first.scrollIntoView) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        },
+
+        _renderStep: function () {
+            var cur = ZnpPostJob._step;
+
+            /* Show only the active pane. */
+            document.querySelectorAll('.znp-pj .pj-step-pane').forEach(function (p) {
+                var n = parseInt(p.getAttribute('data-step'), 10);
+                p.classList.toggle('is-active', n === cur);
+            });
+
+            /* Indicator pills (active / done / idle). */
+            document.querySelectorAll('.znp-pj #pjSteps .step').forEach(function (el) {
+                var n = parseInt(el.getAttribute('data-step'), 10);
+                var num = el.querySelector('.step-num');
+                var lab = el.querySelector('.step-label');
+                if (!num || !lab) return;
+                num.classList.remove('active', 'done', 'idle');
+                lab.classList.remove('active', 'done');
+                el.classList.remove('is-locked');
+                if (n < cur)        { num.classList.add('done');   lab.classList.add('done'); }
+                else if (n === cur) { num.classList.add('active'); lab.classList.add('active'); }
+                else                { num.classList.add('idle');   }
+            });
+
+            /* Connecting lines fill up to the current step. */
+            var lines = document.querySelectorAll('.znp-pj #pjSteps .step-line');
+            lines.forEach(function (ln, idx) {
+                ln.classList.toggle('done', (idx + 1) < cur);
+            });
+
+            /* Footer state. */
+            var back    = document.getElementById('pjBackBtn');
+            var next    = document.getElementById('pjNextBtn');
+            var preview = document.getElementById('pjPreviewBtn');
+            var curEl   = document.getElementById('pjStepCur');
+            var lblEl   = document.getElementById('pjStepCurLabel');
+            if (back) back.disabled = (cur === 1);
+            if (curEl) curEl.textContent = String(cur);
+            if (lblEl) lblEl.textContent = ZnpPostJob._stepLabels[cur - 1] || '';
+            /* Final step → swap "Next" for "Preview & Post Job" in the same footer slot. */
+            var onLast = (cur === ZnpPostJob._stepsTotal);
+            if (next)    next.style.display    = onLast ? 'none' : '';
+            if (preview) preview.style.display = onLast ? '' : 'none';
+
+            /* Smooth-scroll the page-head into view so the user always lands at the top of the form. */
+            var head = document.querySelector('.znp-pj .pj-page-head');
+            if (head && head.scrollIntoView) head.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        },
+
         /* ───────── Toast helper ───────── */
         _toastTimer: null,
         toast: function (msg, kind) {
@@ -1640,8 +1908,37 @@
         },
         _validateForm: function () {
             ZnpPostJob.clearValidation();
-            var errors = [];
+            /* Aggregate every step's errors so showPreview can validate the whole form
+               at once (cross-checks like sal max > min still work end-to-end). */
+            var all = [];
+            for (var i = 1; i <= 5; i++) {
+                var fn = ZnpPostJob['_validateStep' + i];
+                if (typeof fn === 'function') all = all.concat(fn());
+            }
+            return all;
+        },
 
+        /**
+         * Validate just the fields belonging to a single wizard step.
+         * Returns the array of failing elements (or [] if all good).
+         * Used by nextStep() so the user can't move forward without fixing
+         * the current step.
+         */
+        _validateStep: function (step) {
+            ZnpPostJob.clearValidationForStep(step);
+            var fn = ZnpPostJob['_validateStep' + step];
+            return (typeof fn === 'function') ? fn() : [];
+        },
+
+        clearValidationForStep: function (step) {
+            var pane = document.querySelector('.pj-step-pane[data-step="' + step + '"]');
+            if (!pane) return;
+            pane.querySelectorAll('.has-error').forEach(function (el) { el.classList.remove('has-error'); });
+            pane.querySelectorAll('.field-error.live').forEach(function (el) { el.remove(); });
+        },
+
+        _validateStep1: function () {
+            var errors = [];
             var byId = function (id) { return document.getElementById(id); };
             var require = function (el, msg) {
                 if (!el) return;
@@ -1718,19 +2015,25 @@
                 errors.push(skSel);
             }
 
-            /* Interview modes — at least 1. */
+            /* Interview modes — at least 1 checkbox must be ticked. */
             var anyMode = document.querySelector('input[name="interview_modes[]"]:checked');
             if (!anyMode) {
-                var modeGrid = document.getElementById('interviewModes');
-                if (modeGrid) {
-                    var modeField = modeGrid.closest('.field') || modeGrid;
+                var modeField = document.getElementById('interviewModesField');
+                if (modeField) {
                     modeField.classList.add('has-error');
                     ZnpPostJob._markError(modeField, 'Select at least one interview mode');
+                    errors.push(modeField);
                 }
-                errors.push(modeGrid);
             }
 
-            /* Section 2 — Description + Eligibility. */
+            return errors;
+        },
+
+        _validateStep2: function () {
+            var errors = [];
+            var byId = function (id) { return document.getElementById(id); };
+
+            /* Description + Eligibility — both rich-text contenteditable, hidden mirror via _syncRich. */
             ZnpPostJob._syncRich();
             var descVal = (byId('jobDescriptionField').value || '').replace(/<[^>]+>/g, '').trim();
             if (!descVal) {
@@ -1746,8 +2049,18 @@
                 ZnpPostJob._markError(ovrWrap, 'Candidate eligibility is required');
                 errors.push(ovrWrap);
             }
+            return errors;
+        },
 
-            /* Section 3 — Company. */
+        _validateStep3: function () {
+            var errors = [];
+            var byId = function (id) { return document.getElementById(id); };
+            var require = function (el, msg) {
+                if (!el) return;
+                var val = (el.value == null ? '' : String(el.value)).trim();
+                if (!val) { ZnpPostJob._markError(el, msg); errors.push(el); }
+            };
+
             require(document.querySelector('[name="about_company"]'), 'About the company is required');
             var webHost = (byId('websiteHost').value || '').trim();
             if (!webHost) {
@@ -1755,7 +2068,9 @@
                 errors.push(byId('websiteHost'));
             }
 
-            /* Office address required for WFO / Hybrid / Temp WFH. */
+            /* Office address required for WFO / Hybrid / Temp WFH (not Remote). */
+            var wmSel = byId('workModeSelect');
+            var wm = wmSel ? wmSel.value : '';
             if (wm && wm !== 'Remote / WFH') {
                 var addrEl = document.querySelector('[name="office_address"]');
                 if (addrEl && !addrEl.value.trim()) {
@@ -1763,7 +2078,24 @@
                     errors.push(addrEl);
                 }
             }
+            return errors;
+        },
 
+        /* Step 4 (Awards / Perks) — both optional. */
+        _validateStep4: function () { return []; },
+
+        /* Step 5 — Profile Requirements must have at least one ticked. */
+        _validateStep5: function () {
+            var errors = [];
+            var anyProfile = document.querySelector('input[name="profile_requirements[]"]:checked');
+            if (!anyProfile) {
+                var prField = document.getElementById('profileReqsField');
+                if (prField) {
+                    prField.classList.add('has-error');
+                    ZnpPostJob._markError(prField, 'Pick at least one profile field candidates must confirm');
+                    errors.push(prField);
+                }
+            }
             return errors;
         },
 
@@ -1777,7 +2109,18 @@
 
             var errors = ZnpPostJob._validateForm();
             if (errors.length) {
-                var first = document.querySelector('.znp-pj .has-error');
+                /* Find the EARLIEST step that has an error and jump to it so the
+                   user can see what's missing — works even when they're on step 5. */
+                var firstStepWithError = null;
+                for (var s = 1; s <= ZnpPostJob._stepsTotal; s++) {
+                    var pane = document.querySelector('.pj-step-pane[data-step="' + s + '"]');
+                    if (pane && pane.querySelector('.has-error')) { firstStepWithError = s; break; }
+                }
+                if (firstStepWithError && firstStepWithError !== ZnpPostJob._step) {
+                    ZnpPostJob.gotoStep(firstStepWithError, { validate: false });
+                }
+                var first = document.querySelector('.znp-pj .pj-step-pane.is-active .has-error') ||
+                            document.querySelector('.znp-pj .has-error');
                 if (first && first.scrollIntoView) first.scrollIntoView({behavior:'smooth', block:'center'});
                 var focusable = first && first.querySelector ? first.querySelector('input,select,textarea,[contenteditable]') : null;
                 if (focusable && focusable.focus) focusable.focus();
@@ -1994,6 +2337,31 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         bindCheckToggles();
+
+        /* Initialise the step wizard — start on step 1 and paint the indicator. */
+        ZnpPostJob._step = 1;
+        ZnpPostJob._renderStep();
+
+        /* Intercept paste on the rich-text fields to strip alien formatting. */
+        ZnpPostJob._bindRichPasteSanitizer('jobDesc');
+        ZnpPostJob._bindRichPasteSanitizer('jobOverview');
+
+        /* Sanitize pre-existing content (edit mode + old() restore) once on load. */
+        ['jobDesc', 'jobOverview'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && el.innerHTML) el.innerHTML = ZnpPostJob._sanitizeRich(el.innerHTML);
+        });
+
+        /* Keyboard accessibility: Enter/Space on a step pill triggers gotoStep. */
+        document.querySelectorAll('.znp-pj #pjSteps .step').forEach(function (el) {
+            el.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    var n = parseInt(el.getAttribute('data-step'), 10);
+                    if (n) ZnpPostJob.gotoStep(n);
+                }
+            });
+        });
 
         /* Trigger conditional panels for restored old-input values. */
         var jt = document.getElementById('jobTypeSelect');

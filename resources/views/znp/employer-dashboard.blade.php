@@ -148,8 +148,31 @@
     margin: 14px 10px 0; background: var(--ed-blue-50);
     border: 1px solid var(--ed-blue-100); border-radius: var(--ed-r-sm); padding: 11px 13px;
 }
-.znp-ed .ed-plan-name { font-size: 11px; font-weight: 700; color: var(--ed-blue); margin-bottom: 2px; }
+.znp-ed .ed-plan-card.is-none    { background: #fff7ed; border-color: #fed7aa; }
+.znp-ed .ed-plan-card.is-warn    { background: #fff7ed; border-color: #fed7aa; }
+.znp-ed .ed-plan-card.is-full    { background: #fef2f2; border-color: #fecaca; }
+.znp-ed .ed-plan-card.is-expired { background: #fef2f2; border-color: #fecaca; }
+
+.znp-ed .ed-plan-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 2px; }
+.znp-ed .ed-plan-name { font-size: 11px; font-weight: 700; color: var(--ed-blue); }
+.znp-ed .ed-plan-card.is-warn    .ed-plan-name,
+.znp-ed .ed-plan-card.is-none    .ed-plan-name { color: #c2410c; }
+.znp-ed .ed-plan-card.is-full    .ed-plan-name,
+.znp-ed .ed-plan-card.is-expired .ed-plan-name { color: #b91c1c; }
+.znp-ed .ed-plan-tag { font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 20px; background: rgba(59,92,204,.12); color: var(--ed-blue); text-transform: uppercase; letter-spacing: .04em; }
+.znp-ed .ed-plan-card.is-warn .ed-plan-tag,
+.znp-ed .ed-plan-card.is-none .ed-plan-tag { background: rgba(234,88,12,.14); color: #c2410c; }
+.znp-ed .ed-plan-card.is-full .ed-plan-tag,
+.znp-ed .ed-plan-card.is-expired .ed-plan-tag { background: rgba(185,28,28,.12); color: #b91c1c; }
 .znp-ed .ed-plan-desc { font-size: 10.5px; color: var(--ed-t3); line-height: 1.5; }
+
+.znp-ed .ed-plan-bar { height: 4px; background: rgba(59,92,204,.15); border-radius: 4px; overflow: hidden; margin: 8px 0 6px; }
+.znp-ed .ed-plan-bar-fill { height: 100%; background: var(--ed-blue); border-radius: 4px; transition: width .4s; }
+.znp-ed .ed-plan-card.is-warn .ed-plan-bar-fill { background: var(--ed-orange); }
+.znp-ed .ed-plan-card.is-full .ed-plan-bar-fill,
+.znp-ed .ed-plan-card.is-expired .ed-plan-bar-fill { background: #ef4444; }
+.znp-ed .ed-plan-meta { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; color: var(--ed-t3); font-weight: 600; }
+
 .znp-ed .ed-plan-upgrade {
     display: block; margin-top: 8px; width: 100%; padding: 7px;
     background: var(--ed-orange); color: #fff !important; border: none;
@@ -157,6 +180,8 @@
     text-align: center; text-decoration: none !important; transition: opacity .15s;
 }
 .znp-ed .ed-plan-upgrade:hover { opacity: .9; }
+.znp-ed .ed-plan-card.is-default .ed-plan-upgrade { background: var(--ed-blue); }
+.znp-ed .ed-plan-card.is-default .ed-plan-upgrade:hover { background: var(--ed-blue-d); }
 
 /* ── HELP CARD ── */
 .znp-ed .ed-help-card {
@@ -662,8 +687,8 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <svg id="edArrJobs" class="ed-nav-arrow" style="transform:rotate(180deg)" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div id="edSubJobs" class="ed-nav-sub is-open">
-                <a target="_blank" rel="noopener noreferrer" href="{{ url('post-job') }}" class="ed-nav-sub-item">Post a Job</a>
-                <a target="_blank" rel="noopener noreferrer" href="{{ route('posted.jobs') }}" class="ed-nav-sub-item">
+                <a target="_blank" rel="noopener noreferrer" href="{{ url('post-job-page') }}" class="ed-nav-sub-item">Post a Job</a>
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('my-jobs') }}" class="ed-nav-sub-item">
                     My Job Postings
                     <span class="ed-nbadge">{{ $jobsPostedCount }}</span>
                 </a>
@@ -704,11 +729,42 @@ if (!function_exists('znp_ed_job_location_preview')) {
             </div>
         </nav>
 
-        {{-- Plan card --}}
-        <div class="ed-plan-card">
-            <div class="ed-plan-name">{{ $planLabel }}</div>
-            <div class="ed-plan-desc">{{ $planDescription }}</div>
-            <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-plan-upgrade">Upgrade →</a>
+        {{-- ── Plan card (ZNP) ──
+             Driven by $znpPlan from Company::znpPlanViewModel(). Shows live
+             quota + days-remaining bar when an active subscription exists,
+             a warm "Choose a Plan" prompt when there is none, and a red
+             "Renew" prompt when the plan has expired. --}}
+        <div class="ed-plan-card is-{{ $znpPlan['tone'] }}">
+            <div class="ed-plan-head">
+                <div class="ed-plan-name">{{ $znpPlan['plan_name'] }}</div>
+                @if($znpPlan['tag_label'])
+                    <span class="ed-plan-tag">{{ $znpPlan['tag_label'] }}</span>
+                @elseif(! $znpPlan['has_plan'])
+                    <span class="ed-plan-tag">Required</span>
+                @elseif($znpPlan['is_expired'])
+                    <span class="ed-plan-tag">Expired</span>
+                @elseif($znpPlan['tone'] === 'full')
+                    <span class="ed-plan-tag">Out of quota</span>
+                @endif
+            </div>
+
+            @if($znpPlan['has_plan'] && ! $znpPlan['is_unlimited'])
+                <div class="ed-plan-bar"><div class="ed-plan-bar-fill" style="width: {{ $znpPlan['percent'] }}%"></div></div>
+                <div class="ed-plan-meta">
+                    <span>{{ $znpPlan['posts_used'] }} of {{ $znpPlan['posts_limit'] }} used</span>
+                    @if($znpPlan['expires_label'])
+                        <span>{{ $znpPlan['days_remaining'] > 0 ? $znpPlan['days_remaining'] . 'd left' : 'expired' }}</span>
+                    @endif
+                </div>
+            @elseif($znpPlan['has_plan'] && $znpPlan['is_unlimited'])
+                <div class="ed-plan-desc">{{ $znpPlan['posts_used'] }} posted · unlimited @if($znpPlan['expires_label']) · expires {{ $znpPlan['expires_label'] }} @endif</div>
+            @else
+                <div class="ed-plan-desc">{{ $znpPlan['sub_line'] }}</div>
+            @endif
+
+            <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['cta_url'] }}" class="ed-plan-upgrade">
+                {{ $znpPlan['cta_label'] }} →
+            </a>
         </div>
 
         {{-- Help card --}}
@@ -771,15 +827,30 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <h1 class="ed-hero-title">Welcome, {{ $welcomeName }}</h1>
                 <div class="ed-hero-badge">
                     {{ $company->name }}
-                    @if(!$packageActive)
-                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" style="color:var(--ed-orange-d);font-weight:700">Upgrade to post jobs</a>
+                    @if(! $znpPlan['has_plan'])
+                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Choose a plan to post jobs</a>
+                    @elseif($znpPlan['is_expired'])
+                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Plan expired — renew to keep posting</a>
+                    @elseif(! $znpPlan['can_post'])
+                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Out of posts — buy more</a>
+                    @else
+                        &nbsp;·&nbsp; <span style="color:var(--ed-blue);font-weight:700">{{ $znpPlan['plan_name'] }}@if(! $znpPlan['is_unlimited']) · {{ $znpPlan['posts_remaining'] }} post{{ $znpPlan['posts_remaining'] === 1 ? '' : 's' }} left @endif</span>
                     @endif
                 </div>
                 <div class="ed-cta-row">
-                    <button type="button" class="ed-btn ed-btn-blue" onclick="EdDash.openPostJob()">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                        Post a Job
-                    </button>
+                    {{-- Primary CTA flips between "Post a Job" and "Choose / Buy a Plan"
+                         depending on the live ZNP plan state (see Company::znpPlanViewModel). --}}
+                    @if($znpPlan['can_post'])
+                        <a href="{{ route('employer.post.job.page') }}" class="ed-btn ed-btn-blue">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            Post a Job
+                        </a>
+                    @else
+                        <a href="{{ $znpPlan['cta_url'] }}" class="ed-btn ed-btn-blue">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                            {{ $znpPlan['cta_label'] }}
+                        </a>
+                    @endif
                     <a target="_blank" rel="noopener noreferrer" href="{{ route('cv-search') }}" class="ed-btn ed-btn-orange">
                         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Browse ResumeDB
@@ -808,17 +879,42 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <div class="ed-sum-cell">
                     <div class="ed-sum-lbl">Jobs posted</div>
                     <div class="ed-sum-num {{ $jobsPostedCount ? '' : 'is-dim' }}">{{ $jobsPostedCount }}</div>
-                    <div class="ed-sum-sub"><a target="_blank" rel="noopener noreferrer" href="{{ url('post-job') }}">Post a job →</a></div>
+                    <div class="ed-sum-sub">
+                        @if($znpPlan['can_post'])
+                            <a href="{{ route('employer.post.job.page') }}">Post a job →</a>
+                        @else
+                            <a href="{{ $znpPlan['pricing_url'] }}">{{ $znpPlan['cta_label'] }} →</a>
+                        @endif
+                    </div>
                 </div>
                 <div class="ed-sum-cell">
                     <div class="ed-sum-lbl">Applications</div>
                     <div class="ed-sum-num {{ $applicationsCount ? '' : 'is-dim' }}">{{ $applicationsCount }}</div>
                     <div class="ed-sum-sub is-muted">{{ $applicationsCount ? 'Across your postings' : 'Appears once you post' }}</div>
                 </div>
+                {{-- "Posts remaining" replaces the legacy CV-credits tile so it
+                     reflects the actual ZNP job-posting quota the user paid for. --}}
                 <div class="ed-sum-cell">
-                    <div class="ed-sum-lbl">Credits remaining</div>
-                    <div class="ed-sum-num {{ $creditsRemaining ? '' : 'is-dim' }}">{{ $creditsRemaining }}</div>
-                    <div class="ed-sum-sub"><a target="_blank" rel="noopener noreferrer" href="{{ route('company.packages') }}">Buy credits →</a></div>
+                    <div class="ed-sum-lbl">{{ $znpPlan['is_unlimited'] ? 'Plan' : 'Posts remaining' }}</div>
+                    @if(! $znpPlan['has_plan'])
+                        <div class="ed-sum-num is-dim">—</div>
+                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}">Choose a plan →</a></div>
+                    @elseif($znpPlan['is_expired'])
+                        <div class="ed-sum-num is-dim">0</div>
+                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Renew {{ $znpPlan['plan_name'] }} →</a></div>
+                    @elseif($znpPlan['is_unlimited'])
+                        <div class="ed-sum-num">∞</div>
+                        <div class="ed-sum-sub is-muted">{{ $znpPlan['plan_name'] }}@if($znpPlan['expires_label']) · expires {{ $znpPlan['expires_label'] }} @endif</div>
+                    @else
+                        <div class="ed-sum-num {{ $znpPlan['posts_remaining'] ? '' : 'is-dim' }}">{{ $znpPlan['posts_remaining'] }}</div>
+                        <div class="ed-sum-sub">
+                            @if($znpPlan['posts_remaining'] === 0)
+                                <a href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Buy more →</a>
+                            @else
+                                <span class="is-muted">of {{ $znpPlan['posts_limit'] }} on {{ $znpPlan['plan_name'] }}</span>
+                            @endif
+                        </div>
+                    @endif
                 </div>
                 <div class="ed-sum-cell">
                     <div class="ed-sum-lbl">ResumeDB available</div>
@@ -958,7 +1054,11 @@ if (!function_exists('znp_ed_job_location_preview')) {
                         <span class="ed-jh-title">Jobs posted on ZNP in the last 30 days</span>
                         <span class="ed-jh-sub"> — See what others are hiring for</span>
                     </div>
-                    <a target="_blank" rel="noopener noreferrer" href="{{ url('post-job') }}" class="ed-jh-cta">+ Post your first job</a>
+                    @if($znpPlan['can_post'])
+                        <a href="{{ route('employer.post.job.page') }}" class="ed-jh-cta">+ Post your first job</a>
+                    @else
+                        <a href="{{ $znpPlan['cta_url'] }}" class="ed-jh-cta">{{ $znpPlan['cta_label'] }} →</a>
+                    @endif
                 </div>
                 <div class="ed-jobs-scroll-wrap">
                     @php
@@ -1024,11 +1124,23 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <button type="button" class="ed-modal-close" onclick="EdDash.closePostJob()" aria-label="Close">×</button>
         </div>
         <div class="ed-modal-body">
-            <p>You will continue to ZeroNoticePeriod's guided job publishing flow. Saved drafts remain in your employer account.</p>
-            <div class="ed-modal-actions">
-                <a target="_blank" rel="noopener noreferrer" href="{{ url('post-job') }}" class="ed-modal-btn-solid">Continue to job form →</a>
-                <button type="button" class="ed-modal-btn-soft" onclick="EdDash.closePostJob()">Not now</button>
-            </div>
+            @if($znpPlan['can_post'])
+                <p>You will continue to ZeroNoticePeriod's guided job publishing flow.
+                    @if(! $znpPlan['is_unlimited'])
+                        You have <strong>{{ $znpPlan['posts_remaining'] }}</strong> of {{ $znpPlan['posts_limit'] }} posts left on your {{ $znpPlan['plan_name'] }} plan.
+                    @endif
+                </p>
+                <div class="ed-modal-actions">
+                    <a href="{{ route('employer.post.job.page') }}" class="ed-modal-btn-solid">Continue to job form →</a>
+                    <button type="button" class="ed-modal-btn-soft" onclick="EdDash.closePostJob()">Not now</button>
+                </div>
+            @else
+                <p>{{ $znpPlan['sub_line'] }}</p>
+                <div class="ed-modal-actions">
+                    <a href="{{ $znpPlan['cta_url'] }}" class="ed-modal-btn-solid">{{ $znpPlan['cta_label'] }} →</a>
+                    <button type="button" class="ed-modal-btn-soft" onclick="EdDash.closePostJob()">Not now</button>
+                </div>
+            @endif
         </div>
     </div>
 </div>

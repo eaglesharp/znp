@@ -487,6 +487,274 @@
 }
 .znp-job-detail .walkin-box strong { font-weight: 700; }
 
+/* ─── right-rail key-value list (Job snapshot) ───────── */
+.znp-job-detail .rail-card { padding: 16px 18px; }
+.znp-job-detail .rail-card .ct { font-size: 13px; margin-bottom: 11px; }
+.znp-job-detail .kv-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+.znp-job-detail .kv-list li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 0.5px dashed #e2e8f0;
+    font-size: 12px;
+    line-height: 1.45;
+}
+.znp-job-detail .kv-list li:last-child { border-bottom: none; }
+.znp-job-detail .kv-list li.kv-stack {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+.znp-job-detail .kv-lbl {
+    color: #64748b;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+.znp-job-detail .kv-val {
+    color: #0f172a;
+    font-weight: 600;
+    text-align: right;
+    word-break: break-word;
+}
+.znp-job-detail .kv-stack .kv-val { text-align: left; font-weight: 700; }
+.znp-job-detail .kv-sub {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* ─── snapshot / contract grids (left column — Contract details) ─ */
+.znp-job-detail .snap-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 22px;
+}
+.znp-job-detail .snap-item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.znp-job-detail .snap-lbl {
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.znp-job-detail .snap-val {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.45;
+    word-break: break-word;
+}
+.znp-job-detail .snap-val.muted { color: #64748b; font-weight: 500; }
+.znp-job-detail .snap-val a { color: #1d4ed8; }
+.znp-job-detail .snap-val a:hover { text-decoration: underline; }
+
+.znp-job-detail .client-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef3c7;
+    border: 0.5px solid #fde68a;
+    color: #92400e;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.znp-job-detail .conf-pill {
+    background: #fff7ed !important;
+    border-color: #fed7aa !important;
+    color: #9a3412 !important;
+    font-weight: 600;
+}
+
+/* ─── perks & awards lists ───────────────────────────── */
+.znp-job-detail .pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+.znp-job-detail .pl-perk {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 500;
+    background: #ecfdf5;
+    border: 0.5px solid #a7f3d0;
+    color: #065f46;
+    border-radius: 20px;
+    padding: 5px 12px;
+}
+.znp-job-detail .pl-perk::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #10b981;
+    border-radius: 50%;
+}
+.znp-job-detail .pl-award {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    background: #fef9c3;
+    border: 0.5px solid #fde68a;
+    color: #854d0e;
+    border-radius: 20px;
+    padding: 5px 12px;
+}
+.znp-job-detail .pl-award svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+}
+
+/* ─── company details (extended about-company) ──────── */
+.znp-job-detail .cmeta {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px 14px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 0.5px dashed #e2e8f0;
+    font-size: 12px;
+}
+.znp-job-detail .cmeta dt {
+    color: #64748b;
+    font-weight: 600;
+    margin: 0;
+}
+.znp-job-detail .cmeta dd {
+    color: #0f172a;
+    font-weight: 500;
+    margin: 0;
+    word-break: break-word;
+}
+.znp-job-detail .cmeta dd a { color: #1d4ed8; }
+.znp-job-detail .cmeta dd a:hover { text-decoration: underline; }
+.znp-job-detail .cmeta .country-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+}
+.znp-job-detail .cmeta .country-chips span {
+    font-size: 11px;
+    padding: 2px 9px;
+    background: #f1f5f9;
+    border: 0.5px solid #cbd5e1;
+    border-radius: 20px;
+    color: #334155;
+    font-weight: 500;
+}
+
+/* ─── application requirements (right rail) ──────────── */
+.znp-job-detail .req-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.znp-job-detail .req-list li {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: #334155;
+    line-height: 1.5;
+}
+.znp-job-detail .req-list svg {
+    width: 13px;
+    height: 13px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    color: #1c3faa;
+}
+.znp-job-detail .strict-banner {
+    margin-top: 12px;
+    background: #fef2f2;
+    border: 0.5px solid #fecaca;
+    color: #991b1b;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.znp-job-detail .strict-banner svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; }
+
+/* ─── questionnaire (right rail) ─────────────────────── */
+.znp-job-detail .qst-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    counter-reset: qst;
+    padding: 0;
+    margin: 0;
+}
+.znp-job-detail .qst-list li {
+    list-style: none;
+    counter-increment: qst;
+    display: flex;
+    gap: 9px;
+    font-size: 11.5px;
+    color: #334155;
+    line-height: 1.55;
+}
+.znp-job-detail .qst-list li::before {
+    content: counter(qst);
+    flex-shrink: 0;
+    width: 18px; height: 18px;
+    background: #eff6ff;
+    border: 0.5px solid #bfdbfe;
+    color: #1e40af;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.znp-job-detail .qst-q { font-weight: 500; color: #0f172a; word-break: break-word; }
+.znp-job-detail .qst-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 3px;
+    font-size: 10.5px;
+    color: #64748b;
+    font-weight: 500;
+}
+.znp-job-detail .qst-type-chip {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 10px;
+    color: #475569;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.znp-job-detail .qst-req { color: #dc2626; font-weight: 700; }
+.znp-job-detail .qst-hint {
+    margin-top: 2px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
 /* ─── responsive ─────────────────────────────────────── */
 @media (max-width: 768px) {
     .znp-job-detail .jd-grid {
@@ -587,6 +855,155 @@
 }
 .znp-am-3col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .znp-am-3col .znp-am-group { margin-bottom: 0; }
+
+/* ── Mandatory Questionnaire (replaces the old slot picker) ── */
+.znp-am-qst-list {
+    display: flex; flex-direction: column;
+    gap: 14px;
+    counter-reset: znp-q;
+}
+.znp-am-qst {
+    counter-increment: znp-q;
+    background: #f8fafc;
+    border: 0.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.znp-am-qst-label {
+    display: flex; align-items: flex-start; gap: 8px;
+    font-size: 12.5px; font-weight: 600; color: #0f172a;
+    margin-bottom: 8px; line-height: 1.45;
+}
+.znp-am-qst-label::before {
+    content: counter(znp-q);
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    background: #1c3faa; color: #fff;
+    border-radius: 50%;
+    font-size: 10.5px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+}
+.znp-am-qst-label .req-star { color: #dc2626; }
+.znp-am-qst-type {
+    background: #eff6ff;
+    border: 0.5px solid #bfdbfe;
+    color: #1e40af;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
+}
+.znp-am-qst-input,
+.znp-am-qst textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #0f172a;
+    background: #fff;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.znp-am-qst-input:focus,
+.znp-am-qst textarea:focus {
+    border-color: #1a3faa;
+    box-shadow: 0 0 0 3px rgba(26,63,170,0.08);
+}
+.znp-am-qst textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.znp-am-qst-yesno {
+    display: flex; gap: 8px;
+}
+.znp-am-qst-yesno label {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1.5px solid #cbd5e1;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 0;
+}
+.znp-am-qst-yesno input[type="radio"] { display: none; }
+.znp-am-qst-yesno label:hover { border-color: #94a3b8; background: #f8fafc; }
+.znp-am-qst-yesno input[type="radio"]:checked + span,
+.znp-am-qst-yesno label.is-on {
+    /* keep simple; we toggle the .is-on class on the wrapping label */
+}
+.znp-am-qst-yesno label.is-on {
+    border-color: #1c3faa;
+    background: #eff6ff;
+    color: #1c3faa;
+}
+.znp-am-qst-empty {
+    background: #f0fdf4;
+    border: 0.5px solid #bbf7d0;
+    color: #15803d;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 12px;
+    line-height: 1.55;
+    display: flex; align-items: flex-start; gap: 8px;
+}
+.znp-am-qst-empty svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+
+/* ── Confirm & Apply submit button (scoped to the modal so it
+     renders correctly even though the modal is outside .znp-job-detail). */
+.znp-apply-modal .znp-am-submit {
+    width: 100%;
+    margin-top: 18px;
+    background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    box-shadow: 0 4px 14px rgba(234, 88, 12, 0.28);
+    transition: transform 0.12s ease, box-shadow 0.18s ease, background 0.18s ease;
+    font-family: inherit;
+}
+.znp-apply-modal .znp-am-submit:hover {
+    background: linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+    box-shadow: 0 6px 18px rgba(234, 88, 12, 0.38);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+.znp-apply-modal .znp-am-submit:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.32);
+}
+.znp-apply-modal .znp-am-submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(234, 88, 12, 0.16);
+}
+.znp-apply-modal .znp-am-submit svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    transition: transform 0.18s ease;
+}
+.znp-apply-modal .znp-am-submit:hover svg { transform: translateX(2px); }
 .znp-am-slot-del {
     position: absolute; top: 9px; right: 10px;
     background: none; border: none; color: #94a3b8;
@@ -637,7 +1054,10 @@
     }
 
     /* ── salary string ───────────────────────────────────── */
-    if ($job->min_salary && $job->max_salary) {
+    $isCompConfidential = (bool) ($job->compensation_confidential ?? 0);
+    if ($isCompConfidential) {
+        $salaryStr = 'Compensation: Confidential';
+    } elseif ($job->min_salary && $job->max_salary) {
         $salaryStr = $job->min_salary . 'L – ' . $job->max_salary . 'L / yr';
     } elseif ($job->min_salary) {
         $salaryStr = $job->min_salary . 'L+ / yr';
@@ -645,6 +1065,19 @@
         $salaryStr = 'Up to ' . $job->max_salary . 'L / yr';
     } else {
         $salaryStr = '';
+    }
+
+    /* ── experience range (prefer exp_min/exp_max range, fall back to legacy) ── */
+    $fmtYrs = function ($v) {
+        $f = (float) $v;
+        return rtrim(rtrim(number_format($f, 2, '.', ''), '0'), '.');
+    };
+    if ($job->exp_min !== null && $job->exp_min !== '' && $job->exp_max !== null && $job->exp_max !== '') {
+        $expRangeStr = $fmtYrs($job->exp_min) . ' – ' . $fmtYrs($job->exp_max) . ' yrs';
+    } elseif ($job->exp_min !== null && $job->exp_min !== '') {
+        $expRangeStr = $fmtYrs($job->exp_min) . '+ yrs';
+    } else {
+        $expRangeStr = (string) ($job->experience ?? '');
     }
 
     /* ── posted age ──────────────────────────────────────── */
@@ -705,6 +1138,58 @@
     /* ── share URL ───────────────────────────────────────── */
     $shareUrl = urlencode(url()->current());
     $shareTitle = urlencode($job->job_title . ' at ZeroNoticePeriod');
+
+    /* ── posting type / client metadata ──────────────────── */
+    $postingType   = strtolower((string) ($job->posting_type ?? ''));
+    $isClientPost  = $postingType === 'client';
+    $clientName    = trim((string) ($job->client_name ?? ''));
+    $clientIndStr  = trim((string) ($job->client_industry ?? ''));
+
+    /* ── contract block (only for *Contract* job types) ──── */
+    $isContract = (bool) preg_match('/contract/i', (string) ($job->job_type ?? ''));
+    $contractDuration  = trim((string) ($job->duration ?? ''));
+    $contractDayRate   = $job->contract_day_rate;
+    $contractExtension = trim((string) ($job->contract_extension ?? ''));
+    $hasContractInfo   = $isContract && ($contractDuration || $contractDayRate || $contractExtension);
+
+    /* ── headcount label (reuse $hcMap from above) ──────── */
+    $jobHeadcount = trim((string) ($job->headcount ?? ''));
+    $jobHeadcountLabel = $jobHeadcount && isset($hcMap[$jobHeadcount]) ? $hcMap[$jobHeadcount] : $jobHeadcount;
+
+    /* ── industry / website / office / countries ───────── */
+    $jobIndustryStr = trim((string) ($job->industry ?? ''));
+    $jobWebsiteRaw  = trim((string) ($job->website_address ?? ''));
+    $jobWebsiteHost = $jobWebsiteRaw ? preg_replace('#^https?://(www\.)?#i', '', $jobWebsiteRaw) : '';
+    $jobOfficeAddr  = trim((string) ($job->office_address ?? ''));
+    try {
+        $jobCountries = json_decode((string) ($job->countries_presence ?? '[]'), true) ?: [];
+    } catch (\Exception $e) { $jobCountries = []; }
+
+    /* ── perks / awards (JSON arrays on post_jobs) ──────── */
+    try { $perks  = json_decode((string) ($job->perks  ?? '[]'), true) ?: []; } catch (\Exception $e) { $perks  = []; }
+    try { $awards = json_decode((string) ($job->awards ?? '[]'), true) ?: []; } catch (\Exception $e) { $awards = []; }
+    /* De-dupe defensively (older rows may have duplicates from clone history). */
+    $perks  = array_values(array_unique(array_filter(array_map('trim', $perks))));
+    $awards = array_values(array_unique(array_filter(array_map('trim', $awards))));
+
+    /* ── profile requirements + strict mode ─────────────── */
+    try { $profileReqs = json_decode((string) ($job->profile_requirements ?? '[]'), true) ?: []; }
+    catch (\Exception $e) { $profileReqs = []; }
+    $profileReqs = array_values(array_unique(array_filter(array_map('trim', $profileReqs))));
+    $isStrictMode = (int) ($job->strict_mode ?? 0) === 1;
+
+    /* ── questionnaire (skip disabled rows; pretty type label) ─ */
+    try { $questionnaire = json_decode((string) ($job->questionnaire ?? '[]'), true) ?: []; }
+    catch (\Exception $e) { $questionnaire = []; }
+    $questionnaire = array_values(array_filter($questionnaire, function ($q) {
+        return is_array($q) && !empty($q['label']) && (!isset($q['enabled']) || $q['enabled']);
+    }));
+    $qstTypeMap = [
+        'text'   => 'Short answer',
+        'yesno'  => 'Yes / No',
+        'number' => 'Number',
+        'url'    => 'Video link',
+    ];
 @endphp
 
 {{-- ═══ JOB HEADER ═══════════════════════════════════════════════ --}}
@@ -727,12 +1212,13 @@
         </div>
 
         <div class="sum-row">
-            @if($salaryStr)<span class="sg-pill">{{ $salaryStr }}</span>@endif
+            @if($salaryStr)<span class="sg-pill {{ $isCompConfidential ? 'conf-pill' : '' }}">{{ $salaryStr }}</span>@endif
             @if($job->job_type)<span class="sg-pill">{{ $job->job_type }}</span>@endif
-            @if($job->experience)<span class="sg-pill">{{ $job->experience }}</span>@endif
+            @if($expRangeStr)<span class="sg-pill">{{ $expRangeStr }}</span>@endif
             @if($job->job_shift)<span class="sg-pill">{{ $job->job_shift }}</span>@endif
             @if($job->work_mode)<span class="sg-pill">{{ $job->work_mode }}</span>@endif
             @if($locationStr)<span class="sg-pill">{{ $locationStr }}</span>@endif
+            @if($isClientPost)<span class="client-pill">Hiring for a Client</span>@endif
         </div>
 
         @if($hasAnyBadge)
@@ -816,6 +1302,33 @@
         </div>
         @endif
 
+        {{-- Contract details (only when job_type is *Contract*) --}}
+        @if($hasContractInfo)
+        <div class="card">
+            <div class="ct">Contract details</div>
+            <div class="snap-grid">
+                @if($contractDuration)
+                <div class="snap-item">
+                    <span class="snap-lbl">Duration</span>
+                    <span class="snap-val">{{ $contractDuration }}</span>
+                </div>
+                @endif
+                @if($contractDayRate)
+                <div class="snap-item">
+                    <span class="snap-lbl">Day rate</span>
+                    <span class="snap-val">₹{{ number_format((float) $contractDayRate, 0) }} / day</span>
+                </div>
+                @endif
+                @if($contractExtension)
+                <div class="snap-item">
+                    <span class="snap-lbl">Extension</span>
+                    <span class="snap-val">{{ $contractExtension }}</span>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
         {{-- Key Skills --}}
         @if($jobskills->count())
         <div class="card">
@@ -894,12 +1407,53 @@
                 </div>
             </div>
             <p class="cdesc">
-                @if($co && $co->description)
-                    {!! $co->description !!}
+                @php
+                    /* Prefer the per-job snapshot (always reflects what was posted),
+                       fall back to the company-level description for older rows. */
+                    $aboutText = trim((string) ($job->about_company ?? ''));
+                    if ($aboutText === '' && $co && $co->description) {
+                        $aboutText = (string) $co->description;
+                    }
+                @endphp
+                @if($aboutText !== '')
+                    {!! $aboutText !!}
                 @else
                     ZeroNoticePeriod is an exclusive online hiring platform connecting job seekers with Zero Notice Period with employers looking for immediate hires. We help employers hire at a fast pace without losing time on "searching" talent with zero notice period.
                 @endif
             </p>
+
+            @if($jobIndustryStr || $jobHeadcountLabel || $jobWebsiteHost || $jobOfficeAddr || count($jobCountries))
+            <dl class="cmeta">
+                @if($jobIndustryStr)
+                    <dt>Industry</dt>
+                    <dd>{{ $jobIndustryStr }}</dd>
+                @endif
+                @if($jobHeadcountLabel)
+                    <dt>Team size</dt>
+                    <dd>{{ $jobHeadcountLabel }}</dd>
+                @endif
+                @if($jobWebsiteHost)
+                    <dt>Website</dt>
+                    <dd>
+                        <a href="{{ $jobWebsiteRaw }}" target="_blank" rel="noopener nofollow">{{ $jobWebsiteHost }} ↗</a>
+                    </dd>
+                @endif
+                @if($jobOfficeAddr)
+                    <dt>Office</dt>
+                    <dd>{{ $jobOfficeAddr }}</dd>
+                @endif
+                @if(count($jobCountries))
+                    <dt>Presence</dt>
+                    <dd>
+                        <div class="country-chips">
+                            @foreach($jobCountries as $cn)
+                                <span>{{ $cn }}</span>
+                            @endforeach
+                        </div>
+                    </dd>
+                @endif
+            </dl>
+            @endif
         </div>
 
     </div>
@@ -917,7 +1471,7 @@
                     <span class="itag">{{ $mode }}</span>
                 @endforeach
             </div>
-            @if($hasWalkin && ($job->walkin_date || $job->walkin_venue))
+            @if($hasWalkin && ($job->walkin_date || $job->walkin_venue || $job->walkin_time || $job->walkin_contact))
             <div class="walkin-box">
                 @if($job->walkin_date)<div><strong>Date:</strong> {{ $job->walkin_date }}</div>@endif
                 @if($job->walkin_time)<div><strong>Time:</strong> {{ $job->walkin_time }}</div>@endif
@@ -925,6 +1479,83 @@
                 @if($job->walkin_contact)<div><strong>Contact:</strong> {{ $job->walkin_contact }}</div>@endif
             </div>
             @endif
+        </div>
+        @endif
+
+        {{-- Job Snapshot — non-duplicating quick facts.
+             Header pills already cover: salary, job_type, experience range,
+             job_shift, work_mode, location, "Hiring for a Client" badge.
+             The snapshot adds the bits we *don't* already show in the header. --}}
+        @php
+            $hasSnapshot = $job->no_of_openings
+                || $job->primary_language
+                || $job->locality
+                || ($isClientPost && ($clientName || $clientIndStr));
+        @endphp
+        @if($hasSnapshot)
+        <div class="card rail-card">
+            <div class="ct">Job snapshot</div>
+            <ul class="kv-list">
+                @if($job->no_of_openings)
+                <li>
+                    <span class="kv-lbl">Openings</span>
+                    <span class="kv-val">{{ $job->no_of_openings }} {{ (int) $job->no_of_openings === 1 ? 'position' : 'positions' }}</span>
+                </li>
+                @endif
+
+                @if($job->primary_language)
+                <li>
+                    <span class="kv-lbl">Primary language</span>
+                    <span class="kv-val">{{ $job->primary_language }}</span>
+                </li>
+                @endif
+
+                @if($job->locality)
+                <li>
+                    <span class="kv-lbl">Locality</span>
+                    <span class="kv-val">{{ $job->locality }}</span>
+                </li>
+                @endif
+
+                @if($isClientPost && ($clientName || $clientIndStr))
+                <li class="kv-stack">
+                    <span class="kv-lbl">Client</span>
+                    <span class="kv-val">{{ $clientName ?: 'Confidential' }}</span>
+                    @if($clientIndStr)
+                        <span class="kv-sub">{{ $clientIndStr }}</span>
+                    @endif
+                </li>
+                @endif
+            </ul>
+        </div>
+        @endif
+
+        {{-- Perks & Benefits --}}
+        @if(count($perks))
+        <div class="card rail-card">
+            <div class="ct">Perks &amp; benefits</div>
+            <div class="pill-list">
+                @foreach($perks as $p)
+                    <span class="pl-perk">{{ $p }}</span>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Awards & Recognition --}}
+        @if(count($awards))
+        <div class="card rail-card">
+            <div class="ct">Awards &amp; recognition</div>
+            <div class="pill-list">
+                @foreach($awards as $a)
+                    <span class="pl-award">
+                        <svg viewBox="0 0 16 16" fill="#ca8a04" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 1.5l1.95 3.95 4.35.63-3.15 3.07.74 4.33L8 11.4 4.11 13.48l.74-4.33L1.7 6.08l4.35-.63z"/>
+                        </svg>
+                        {{ $a }}
+                    </span>
+                @endforeach
+            </div>
         </div>
         @endif
 
@@ -1006,65 +1637,76 @@
                     <input type="hidden" name="job_id"  value="{{ $job->id }}">
                     <input type="hidden" name="user_id" value="{{ $amUser->id }}">
 
-                    {{-- Notice Period Status --}}
-                    <div class="znp-am-group">
-                        <label class="znp-am-label">Notice Period Status <span>*</span></label>
-                        <select name="nop_days" id="znp-nop-sel" class="znp-am-select" required>
-                            <option value="" disabled selected>Select Option</option>
-                            <option value="1" @if(isset($amUser->getprofileNop()->nop_days) && $amUser->getprofileNop()->nop_days == '1') selected @endif>Immediately Available</option>
-                            <option value="2" @if(isset($amUser->getprofileNop()->nop_days) && $amUser->getprofileNop()->nop_days == '2') selected @endif>Serving Notice Period</option>
-                        </select>
-                    </div>
-
-                    {{-- Shown when Serving Notice Period --}}
-                    <div id="znp-snp-wrap" style="{{ (isset($amUser->getprofileNop()->nop_days) && $amUser->getprofileNop()->nop_days == '2') ? '' : 'display:none;' }}">
-                        <div class="znp-am-group">
-                            <label class="znp-am-label">Last Working Date (while serving notice) <span>*</span></label>
-                            <input type="text" name="last_working_day"
-                                   class="znp-am-input znp-datepicker"
-                                   value="{{ isset($amUser->getprofileNop()->last_working_day) ? \Carbon\Carbon::parse($amUser->getprofileNop()->last_working_day)->format('d-M-Y') : '' }}"
-                                   placeholder="DD-Mon-YYYY" autocomplete="off">
-                        </div>
-                    </div>
-
-                    {{-- Shown when Immediately Available --}}
-                    <div id="znp-bnp-wrap" style="{{ (isset($amUser->getprofileNop()->nop_days) && $amUser->getprofileNop()->nop_days == '1') ? '' : 'display:none;' }}">
-                        <div class="znp-am-group">
-                            <label class="znp-am-label">Last Working Date / Month of Graduation <span>*</span></label>
-                            <input type="text" name="immediate_last_date"
-                                   class="znp-am-input znp-datepicker-month"
-                                   value="{{ isset($amUser->getprofileNop()->immediate_last_date) ? $amUser->getprofileNop()->immediate_last_date : '' }}"
-                                   placeholder="Mon-YYYY" autocomplete="off">
-                        </div>
-                    </div>
-
-                    {{-- Video Interview Availability --}}
-                    <div class="znp-am-section-title">Video Interview Availability</div>
-                    <div id="znp-slots-wrap">
-                        <div class="znp-am-slot">
-                            <div class="znp-am-3col">
-                                <div class="znp-am-group">
-                                    <label class="znp-am-label">Date <span>*</span></label>
-                                    <input type="text" name="date[]" class="znp-am-input znp-date-picker" autocomplete="off">
+                    {{-- Mandatory Questionnaire (set by the employer at post-time).
+                         Renders only enabled questions. Required questions get a
+                         red asterisk + client-side gating. --}}
+                    @if(count($questionnaire))
+                    <div class="znp-am-section-title">Mandatory Questionnaire</div>
+                    <p style="font-size:11.5px;color:#64748b;margin:-6px 0 12px;">
+                        The employer asks every applicant to answer these before they review your profile.
+                    </p>
+                    <div class="znp-am-qst-list">
+                        @foreach($questionnaire as $q)
+                            @php
+                                $qKey   = (string) ($q['key']   ?? 'q_' . md5((string) ($q['label'] ?? '')));
+                                $qLabel = (string) ($q['label'] ?? '');
+                                $qType  = (string) ($q['type']  ?? 'text');
+                                $qReq   = (bool)   ($q['required'] ?? false);
+                                $qTypeLabel = $qstTypeMap[$qType] ?? ucfirst($qType);
+                                $inputName = 'answers[' . $qKey . ']';
+                            @endphp
+                            <div class="znp-am-qst" data-qkey="{{ $qKey }}" data-qtype="{{ $qType }}" data-qrequired="{{ $qReq ? '1' : '0' }}">
+                                <div class="znp-am-qst-label">
+                                    <span style="flex:1;">
+                                        {{ $qLabel }}
+                                        @if($qReq)<span class="req-star">&nbsp;*</span>@endif
+                                    </span>
+                                    <span class="znp-am-qst-type">{{ $qTypeLabel }}</span>
                                 </div>
-                                <div class="znp-am-group">
-                                    <label class="znp-am-label">From <span>*</span></label>
-                                    <input type="text" name="from_time[]" class="znp-am-input znp-timepicker znp-from" autocomplete="off">
-                                </div>
-                                <div class="znp-am-group">
-                                    <label class="znp-am-label">To <span>*</span></label>
-                                    <input type="text" name="to_time[]" class="znp-am-input znp-timepicker znp-to" autocomplete="off">
-                                </div>
+
+                                @if($qType === 'yesno')
+                                    <div class="znp-am-qst-yesno" role="radiogroup">
+                                        <label>
+                                            <input type="radio" name="{{ $inputName }}" value="Yes">
+                                            <span>Yes</span>
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="{{ $inputName }}" value="No">
+                                            <span>No</span>
+                                        </label>
+                                    </div>
+                                @elseif($qType === 'number')
+                                    <input type="number" name="{{ $inputName }}" class="znp-am-qst-input"
+                                           min="0" step="1" placeholder="e.g. 5" autocomplete="off">
+                                @elseif($qType === 'url')
+                                    <input type="url" name="{{ $inputName }}" class="znp-am-qst-input"
+                                           placeholder="https://drive.google.com/... or https://youtu.be/..." autocomplete="off">
+                                @else
+                                    <textarea name="{{ $inputName }}" rows="3" placeholder="Type your answer here…"></textarea>
+                                @endif
                             </div>
-                        </div>
+                        @endforeach
                     </div>
-
-                    <button type="button" id="znp-add-slot" class="znp-am-add-btn">+ Add Another Slot</button>
+                    @else
+                    <div class="znp-am-qst-empty">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="3 8 7 12 13 4"/>
+                        </svg>
+                        <span>The employer hasn't set any pre-apply questions for this job — you're all set to submit.</span>
+                    </div>
+                    @endif
 
                     <div class="znp-am-error" id="znp-am-error" style="display:none;"></div>
 
-                    <button type="button" class="bapp" style="width:100%;margin-top:16px;"
-                            onclick="znpSubmitApply()">Confirm &amp; Apply</button>
+                    <button type="button" class="znp-am-submit" id="znp-am-submit-btn"
+                            onclick="znpSubmitApply()">
+                        Confirm &amp; Apply
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                            <line x1="3" y1="8" x2="13" y2="8"/><polyline points="9 4 13 8 9 12"/>
+                        </svg>
+                    </button>
                 </form>
             </div>
 
@@ -1102,104 +1744,60 @@ function znpReportJob() {
 
 /* ── apply modal ──────────────────────────────────────── */
 (function () {
-    var MAX_SLOTS = 3;
+    /* The modal now contains only the Mandatory Questionnaire — no datepickers
+       to bootstrap. NOP fields and the slot pickers are gone. */
 
-    /* init datepickers / timepickers inside the modal */
-    function initZnpPickers($scope) {
-        $scope = $scope || $('#applyModal');
-        $scope.find('.znp-datepicker').not('[data-znp-init]').each(function () {
-            $(this).attr('data-znp-init', '1').datepicker({
-                autoclose: true, format: 'dd-M-yyyy',
-                todayHighlight: true, orientation: 'bottom',
-                endDate: new Date()
-            });
-        });
-        $scope.find('.znp-datepicker-month').not('[data-znp-init]').each(function () {
-            $(this).attr('data-znp-init', '1').datepicker({
-                autoclose: true, format: 'M-yyyy',
-                viewMode: 'months', minViewMode: 'months',
-                orientation: 'bottom', endDate: new Date()
-            });
-        });
-        $scope.find('.znp-date-picker').not('[data-znp-init]').each(function () {
-            $(this).attr('data-znp-init', '1').datepicker({
-                autoclose: true, format: 'dd-mm-yyyy',
-                startDate: new Date(), endDate: '+30d',
-                changeMonth: true, changeYear: true, orientation: 'bottom'
-            });
-        });
-        $scope.find('.znp-timepicker').not('[data-znp-init]').each(function () {
-            $(this).attr('data-znp-init', '1').timepicker({});
-        });
-    }
-
-    /* run once on DOM ready too (for pre-filled values) */
-    $(function () { initZnpPickers(); });
-
-    /* re-run every time modal opens */
-    $('#applyModal').on('shown.bs.modal', function () {
-        initZnpPickers();
+    /* Yes/No questionnaire — toggle .is-on on the selected label so the
+       chosen option highlights even though the radio itself is hidden. */
+    $(document).on('change', '.znp-am-qst-yesno input[type="radio"]', function () {
+        var $g = $(this).closest('.znp-am-qst-yesno');
+        $g.find('label').removeClass('is-on');
+        $(this).closest('label').addClass('is-on');
     });
 
-    /* NOP select: toggle date fields */
-    $(document).on('change', '#znp-nop-sel', function () {
-        var v = this.value;
-        $('#znp-snp-wrap').toggle(v === '2');
-        $('#znp-bnp-wrap').toggle(v === '1');
-    });
-
-    /* Auto-fill "To" time = "From" + 1 hr */
-    $(document).on('changeTime change', '.znp-from', function () {
-        var $slot  = $(this).closest('.znp-am-slot');
-        var fromVal = $(this).val();
-        if (!fromVal) return;
-        try {
-            var parts     = fromVal.split(' ');
-            var timeParts = parts[0].split(':');
-            var hours     = parseInt(timeParts[0]);
-            var minutes   = parseInt(timeParts[1]);
-            var isPM      = parts[1] && parts[1].toUpperCase() === 'PM';
-            if (isPM && hours !== 12) hours += 12;
-            else if (!isPM && hours === 12) hours = 0;
-            var d = new Date();
-            d.setHours(hours); d.setMinutes(minutes);
-            d.setHours(d.getHours() + 1);
-            var uh = d.getHours() % 12 || 12;
-            var um = d.getMinutes();
-            var ua = d.getHours() >= 12 ? 'PM' : 'AM';
-            $slot.find('.znp-to').val(uh + ':' + (um < 10 ? '0' : '') + um + ' ' + ua);
-        } catch (e) {}
-    });
-
-    /* Add Another Slot (max 3) */
-    $(document).on('click', '#znp-add-slot', function () {
-        var $wrap  = $('#znp-slots-wrap');
-        var count  = $wrap.find('.znp-am-slot').length;
-        if (count >= MAX_SLOTS) return;
-        var $clone = $wrap.find('.znp-am-slot').first().clone(true, true);
-        $clone.find('input').val('').removeAttr('data-znp-init');
-        var $del = $('<button type="button" class="znp-am-slot-del" title="Remove slot">×</button>');
-        $del.on('click', function () {
-            $(this).closest('.znp-am-slot').remove();
-            if ($wrap.find('.znp-am-slot').length < MAX_SLOTS) {
-                $('#znp-add-slot').prop('disabled', false).text('+ Add Another Slot');
+    /* Client-side validation of required questionnaire answers.
+       Server still re-validates — this is purely a UX nicety. */
+    function znpValidateQuestionnaire() {
+        var missing = [];
+        $('#znp-apply-form .znp-am-qst[data-qrequired="1"]').each(function () {
+            var $q   = $(this);
+            var type = $q.data('qtype');
+            var ok   = false;
+            if (type === 'yesno') {
+                ok = $q.find('input[type="radio"]:checked').length > 0;
+            } else {
+                var v = ($q.find('textarea, .znp-am-qst-input').val() || '').toString().trim();
+                ok = v.length > 0;
+            }
+            if (!ok) {
+                missing.push($q.find('.znp-am-qst-label > span').first().text().trim().replace(/\s+\*$/, ''));
             }
         });
-        $clone.append($del);
-        $wrap.append($clone);
-        initZnpPickers($clone);
-        if ($wrap.find('.znp-am-slot').length >= MAX_SLOTS) {
-            $(this).prop('disabled', true).text('Max 3 slots added');
-        }
-    });
+        return missing;
+    }
+
+    function znpSetSubmitBtnLabel($btn, label, isLoading) {
+        $btn.prop('disabled', !!isLoading);
+        /* Replace the text node only — keep the SVG arrow intact. */
+        $btn.contents().filter(function () {
+            return this.nodeType === 3; /* Node.TEXT_NODE */
+        }).first().replaceWith(document.createTextNode(' ' + label + ' '));
+    }
 
     /* AJAX apply submit */
     window.znpSubmitApply = function () {
         var $form = $('#znp-apply-form');
         var $err  = $('#znp-am-error');
-        var $btn  = $form.find('button[onclick="znpSubmitApply()"]');
+        var $btn  = $('#znp-am-submit-btn');
         $err.hide();
-        $btn.prop('disabled', true).text('Submitting…');
+
+        var missing = znpValidateQuestionnaire();
+        if (missing.length) {
+            $err.html('Please answer the required questions:<br>• ' + missing.join('<br>• ')).show();
+            return;
+        }
+
+        znpSetSubmitBtnLabel($btn, 'Submitting…', true);
         $.ajax({
             url:      $form.attr('action'),
             type:     'POST',
@@ -1214,7 +1812,7 @@ function znpReportJob() {
                 }, 2200);
             },
             error: function (xhr) {
-                $btn.prop('disabled', false).text('Confirm & Apply');
+                znpSetSubmitBtnLabel($btn, 'Confirm & Apply', false);
                 var msg = 'Something went wrong. Please try again.';
                 if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
                     var errs = [];

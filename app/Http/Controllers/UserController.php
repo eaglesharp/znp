@@ -3216,98 +3216,51 @@ public function updatecurrentcompany(CompanyFrontRequest $request,$id)
       
 
       
-   public function jobstorefrontnp(Request $request,$id)
+  public function jobstorefrontnp(Request $request,$id)
 
-   {
+  {
 
-   // dd($request->all());
+    /* The new ZNP apply modal no longer asks for Notice Period in the
+       form — it now ships only the Mandatory Questionnaire. We still
+       accept and persist NOP fields *if they are submitted* so the
+       legacy resources/views/job/detail.blade.php apply page keeps
+       working unchanged. */
+    if ($request->filled('nop_days')) {
+        if ($request->nop_days == 2) {
+            $this->validate(
+                $request,
+                ['last_working_day' => 'required'],
+                ['last_working_day.required' => 'Last working date is required']
+            );
+        }
+        if ($request->nop_days == 1) {
+            $this->validate(
+                $request,
+                ['immediate_last_date' => 'required'],
+                ['immediate_last_date.required' => ' Date is required']
+            );
+        }
+
+        $profileNP = ProfileNop::where('user_id', '=', $request->user_id)->first();
+        if ($profileNP) {
+            $profileNP->nop_days            = $request->input('nop_days');
+            $profileNP->buyable_nop         = $request->input('buyable_nop');
+            $profileNP->last_working_day    = $this->dbdatechange($request->last_working_day);
+            $profileNP->immediate_last_date = $request->immediate_last_date;
+            $profileNP->user_id             = $request->user_id;
+            $profileNP->save();
+        } else {
+            $profileNP = new ProfileNop();
+            $profileNP->nop_days            = $request->input('nop_days');
+            $profileNP->buyable_nop         = $request->input('buyable_nop');
+            $profileNP->last_working_day    = $this->dbdatechange($request->last_working_day) ?? '';
+            $profileNP->immediate_last_date = $request->immediate_last_date;
+            $profileNP->user_id             = $request->user_id;
+            $profileNP->save();
+        }
+    }
 
 
-        $this->validate(
-        $request, 
-        ['nop_days' => 'required'],
-        ['nop_days.required' => ' Notice Period is required']
-        );
-
-     if($request->nop_days == 2){
-
- 
-
-          $this->validate(
-             $request, 
-             ['last_working_day' => 'required'],
-             ['last_working_day.required' => 'Last working date is required']
-         );
-
-         
-
-         }
-
-         if($request->nop_days == 1){
-
-         
-
-
-                 $this->validate(
-                     $request, 
-                     ['immediate_last_date' => 'required'],
-                     ['immediate_last_date.required' => ' Date is required']
-                 );
-
-         
-
-         
-
-         }
-
-         
-         $profileNP = ProfileNop::where('user_id', '=', $request->user_id)->first();
-
-     
-
-         if($profileNP)
-
-         {
-
-             $profileNP->nop_days = $request->input('nop_days');
-
-             $profileNP->buyable_nop = $request->input('buyable_nop');
-
-             $profileNP->last_working_day = $this->dbdatechange($request->last_working_day);
-
-            // $profileNP->nop_status = $request->input('nop_status');
-
-             $profileNP->immediate_last_date=$request->immediate_last_date;
-
-             $profileNP->user_id=$request->user_id;
-
-             $profileNP->save();
-
-         }
-
-         else
-
-         {       
-
-             $profileNP = new ProfileNop();
-
-             $profileNP->nop_days = $request->input('nop_days');
-
-             $profileNP->buyable_nop = $request->input('buyable_nop');
-
-             $profileNP->last_working_day = $this->dbdatechange($request->last_working_day)??"";
-
-             //$profileNP->nop_status = $request->input('nop_status');
-
-             $profileNP->immediate_last_date=$request->immediate_last_date;
-
-             $profileNP->user_id=$request->user_id;
-
-             $profileNP->save();
-
-         }
-
-         
         // $d =  date("h:i:sa");
         $nowtime =  date("g:i A");
         $todaydate = date("d-m-Y");
@@ -3316,88 +3269,145 @@ public function updatecurrentcompany(CompanyFrontRequest $request,$id)
       $todayDate = date('d-m-Y');
       $nowTime = date('g:i A');
       
-      if ($request->date == $todayDate) {
-          $this->validate($request, [
-              'date.*' => 'required',
-              'from_time.*'  => 'required|date_format:g:i A|after:' . $nowTime,
-              'to_time.*'  => 'required|date_format:g:i A|after:from_time.*',
-          ], [
-              'date.*.required' => 'Date is required',
-              'from_time.*.required'  => 'From Time is required',
-              'from_time.*.date_format' => 'From Time should be in valid format',
-              'from_time.*.after' => 'From Time should be after the current time',
-              'to_time.*.required' => 'To Time is required',
-              'to_time.*.date_format' => 'To Time should be in valid format',
-              'to_time.*.after' => 'To Time should be after From Time',
-          ]);
-      } else {
-          $this->validate($request, [
-              'date.*' => 'required',
-              'from_time.*'  => 'required|date_format:g:i A',
-              'to_time.*'  => 'required|date_format:g:i A|after:from_time.*',
-          ], [
-              'date.*.required' => 'Date is required',
-              'from_time.*.required'  => 'From Time is required',
-              'from_time.*.date_format' => 'From Time should be in valid format',
-              'to_time.*.required' => 'To Time is required',
-              'to_time.*.date_format' => 'To Time should be in valid format',
-              'to_time.*.after' => 'To Time should be after From Time',
-          ]);
-      }
-      
-  //dd('validation success');
+    /* ── Legacy interview-availability slots (still posted by the old
+         resources/views/job/detail.blade.php apply form). The new ZNP
+         apply modal no longer sends date[]/from_time[]/to_time[], so
+         we treat slots as optional and only run their validation +
+         Interview row save when the legacy form actually submits them. */
+    $hasLegacySlots = $request->filled('date') && is_array($request->date) && count($request->date) > 0;
 
-  $inter = Interview::where('user_id', $request->id)->first();
+    if ($hasLegacySlots) {
+        if ($request->date == $todayDate) {
+            $this->validate($request, [
+                'date.*'      => 'required',
+                'from_time.*' => 'required|date_format:g:i A|after:' . $nowTime,
+                'to_time.*'   => 'required|date_format:g:i A|after:from_time.*',
+            ], [
+                'date.*.required'         => 'Date is required',
+                'from_time.*.required'    => 'From Time is required',
+                'from_time.*.date_format' => 'From Time should be in valid format',
+                'from_time.*.after'       => 'From Time should be after the current time',
+                'to_time.*.required'      => 'To Time is required',
+                'to_time.*.date_format'   => 'To Time should be in valid format',
+                'to_time.*.after'         => 'To Time should be after From Time',
+            ]);
+        } else {
+            $this->validate($request, [
+                'date.*'      => 'required',
+                'from_time.*' => 'required|date_format:g:i A',
+                'to_time.*'   => 'required|date_format:g:i A|after:from_time.*',
+            ], [
+                'date.*.required'         => 'Date is required',
+                'from_time.*.required'    => 'From Time is required',
+                'from_time.*.date_format' => 'From Time should be in valid format',
+                'to_time.*.required'      => 'To Time is required',
+                'to_time.*.date_format'   => 'To Time should be in valid format',
+                'to_time.*.after'         => 'To Time should be after From Time',
+            ]);
+        }
 
-  if ($inter) {
-    
-      $inter = Interview::where('user_id', $request->id)->delete();
+        Interview::where('user_id', $request->id)->delete();
+        foreach ($request->date as $index => $date) {
+            $interview = new Interview();
+            $interview->user_id   = $request->id;
+            $interview->date      = $this->dbdatechange($date) ?? '';
+            $interview->from_time = $request->from_time[$index] ?? null;
+            $interview->to_time   = $request->to_time[$index]   ?? null;
+            $interview->save();
+        }
+    }
 
-      // Iterate over the arrays and save each value individually
-      foreach ($request->date as $index => $date) {
-          $interview = new Interview();
-          $interview->user_id = $request->id;
-          $interview->date = $this->dbdatechange($date) ?? '';
-          $interview->from_time = $request->from_time[$index];
-          $interview->to_time = $request->to_time[$index];
-          $interview->save();
-      }
-  } else {
-      // Iterate over the arrays and save each value individually
-      foreach ($request->date as $index => $date) {
-          $interview = new Interview();
-          $interview->user_id = $request->id;
-          $interview->date = $this->dbdatechange($date) ?? '';
-          $interview->from_time = $request->from_time[$index];
-          $interview->to_time = $request->to_time[$index];
-          $interview->save();
-      }
-  }
-  
-  
+    $user_id = $request->id;
+    $job = PostJob::where('id', $request->job_id)->first();
 
+    /* ── Mandatory Questionnaire (new ZNP apply flow).
+         The job's questionnaire JSON drives which keys we expect; the
+         apply form posts answers under `answers[<key>]`. Required
+         questions are validated; the answers are then captured as a
+         labelled JSON array on job_apply.questionnaire_answers so the
+         employer dashboard can render Q&A pairs without needing to
+         re-resolve the live job questionnaire (which may have been
+         edited after the application was submitted). */
+    $jobQuestionnaire = [];
+    if ($job && !empty($job->questionnaire)) {
+        $decoded = json_decode((string) $job->questionnaire, true);
+        if (is_array($decoded)) {
+            $jobQuestionnaire = $decoded;
+        }
+    }
 
-  
-     $user_id = $request->id;
-     $job = PostJob::where('id', $request->job_id)->first();
-     
-     $matchThese = [
-         'user_id'=>$user_id,
-         'job_id' => $job->id   
-         ];
-     $data = [
-         'user_id'=>$user_id,
-         'job_id' => $job->id,
-         'coverletter' => $request->description  
+    $rawAnswers       = (array) $request->input('answers', []);
+    $questionnaireRow = [];
+    $qErrors          = [];
+
+    foreach ($jobQuestionnaire as $q) {
+        if (! is_array($q) || empty($q['label'])) continue;
+        if (isset($q['enabled']) && ! $q['enabled']) continue;
+
+        $key      = (string) ($q['key']      ?? 'q_' . md5((string) $q['label']));
+        $label    = (string) ($q['label']    ?? '');
+        $type     = (string) ($q['type']     ?? 'text');
+        $required = (bool)   ($q['required'] ?? false);
+
+        $raw = $rawAnswers[$key] ?? null;
+        $val = is_string($raw) ? trim($raw) : $raw;
+
+        /* Type-specific normalisation. */
+        if ($type === 'yesno') {
+            $val = is_string($val) ? ucfirst(strtolower($val)) : '';
+            if ($val !== '' && ! in_array($val, ['Yes', 'No'], true)) {
+                $qErrors['answers.' . $key] = 'Please choose Yes or No for "' . $label . '".';
+                $val = '';
+            }
+        } elseif ($type === 'number') {
+            if ($val !== '' && $val !== null && ! is_numeric($val)) {
+                $qErrors['answers.' . $key] = '"' . $label . '" needs a numeric answer.';
+                $val = '';
+            }
+        } elseif ($type === 'url') {
+            if ($val !== '' && $val !== null && ! filter_var($val, FILTER_VALIDATE_URL)) {
+                $qErrors['answers.' . $key] = '"' . $label . '" needs a valid URL.';
+                $val = '';
+            }
+        }
+
+        if ($required && ($val === '' || $val === null)) {
+            $qErrors['answers.' . $key] = '"' . $label . '" is required.';
+        }
+
+        $questionnaireRow[] = [
+            'key'      => $key,
+            'label'    => $label,
+            'type'     => $type,
+            'required' => $required,
+            'answer'   => is_scalar($val) ? (string) $val : '',
         ];
-    $item =  JobApply::updateOrCreate($matchThese,$data);
+    }
+
+    if (! empty($qErrors)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'The given data was invalid.',
+            'errors'  => array_map(function ($m) { return [$m]; }, $qErrors),
+        ], 422);
+    }
+
+    $matchThese = ['user_id' => $user_id, 'job_id' => $job->id];
+    $data = [
+        'user_id'                => $user_id,
+        'job_id'                 => $job->id,
+        'coverletter'            => $request->description,
+        'questionnaire_answers'  => ! empty($questionnaireRow) ? json_encode($questionnaireRow) : null,
+    ];
+    $item = JobApply::updateOrCreate($matchThese, $data);
 
     if ($item->wasRecentlyCreated === true) {
-        event(new JobApplied($job, $jobApply));
-    } 
-     return response()->json(array('success' => true, 'status' => 200), 200);
+        event(new JobApplied($job, $item));
+    }
 
-   }
+    return response()->json(['success' => true, 'status' => 200], 200);
+
+  }
 
       
 

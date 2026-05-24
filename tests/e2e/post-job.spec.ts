@@ -14,7 +14,7 @@ import { test, expect } from '@playwright/test';
 import {
   ENV, Scenario, dbAvailable, dbFindCompanyIdByEmail,
   dbVerifyLatestJob, dbCleanupJob, dbClose,
-  login, fillJobForm, submitOrPreview, assertPreviewMatches,
+  login, fillJobForm, openPreview, submitOrPreview, assertPreviewMatches,
 } from './helpers';
 
 test.describe('Post-a-Job form', () => {
@@ -191,7 +191,13 @@ test.describe('Post-a-Job form', () => {
     const hasLatest = await page.evaluate(() => !!document.getElementById('cloneLatestId'));
     expect(hasLatest).toBe(true);
 
-    /* Step 3 — Apply clone, tweak only the title, submit. */
+    /* Step 3 — Enable the Interview Modes carry-over pill (otherwise the
+       cloned form has no interview modes ticked and step-1 validation fails),
+       then apply clone, tweak only the title, and submit. */
+    await page.evaluate(() => {
+      const cb = document.querySelector('.clone-check-pill input[data-cc="interview"]') as HTMLInputElement;
+      if (cb) { cb.checked = true; cb.closest('.clone-check-pill')?.classList.add('on'); }
+    });
     await page.evaluate(() => (window as any).ZnpPostJob.applyClone());
     const cloned = await page.evaluate(() => ({
       title:    (document.getElementById('jobTitle')       as HTMLInputElement).value,
@@ -208,6 +214,12 @@ test.describe('Post-a-Job form', () => {
     await page.evaluate((t) => {
       const el = document.getElementById('jobTitle') as HTMLInputElement;
       el.value = t; el.dispatchEvent(new Event('input', { bubbles: true }));
+
+      /* Profile reqs aren't carried over by clone (Profile pill is off by
+         default) — but step-5 validation requires at least one. Tick a
+         sensible default so we can submit. */
+      const cb = document.querySelector('input[name="profile_requirements[]"][value="Current CTC"]') as HTMLInputElement;
+      if (cb) { cb.checked = true; cb.dispatchEvent(new Event('change', { bubbles: true })); }
     }, newTitle);
 
     await submitOrPreview(page);
@@ -234,12 +246,13 @@ test.describe('Post-a-Job form', () => {
 async function runScenario(page: import('@playwright/test').Page, s: Scenario): Promise<void> {
   await fillJobForm(page, s);
 
-  /* Open preview & sanity check rendered content. */
-  await page.evaluate(() => (window as any).ZnpPostJob.showPreview());
+  /* Walk through the wizard, then open preview & verify its rendered content. */
+  await openPreview(page);
   await assertPreviewMatches(page, s);
-
-  /* Close it and re-open via the real flow (submit | dryrun). */
   await page.evaluate(() => (window as any).ZnpPostJob.closePreview());
+
+  /* Re-submit through the real flow (submit | dryrun). The previous step
+     already advanced us to step 5, so this just re-opens the preview. */
   const outcome = await submitOrPreview(page);
 
   if (outcome === 'submitted' && dbAvailable()) {

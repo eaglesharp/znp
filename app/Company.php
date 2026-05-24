@@ -382,5 +382,235 @@ class Company extends Authenticatable
         }
     }
 
+    /* ════════════════════════════════════════════════════════════════════
+     *  ZNP pricing plan helpers
+     *
+     *  These wrap the new `znp_company_subscriptions` table that powers
+     *  the Quick Job / Flex / Pro plans defined in `znp_pricing_plans`.
+     *  Job posting (storeJobZNP) gates on `canPostZnpJob()` and calls
+     *  `consumeOneZnpPost()` after a successful publish.
+     * ════════════════════════════════════════════════════════════════════ */
+
+    public function znpSubscriptions()
+    {
+        return $this->hasMany(\App\ZnpCompanySubscription::class, 'company_id', 'id');
+    }
+
+    /**
+     * Returns the company's currently-active ZNP subscription (or null).
+     *
+     * "Active" = status='active' AND (expires_at is null OR > now). When
+     * multiple active rows exist (shouldn't, but possible after a manual
+     * regrant), the newest one wins. Used by the quota gates that decide
+     * whether the employer can publish a new job.
+     */
+    public function activeZnpSubscription()
+    {
+        return $this->znpSubscriptions()
+            ->active()
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Returns the most-recent subscription regardless of whether it's still
+     * within its validity window. Used by the plan view-model so we can show
+     * an "Expired — renew" state instead of the colder "No plan yet" state
+     * when the employer had a plan that lapsed.
+     */
+    public function latestZnpSubscription()
+    {
+        return $this->znpSubscriptions()
+            ->where('status', 'active')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Convenience: true if the employer has a live ZNP plan with quota left.
+     */
+    public function canPostZnpJob(): bool
+    {
+        $sub = $this->activeZnpSubscription();
+        return $sub && $sub->isLive() && $sub->hasQuotaLeft();
+    }
+
+    /**
+     * Atomically increment the active subscription's `posts_used` after a
+     * successful job publish. No-op if there is no active subscription
+     * (caller is expected to gate on `canPostZnpJob()` first).
+     */
+    public function consumeOneZnpPost(): void
+    {
+        $sub = $this->activeZnpSubscription();
+        if (! $sub) {
+            return;
+        }
+        \DB::table('znp_company_subscriptions')
+            ->where('id', $sub->id)
+            ->increment('posts_used');
+    }
+
+    /**
+     * Build a single, denormalised view-model describing this company's ZNP
+     * plan state. Both the employer dashboard (znp.employer-dashboard) and
+     * the my-jobs page (znp.my-jobs) consume this so the messaging stays in
+     * sync across the app.
+     *
+     * Shape:
+     *   [
+     *     'has_plan'        => bool,
+     *     'is_expired'      => bool,
+     *     'is_unlimited'    => bool,
+     *     'can_post'        => bool,
+     *     'plan_name'       => string,  // e.g. "Flex" or "No active plan"
+     *     'plan_slug'       => string|null,
+     *     'tag_label'       => string|null,
+     *     'posts_limit'     => int,     // 0 means unlimited
+     *     'posts_used'      => int,
+     *     'posts_remaining' => int,
+     *     'percent'         => int,     // 0..100
+     *     'tone'            => 'default'|'warn'|'full'|'expired'|'none',
+     *     'expires_at'      => Carbon|null,
+     *     'expires_label'   => string|null,  // "21 Aug 2026"
+     *     'days_remaining'  => int|null,
+     *     'status_line'     => string,  // headline copy ("Flex · 6 of 10 used")
+     *     'sub_line'        => string,  // secondary copy ("4 posts remaining · expires …")
+     *     'cta_label'       => string,  // "Post a Job" / "Buy a Plan" / "Renew"
+     *     'cta_url'         => string,
+     *     'pricing_url'     => string,
+     *   ]
+     */
+    public function znpPlanViewModel(): array
+    {
+        $pricingUrl = route('employer.job.pricing');
+        $postUrl    = route('employer.post.job.page');
+
+        /* Use the latest non-cancelled subscription (whether or not it's still
+           within its validity window) so we can show a dedicated "Expired —
+           renew" state. The quota gates elsewhere use `activeZnpSubscription`
+           which already filters out expired rows. */
+        $sub = $this->latestZnpSubscription();
+
+        /* ── State A: no subscription on file ── */
+        if (! $sub) {
+            return [
+                'has_plan'        => false,
+                'is_expired'      => false,
+                'is_unlimited'    => false,
+                'can_post'        => false,
+                'plan_name'       => 'No active plan',
+                'plan_slug'       => null,
+                'tag_label'       => null,
+                'posts_limit'     => 0,
+                'posts_used'      => 0,
+                'posts_remaining' => 0,
+                'percent'         => 0,
+                'tone'            => 'none',
+                'expires_at'      => null,
+                'expires_label'   => null,
+                'days_remaining'  => null,
+                'status_line'     => 'No active plan',
+                'sub_line'        => 'Choose a plan to start posting jobs.',
+                'cta_label'       => 'Choose a Plan',
+                'cta_url'         => $pricingUrl,
+                'pricing_url'     => $pricingUrl,
+            ];
+        }
+
+        $now           = \Carbon\Carbon::now();
+        $isExpired     = $sub->expires_at && $sub->expires_at->lt($now);
+        $isUnlimited   = (int) $sub->posts_limit === 0;
+        $postsUsed     = (int) $sub->posts_used;
+        $postsLimit    = (int) $sub->posts_limit;
+        $postsRemain   = $isUnlimited ? PHP_INT_MAX : max(0, $postsLimit - $postsUsed);
+        $isOutOfQuota  = ! $isUnlimited && $postsRemain === 0;
+        $expiresLabel  = $sub->expires_at ? $sub->expires_at->format('j M Y') : null;
+        $daysRemaining = $sub->expires_at ? (int) ceil($now->diffInHours($sub->expires_at, false) / 24) : null;
+
+        /* ── State B: subscription expired ── */
+        if ($isExpired) {
+            return [
+                'has_plan'        => true,
+                'is_expired'      => true,
+                'is_unlimited'    => $isUnlimited,
+                'can_post'        => false,
+                'plan_name'       => $sub->plan_name,
+                'plan_slug'       => $sub->plan_slug,
+                'tag_label'       => null,
+                'posts_limit'     => $postsLimit,
+                'posts_used'      => $postsUsed,
+                'posts_remaining' => 0,
+                'percent'         => $isUnlimited ? 0 : 100,
+                'tone'            => 'expired',
+                'expires_at'      => $sub->expires_at,
+                'expires_label'   => $expiresLabel,
+                'days_remaining'  => $daysRemaining,
+                'status_line'     => $sub->plan_name . ' · expired',
+                'sub_line'        => 'Your plan expired on ' . $expiresLabel . '. Renew to keep posting.',
+                'cta_label'       => 'Renew Plan',
+                'cta_url'         => $pricingUrl,
+                'pricing_url'     => $pricingUrl,
+            ];
+        }
+
+        /* ── State C: active subscription ── */
+        $percent = $isUnlimited
+            ? 0
+            : (int) round(($postsUsed / max(1, $postsLimit)) * 100);
+
+        if ($isUnlimited) {
+            $tone = 'default';
+        } elseif ($isOutOfQuota) {
+            $tone = 'full';
+        } elseif ($percent >= 80) {
+            $tone = 'warn';
+        } else {
+            $tone = 'default';
+        }
+
+        if ($isUnlimited) {
+            $statusLine = $sub->plan_name . ' · ' . $postsUsed . ' posted';
+            $subLine    = 'Unlimited posts · expires ' . $expiresLabel
+                . ($daysRemaining !== null ? ' (' . $daysRemaining . ' days left)' : '');
+            $ctaLabel   = 'Post a Job';
+            $ctaUrl     = $postUrl;
+        } elseif ($isOutOfQuota) {
+            $statusLine = $sub->plan_name . ' · ' . $postsUsed . ' of ' . $postsLimit . ' used';
+            $subLine    = 'All ' . $postsLimit . ' posts used. Buy another pack to post more.';
+            $ctaLabel   = 'Buy More Posts';
+            $ctaUrl     = $pricingUrl;
+        } else {
+            $statusLine = $sub->plan_name . ' · ' . $postsUsed . ' of ' . $postsLimit . ' used';
+            $subLine    = $postsRemain . ' post' . ($postsRemain === 1 ? '' : 's') . ' remaining'
+                . ($expiresLabel ? ' · expires ' . $expiresLabel : '');
+            $ctaLabel   = 'Post a Job';
+            $ctaUrl     = $postUrl;
+        }
+
+        return [
+            'has_plan'        => true,
+            'is_expired'      => false,
+            'is_unlimited'    => $isUnlimited,
+            'can_post'        => $isUnlimited || ! $isOutOfQuota,
+            'plan_name'       => $sub->plan_name,
+            'plan_slug'       => $sub->plan_slug,
+            'tag_label'       => optional($sub->plan)->tag_label,
+            'posts_limit'     => $postsLimit,
+            'posts_used'      => $postsUsed,
+            'posts_remaining' => $isUnlimited ? 0 : $postsRemain,
+            'percent'         => $percent,
+            'tone'            => $tone,
+            'expires_at'      => $sub->expires_at,
+            'expires_label'   => $expiresLabel,
+            'days_remaining'  => $daysRemaining,
+            'status_line'     => $statusLine,
+            'sub_line'        => $subLine,
+            'cta_label'       => $ctaLabel,
+            'cta_url'         => $ctaUrl,
+            'pricing_url'     => $pricingUrl,
+        ];
+    }
+
 }
 

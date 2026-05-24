@@ -249,81 +249,107 @@
     <h1>Hire immediately. <em>Pay only for what you need.</em></h1>
 </div>
 
+{{-- ───────────────────────────────────────────────────────────────────────
+     Plans grid — driven by `znp_pricing_plans` rows passed in via
+     CompanyController@jobPricingZNP. Card styling switches on `variant`
+     (default | featured | enterprise) so editing a plan in the DB updates
+     the public page without touching this template.
+
+     Server-side flash message (set by the post-job quota gate) is rendered
+     in the hero area below the headline.
+─────────────────────────────────────────────────────────────────────── --}}
+
+@if(session('error'))
+<div style="max-width:960px;margin:0 auto 8px;padding:12px 18px;background:#fff4f4;border:1px solid #fbb;border-radius:10px;color:#a3262b;font-size:13px;font-weight:600;text-align:center;">
+    {{ session('error') }}
+</div>
+@endif
+
 <div class="jp-plans">
+@forelse(($plans ?? collect()) as $plan)
+    @php
+        $variant = $plan->variant ?: 'default';
+        $isFeatured = $variant === 'featured';
+        $isEnterprise = $variant === 'enterprise';
+        $isCurrent = isset($currentPlanId) && (int) $currentPlanId === (int) $plan->id;
+        /* CTA button style: featured = white, enterprise = solid blue, default = outline. */
+        $btnClass = $isFeatured ? 'jp-btn-white' : ($isEnterprise ? 'jp-btn-blue' : 'jp-btn-outline');
+        $ctaUrl = $plan->cta_url ?: url('post-job-page');
+        if ($ctaUrl && !preg_match('#^https?://#', $ctaUrl)) {
+            $ctaUrl = url($ctaUrl);
+        }
+    @endphp
 
-    <div class="jp-plan">
-        <div class="jp-plan-tag">Single Job</div>
-        <div class="jp-plan-name">Quick Job</div>
-        <div class="jp-plan-desc">Perfect for occasional hiring. Pay per job — no commitment, no subscription.</div>
+    <div class="jp-plan {{ $variant }}">
+        @if($isFeatured)
+            <div class="jp-popular-badge">⚡ {{ $plan->tag_label ?: 'Most Popular' }}</div>
+        @elseif($plan->tag_label)
+            <div class="jp-plan-tag">{{ $plan->tag_label }}</div>
+        @endif
+
+        <div class="jp-plan-name">{{ $plan->name }}</div>
+        @if($plan->description)
+            <div class="jp-plan-desc">{{ $plan->description }}</div>
+        @endif
+
         <div class="jp-price-row">
             <div>
-                <span class="jp-price"><span class="jp-price-currency">₹</span><span class="jp-price-num">2,999</span></span>
+                @if($plan->is_custom_price)
+                    <span class="jp-price" style="font-size:24px;letter-spacing:-.3px">{{ $plan->display_price }}</span>
+                @else
+                    <span class="jp-price">
+                        <span class="jp-price-currency">₹</span><span class="jp-price-num">{{ $plan->display_price }}</span>
+                    </span>
+                    @if($plan->display_original_price)
+                        <span class="jp-price-original">{{ $plan->display_original_price }}</span>
+                    @endif
+                    @if($plan->display_save_amount)
+                        <span class="jp-price-save">Save {{ $plan->display_save_amount }}</span>
+                    @endif
+                @endif
             </div>
-            <div class="jp-price-per">per job post · shown across all metros · valid 30 days · + GST</div>
-            <div class="jp-price-monthly">Billed monthly — pay only when you post</div>
+            @if($plan->price_subtext)
+                <div class="jp-price-per">{{ $plan->price_subtext }}</div>
+            @endif
+            @if($plan->billing_note)
+                <div class="jp-price-monthly">{{ $plan->billing_note }}</div>
+            @endif
         </div>
-        <div class="jp-plan-divider"></div>
-        <div class="jp-features">
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">1 active job post · shown across all metros</div><div class="jp-feat-note">Goes live within 30 minutes of review</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from immediate joiners &amp; serving notice</div><div class="jp-feat-note">Verified zero &amp; short notice period candidates only</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from contractors</div><div class="jp-feat-note">Access freelance &amp; contract talent on day-rate</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Verification of notice period</div><div class="jp-feat-note">Every applicant's notice period is independently verified</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">KYC verification required</div><div class="jp-feat-note">One-time employer verification before going live</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applicant dashboard</div><div class="jp-feat-note">View, shortlist and manage applications</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Email support</div></div></div>
-        </div>
-        <a href="{{ url('post-job') }}" class="jp-plan-btn jp-btn-outline" style="margin-top:18px">Get Started →</a>
-    </div>
 
-    <div class="jp-plan featured">
-        <div class="jp-popular-badge">⚡ Most Popular</div>
-        <div class="jp-plan-name">Flex</div>
-        <div class="jp-plan-desc">For teams hiring regularly. 10 posts at a significant discount with premium features included.</div>
-        <div class="jp-price-row">
-            <div>
-                <span class="jp-price"><span class="jp-price-currency">₹</span><span class="jp-price-num">25,000</span></span>
-                <span class="jp-price-original">₹29,990</span>
-                <span class="jp-price-save">Save ₹4,990</span>
-            </div>
-            <div class="jp-price-per">10 job posts · ₹2,500 per post · valid 90 days · each post active 30 days · + GST</div>
-            <div class="jp-price-monthly">Billed monthly — activate posts anytime within 90 days</div>
-        </div>
         <div class="jp-plan-divider"></div>
-        <div class="jp-features">
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">10 job posts · shown across all metros</div><div class="jp-feat-note">Each post stays active for 30 days · activate anytime within 90 days of purchase</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from immediate joiners &amp; serving notice</div><div class="jp-feat-note">Verified zero &amp; short notice period candidates only</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from contractors</div><div class="jp-feat-note">Access freelance &amp; contract talent on day-rate</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Verification of notice period</div><div class="jp-feat-note">Every applicant's notice period is independently verified</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">KYC verification required</div><div class="jp-feat-note">One-time employer verification before going live</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applicant dashboard</div><div class="jp-feat-note">View, shortlist and manage applications</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Dedicated recruiter support</div><div class="jp-feat-note">A ZeroNoticePeriod recruiter assists your hiring</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Priority listing</div><div class="jp-feat-note">Your jobs appear at the top of search results</div></div></div>
-        </div>
-        <a href="{{ route('employer.login') }}" class="jp-plan-btn jp-btn-white" style="margin-top:18px">Start Hiring →</a>
-    </div>
 
-    <div class="jp-plan enterprise">
-        <div class="jp-plan-tag">Enterprise</div>
-        <div class="jp-plan-name">Pro</div>
-        <div class="jp-plan-desc">For large teams with high-volume hiring. Minimum 250 job postings, everything unlimited, white-glove support.</div>
-        <div class="jp-price-row">
-            <div><span class="jp-price" style="font-size:24px;letter-spacing:-.3px">Custom</span></div>
-            <div class="jp-price-per">Annual plan · minimum 250 job postings · + GST</div>
-            <div class="jp-price-monthly">Billed annually — tailored to your team size</div>
-        </div>
-        <div class="jp-plan-divider"></div>
         <div class="jp-features">
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Minimum 250 job posts per year</div><div class="jp-feat-note">No cap — post as many as your plan allows</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from immediate joiners &amp; serving notice</div><div class="jp-feat-note">Verified zero &amp; short notice period candidates</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Applications from contractors</div><div class="jp-feat-note">Find both permanent and contract talent</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Verification of notice period</div><div class="jp-feat-note">Every applicant's notice period is independently verified</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">AI fitment analysis</div><div class="jp-feat-note">Auto-rank every applicant instantly</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Dedicated account manager</div><div class="jp-feat-note">Named contact, not a support queue</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Priority listing + featured employer</div><div class="jp-feat-note">Your brand prominently displayed to candidates</div></div></div>
-            <div class="jp-feat-row"><div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div><div><div class="jp-feat-label">Custom reporting &amp; analytics</div><div class="jp-feat-note">Hiring funnel data and team-level insights</div></div></div>
+            @foreach(($plan->highlights ?: []) as $h)
+                @php
+                    $included = isset($h['included']) ? (bool) $h['included'] : true;
+                @endphp
+                <div class="jp-feat-row">
+                    @if($included)
+                        <div class="jp-feat-check"><svg viewBox="0 0 12 12" fill="none"><polyline points="1.5,6 4.5,9 10.5,3"/></svg></div>
+                    @else
+                        <div class="jp-feat-no"><svg viewBox="0 0 12 12" fill="none"><line x1="3" y1="3" x2="9" y2="9"/><line x1="9" y1="3" x2="3" y2="9"/></svg></div>
+                    @endif
+                    <div>
+                        <div class="jp-feat-label{{ $included ? '' : ' jp-feat-muted' }}">{{ $h['label'] ?? '' }}</div>
+                        @if(!empty($h['note']))
+                            <div class="jp-feat-note">{{ $h['note'] }}</div>
+                        @endif
+                    </div>
+                </div>
+            @endforeach
         </div>
-        <a href="{{ url('contact-us') }}" class="jp-plan-btn jp-btn-blue" style="margin-top:18px">Talk to Sales →</a>
+
+        @if($isCurrent)
+            <span class="jp-plan-btn {{ $btnClass }}" style="margin-top:18px;opacity:.85;cursor:default;">✓ Your current plan</span>
+        @else
+            <a href="{{ $ctaUrl }}" class="jp-plan-btn {{ $btnClass }}" style="margin-top:18px">{{ $plan->cta_label }}</a>
+        @endif
     </div>
+@empty
+    <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--jp-t3);">
+        No plans are currently available. Please contact support.
+    </div>
+@endforelse
 </div>
 
 <div class="jp-trust">

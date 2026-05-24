@@ -1885,7 +1885,21 @@ class CompanyController extends Controller
 
     {
 
-        return view('znp.job-pricing');
+        /* Pull active plans from znp_pricing_plans (ordered by display_order).
+           Each row drives one card on the pricing page; copy/price/quota/etc.
+           are all editable directly in the DB so a change there reflects on
+           the public page without a redeploy. */
+        $plans = \App\ZnpPricingPlan::active()->ordered()->get();
+
+        /* The current employer's plan (if logged in) — used to highlight
+           "Your current plan" on the matching card. */
+        $currentPlanId = null;
+        if (\Auth::guard('company')->check()) {
+            $sub = \Auth::guard('company')->user()->activeZnpSubscription();
+            $currentPlanId = $sub ? (int) $sub->plan_id : null;
+        }
+
+        return view('znp.job-pricing', compact('plans', 'currentPlanId'));
 
     }
 
@@ -1912,6 +1926,27 @@ class CompanyController extends Controller
     public function postJobZNP()
     {
         $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        /* ── ZNP plan gate ──
+           Bounce before the user fills out a long form they can't submit.
+           Mirrors the gate inside storeJobZNP(); see that method for the
+           full rationale + error strings. */
+        $sub = $company->activeZnpSubscription();
+        if (! $sub) {
+            return redirect()->route('employer.job.pricing')
+                ->with('error', 'You need an active job-posting plan before you can publish. Choose a plan below.');
+        }
+        if (! $sub->isLive()) {
+            return redirect()->route('employer.job.pricing')
+                ->with('error', 'Your ' . $sub->plan_name . ' plan expired on '
+                    . optional($sub->expires_at)->format('d M Y') . '. Renew to continue posting.');
+        }
+        if (! $sub->hasQuotaLeft()) {
+            return redirect()->route('employer.job.pricing')
+                ->with('error', 'You have used all '
+                    . $sub->posts_limit . ' job posts on your '
+                    . $sub->plan_name . ' plan. Upgrade or buy another pack to post more.');
+        }
 
         /* Industry options (active + localised). */
         $industries = Industry::lang()->active()->orderBy('industry')->get();
@@ -1959,6 +1994,32 @@ class CompanyController extends Controller
         /* Required-field validation (mirrors the HTML form's red asterisks). */
         $isDraft = (int) $request->input('is_draft') === 1;
 
+        /* ── ZNP plan quota gate ──
+           Drafts are exempt (no quota consumed for a stub). Real publishes
+           require an active subscription with quota left. The plan_id, validity
+           window and posts_limit all live on znp_company_subscriptions. If the
+           employer has no plan / has exhausted quota / their plan window
+           expired, we bounce them to the pricing page with a friendly message. */
+        if (! $isDraft) {
+            $sub = $company->activeZnpSubscription();
+
+            if (! $sub) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'You need an active job-posting plan before you can publish. Choose a plan below.');
+            }
+            if (! $sub->isLive()) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'Your ' . $sub->plan_name . ' plan expired on '
+                        . optional($sub->expires_at)->format('d M Y') . '. Renew to continue posting.');
+            }
+            if (! $sub->hasQuotaLeft()) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'You have used all '
+                        . $sub->posts_limit . ' job posts on your '
+                        . $sub->plan_name . ' plan. Upgrade or buy another pack to post more.');
+            }
+        }
+
         $rules = [
             'job_title'         => 'required|max:255',
             'work_mode'         => 'required',
@@ -1976,11 +2037,16 @@ class CompanyController extends Controller
             'job_overview'      => 'required',
             'about_company'     => 'required',
             'website_address'   => 'required',
+            'profile_requirements' => 'required|array|min:1',
         ];
 
         $wm = (string) $request->input('work_mode');
         if (! in_array($wm, ['Remote / WFH', 'Remote/WFH'], true)) {
             $rules['location'] = 'required|array|min:1';
+        }
+
+        if ($request->input('posting_type') === 'client') {
+            $rules['client_industry'] = 'required';
         }
 
         if ($isDraft) {
@@ -2029,9 +2095,9 @@ class CompanyController extends Controller
         $interviewModes = array_map([$this, 'znpNormalizeInterviewMode'], (array) $request->input('interview_modes', []));
         $job->interview_modes = implode(',', array_filter($interviewModes));
 
-        /* Section 2 — Description */
-        $job->job_description     = $request->input('job_description');
-        $job->job_overview        = $request->input('job_overview');
+        /* Section 2 — Description (server-side strip of foreign HTML / Word styling). */
+        $job->job_description     = $this->znpSanitizeRichHtml($request->input('job_description'));
+        $job->job_overview        = $this->znpSanitizeRichHtml($request->input('job_overview'));
         $job->roles_responsibility = null; /* dropped from new UI; column kept nullable */
 
         /* Section 3 snapshot (also written to companies below for auto-save). */
@@ -2109,6 +2175,12 @@ class CompanyController extends Controller
         }
 
         $company->save();
+
+        /* Consume one post from the active ZNP subscription on a real publish.
+           Drafts are exempt (see the quota gate at the top of this method). */
+        if (! $isDraft) {
+            $company->consumeOneZnpPost();
+        }
 
         return redirect()->route('my-jobs')->with('message', $isDraft ? 'Draft saved.' : 'Job posted successfully.');
     }
@@ -2220,6 +2292,36 @@ class CompanyController extends Controller
             'Walk-in'         => 'Walkin',
         ];
         return $map[$mode] ?? $mode;
+    }
+
+    /**
+     * Server-side defense for pasted-from-Word HTML.
+     *
+     * Even with the client-side paste sanitizer, we never trust the
+     * submitted HTML. We keep only a tiny whitelist (formatting tags +
+     * lists) and strip every attribute. Anything outside the whitelist
+     * is dropped entirely.
+     */
+    private function znpSanitizeRichHtml(?string $html): ?string
+    {
+        if ($html === null || $html === '') {
+            return $html;
+        }
+
+        /* strip_tags handles the whitelist; we then strip every attribute via regex.
+           The whitelist mirrors what the client-side _sanitizeRich keeps. */
+        $allowed = '<p><br><strong><b><em><i><u><ul><ol><li>';
+        $clean   = strip_tags($html, $allowed);
+
+        /* Remove any remaining attributes on whitelisted tags (e.g. <p style="…">). */
+        $clean = preg_replace('#<([a-z]+)\b[^>]*>#i', '<$1>', $clean) ?? $clean;
+
+        /* Collapse &nbsp; and runs of whitespace introduced by Word/Google Docs. */
+        $clean = str_replace('&nbsp;', ' ', $clean);
+        $clean = preg_replace('/\s{2,}/u', ' ', $clean) ?? $clean;
+        $clean = preg_replace('#<p>\s*</p>#i', '', $clean) ?? $clean;
+
+        return trim($clean);
     }
 
     /* ── Reverse maps (DB value → UI label) — used by editJobZNP ── */
@@ -2422,11 +2524,16 @@ class CompanyController extends Controller
             'job_overview'      => 'required',
             'about_company'     => 'required',
             'website_address'   => 'required',
+            'profile_requirements' => 'required|array|min:1',
         ];
 
         $wm = (string) $request->input('work_mode');
         if (! in_array($wm, ['Remote / WFH', 'Remote/WFH'], true)) {
             $rules['location'] = 'required|array|min:1';
+        }
+
+        if ($request->input('posting_type') === 'client') {
+            $rules['client_industry'] = 'required';
         }
 
         $request->validate($rules);
@@ -2464,8 +2571,8 @@ class CompanyController extends Controller
         $interviewModes = array_map([$this, 'znpNormalizeInterviewMode'], (array) $request->input('interview_modes', []));
         $job->interview_modes = implode(',', array_filter($interviewModes));
 
-        $job->job_description      = $request->input('job_description');
-        $job->job_overview         = $request->input('job_overview');
+        $job->job_description      = $this->znpSanitizeRichHtml($request->input('job_description'));
+        $job->job_overview         = $this->znpSanitizeRichHtml($request->input('job_overview'));
         $job->roles_responsibility = null;
 
         $job->about_company    = $request->input('about_company');
@@ -2667,13 +2774,42 @@ class CompanyController extends Controller
 
 
 
-        $planLabel = $packageActive ? 'Paid plan active' : 'Free Account';
+        /* ── ZNP plan view-model (new system; supersedes the legacy package_*) ──
+           One denormalised array shared with my-jobs so plan messaging stays
+           consistent across the app. See Company::znpPlanViewModel(). */
+        $znpPlan = $company->znpPlanViewModel();
 
-        $planDescription = $packageActive
+        /* "Upsell" picks the other plans to show as next-step options on the
+           dashboard plan card (excludes the user's current plan if any). */
+        $znpUpsellPlans = \App\ZnpPricingPlan::active()->ordered()->get()
+            ->reject(function ($p) use ($znpPlan) {
+                return $znpPlan['has_plan'] && $znpPlan['plan_slug'] === $p->slug;
+            })
+            ->values();
 
-            ? ('Your plan is active through ' . Carbon::parse($company->package_end_date)->format('j M Y') . '. Post jobs and unlock credits from your package.')
 
-            : 'Explore ZNP — upgrade to post jobs and access contractors';
+
+        /* Sidebar plan card copy. Falls back to the legacy "Paid plan active"
+           label only when this employer has neither a ZNP nor a legacy plan. */
+        if ($znpPlan['has_plan']) {
+
+            $planLabel = $znpPlan['plan_name'];
+
+            $planDescription = $znpPlan['sub_line'];
+
+        } elseif ($packageActive) {
+
+            $planLabel = 'Paid plan active';
+
+            $planDescription = 'Your plan is active through ' . Carbon::parse($company->package_end_date)->format('j M Y') . '. Post jobs and unlock credits from your package.';
+
+        } else {
+
+            $planLabel = 'Free Account';
+
+            $planDescription = 'Explore ZNP — upgrade to post jobs and access contractors';
+
+        }
 
 
 
@@ -2764,6 +2900,10 @@ class CompanyController extends Controller
             'planDescription',
 
             'packageActive',
+
+            'znpPlan',
+
+            'znpUpsellPlans',
 
             'contractorsShowcase',
 

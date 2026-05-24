@@ -10,14 +10,35 @@ tests/e2e/
 ├── edit-job.spec.ts          ← EDIT-1 round-trip prefill, EDIT-2 update-in-place
 ├── clone-regression.spec.ts  ← BUG-1 skill names, BUG-2 profile requirements
 ├── variety.spec.ts           ← scenarios F–K (wide fan-out, strict mode, etc.)
-├── helpers.ts                ← login, fillJobForm, DB verify, cleanup
+├── wizard.spec.ts            ← W1–W9 (step gating, validation, paste sanitise)
+├── helpers.ts                ← login, fillJobForm, navigateSteps, DB verify
 ├── seed-local-company.php    ← creates the test login on local
 ├── playwright.config.ts
 ├── package.json
 └── .env.example              ← copy to .env and edit
 ```
 
-**15 tests total** — run with `npm test` (headless) or `npm run test:demo` (headed + pauses).
+**24 tests total** — run with `npm test` (headless) or `npm run test:demo` (headed + pauses).
+
+The form is a **5-step wizard**. Tests call `navigateStepsToEnd()` (via `openPreview` / `submitOrPreview`) which clicks **Next** on each step so per-step validation is exercised automatically.
+
+## Web UI (recommended for manual runs)
+
+When `APP_ENV` is **not** `production`, open:
+
+```
+http://127.0.0.1:8000/dev/e2e-runner
+```
+
+This page lists every test with a plain-English description of what it checks. You can:
+
+- **Run all** — full suite
+- **Run selected** — tick checkboxes, then run
+- **Run just this** — one scenario at a time
+- Watch **live output** in the console panel (polls every ~1.2s)
+- **Open last HTML report** when a run finishes (Playwright report with traces/screenshots)
+
+> Blocked automatically on production (`404`). Requires `npm install` in `tests/e2e/` on the machine running Laravel.
 
 ## 1. First-time setup (do this once)
 
