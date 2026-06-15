@@ -77,7 +77,16 @@ class JobsImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
     private function isBlankRow(array $row): bool
     {
-        foreach ($row as $value) {
+        /* Ignore the company-prefilled columns (countries_presence, awards,
+           perks): the template seeds them on every row, so a row that has only
+           those filled is an untouched template row and should be skipped. */
+        $ignore = JobBulkUploadService::COMPANY_PREFILL_COLUMNS;
+
+        foreach ($row as $key => $value) {
+            if (in_array($key, $ignore, true)) {
+                continue;
+            }
+
             if ($value !== null && trim((string) $value) !== '') {
                 return false;
             }

@@ -82,7 +82,7 @@
                             <li><code>location</code> is required unless <code>work_mode</code> is <strong>Remote / WFH</strong>.</li>
                             <li><code>client_industry</code> is required when <code>posting_type</code> is <strong>client</strong>.</li>
                             <li>Description fields can be plain text; line breaks are converted to paragraphs.</li>
-                            <li><code>countries_presence</code>, <code>awards</code>, and <code>perks</code> are pre-filled from <strong>{{ $company->name }}</strong>'s profile — edit them if needed.</li>
+                            <li><code>countries_presence</code>, <code>awards</code>, and <code>perks</code> are pre-filled from <strong>{{ $company->name }}</strong>'s profile on <em>every</em> row — just fill in the other columns; edit these only if needed.</li>
                             <li><code>video_question_enabled</code>: set <code>1</code> to include the optional "video introduction" question, or <code>0</code> to hide it. The other two screening questions are always included.</li>
                             <li>Save/upload as <code>.xlsx</code> (or export to <code>.csv</code> if you prefer). Both formats import fine.</li>
                         </ul>

@@ -109,11 +109,41 @@ class JobsTemplateJobsSheet implements FromArray, WithTitle, WithEvents
             0,
         ];
 
-        return [
+        $rows = [
             $headers,
             $exampleOne,
             $exampleTwo,
         ];
+
+        /* Prefill the company-level columns (countries_presence, awards, perks)
+           down every usable entry row so the client keeps them even after the
+           two sample rows are deleted. Other columns stay blank for them to fill;
+           the importer skips rows that contain only this prefill. */
+        $prefilledBlankRow = $this->prefilledBlankRow();
+        $targetRowCount = self::VALIDATION_ROWS + 1; // 1 header + VALIDATION_ROWS data rows
+
+        while (count($rows) < $targetRowCount) {
+            $rows[] = $prefilledBlankRow;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * A blank entry row with only the company-prefilled columns populated.
+     *
+     * @return array<int, string>
+     */
+    private function prefilledBlankRow(): array
+    {
+        $columns = JobBulkUploadService::TEMPLATE_COLUMNS;
+        $row = array_fill(0, count($columns), '');
+
+        $row[array_search('countries_presence', $columns, true)] = $this->countries;
+        $row[array_search('awards', $columns, true)] = $this->awards;
+        $row[array_search('perks', $columns, true)] = $this->perks;
+
+        return $row;
     }
 
     public function title(): string
