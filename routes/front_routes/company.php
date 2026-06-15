@@ -125,6 +125,18 @@ Route::post('post-job-page', 'Company\CompanyController@storeJobZNP')->name('emp
 Route::get('post-job-page/{id}/edit', 'Company\CompanyController@editJobZNP')->name('employer.post.job.edit')->where('id', '[0-9]+');
 Route::post('post-job-page/{id}/edit', 'Company\CompanyController@updateJobZNP')->name('employer.post.job.update')->where('id', '[0-9]+');
 
+/* New ZNP Applicants page — per-job applicant list. */
+Route::get('post-job-page/{id}/applicants', 'Company\CompanyController@applicantsZNP')->name('employer.post.job.applicants')->where('id', '[0-9]+');
+Route::post('post-job-page/{id}/retire', 'Company\ApplicantPipelineController@retireJob')->name('employer.post.job.retire')->where('id', '[0-9]+');
+Route::post('post-job-page/{id}/applicants/{app}/shortlist', 'Company\ApplicantPipelineController@shortlist')->name('employer.applicant.shortlist')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/note', 'Company\ApplicantPipelineController@note')->name('employer.applicant.note')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/feedback', 'Company\ApplicantPipelineController@feedback')->name('employer.applicant.feedback')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/reject', 'Company\ApplicantPipelineController@reject')->name('employer.applicant.reject')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/report', 'Company\ApplicantPipelineController@report')->name('employer.applicant.report')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/offer', 'Company\ApplicantPipelineController@offer')->name('employer.applicant.offer')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/view-cv', 'Company\ApplicantPipelineController@viewCv')->name('employer.applicant.viewcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job-page/{id}/applicants/{app}/download-cv', 'Company\ApplicantPipelineController@downloadCv')->name('employer.applicant.downloadcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+
 
 
 Route::post('home-search','Company\CompanyController@homesearch')->name('home.search');

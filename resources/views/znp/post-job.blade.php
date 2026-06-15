@@ -1203,9 +1203,7 @@
 
                 @php
                     $profileReqs = [
-                        'Current CTC','Expected CTC','Notice Period','Current Location',
-                        'Preferred Work Mode','Total Years of Experience','Resume / CV (updated)',
-                        'LinkedIn Profile URL','Highest Qualification','Preferred Job Location',
+                        'Current CTC','Expected CTC','Notice Period',
                     ];
                     /* No defaults — recruiters must explicitly pick what they want. */
                     $oldProfileReqs = (array) old('profile_requirements', []);

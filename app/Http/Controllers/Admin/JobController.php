@@ -17,8 +17,12 @@ use App\Http\Controllers\Controller;
 use App\Traits\JobTrait;
 use App\Helpers\MiscHelper;
 use App\Helpers\DataArrayHelper;
+use App\Exports\JobsTemplateExport;
+use App\Imports\JobsImport;
+use App\Services\JobBulkUploadService;
 use GeoIp2\Record\Postal;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class JobController extends Controller
 {
@@ -48,6 +52,193 @@ class JobController extends Controller
                         
 
                         
+    }
+
+    public function bulkJobsUpload(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+
+        return view('admin.job.bulk', [
+            'company' => $company,
+            'allowedValues' => JobBulkUploadService::allowedValues(),
+        ]);
+    }
+
+    public function downloadJobsTemplate(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+
+        $countries = $this->decodeCompanyJsonList($company->countries_presence);
+        $awards = $this->decodeCompanyJsonList($company->awards);
+        $perks = $this->decodeCompanyJsonList($company->perks);
+
+        return Excel::download(
+            new JobsTemplateExport($countries, $awards, $perks),
+            'bulk-jobs-template.xls',
+            \Maatwebsite\Excel\Excel::XLS
+        );
+    }
+
+    private function decodeCompanyJsonList($value): array
+    {
+        if (is_array($value)) {
+            return array_values(array_filter(array_map('trim', $value), 'strlen'));
+        }
+
+        if (empty($value)) {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        if (! is_array($decoded)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(function ($item) {
+            return trim((string) $item);
+        }, $decoded), 'strlen'));
+    }
+
+    public function bulkJobsImport(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt',
+        ], [
+            'file.required' => 'Please upload an Excel or CSV file.',
+            'file.mimes' => 'The file must be an Excel or CSV file.',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+        $import = new JobsImport($company);
+
+        Excel::import($import, $request->file('file'));
+
+        $successCount = $import->getSuccessCount();
+        $failures = $import->getFailures();
+
+        $message = $successCount . ' job' . ($successCount === 1 ? '' : 's') . ' imported successfully.';
+        if (count($failures)) {
+            $message .= ' ' . count($failures) . ' row' . (count($failures) === 1 ? '' : 's') . ' skipped.';
+        }
+
+        return redirect()
+            ->route('bulk.jobs.upload', ['company_id' => $company->id])
+            ->with('bulk_import_success', $message)
+            ->with('bulk_import_success_count', $successCount)
+            ->with('bulk_import_failures', $failures);
+    }
+
+    public function jobsGrid(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+
+        return view('admin.job.grid', [
+            'company' => $company,
+            'allowedValues' => JobBulkUploadService::allowedValues(),
+        ]);
+    }
+
+    public function storeJobsGrid(Request $request)
+    {
+        $request->validate([
+            'company_id' => 'required|exists:companies,id',
+        ]);
+
+        $company = Company::findOrFail($request->company_id);
+        $service = new JobBulkUploadService();
+
+        $rows = (array) $request->input('jobs', []);
+        $successCount = 0;
+        $failures = [];
+
+        foreach (array_values($rows) as $index => $rawRow) {
+            if (! is_array($rawRow)) {
+                continue;
+            }
+
+            $normalized = $service->normalizeRow($rawRow);
+            if ($this->isBlankGridRow($normalized)) {
+                continue;
+            }
+
+            $prepared = $service->prepareForValidation($normalized);
+            $validator = \Validator::make(
+                $prepared,
+                $service->validationRules($prepared),
+                $service->validationMessages()
+            );
+
+            if ($validator->fails()) {
+                $failures[] = [
+                    'row' => $index + 1,
+                    'job_title' => $prepared['job_title'] ?? null,
+                    'errors' => $validator->errors()->all(),
+                ];
+                continue;
+            }
+
+            try {
+                $service->store($company, $prepared);
+                $successCount++;
+            } catch (\Throwable $exception) {
+                $failures[] = [
+                    'row' => $index + 1,
+                    'job_title' => $prepared['job_title'] ?? null,
+                    'errors' => [$exception->getMessage()],
+                ];
+            }
+        }
+
+        if ($successCount === 0 && count($failures)) {
+            return redirect()
+                ->route('jobs.grid', ['company_id' => $company->id])
+                ->withInput()
+                ->with('grid_failures', $failures)
+                ->with('grid_error', 'No jobs were saved. Please fix the highlighted rows and try again.');
+        }
+
+        $message = $successCount . ' job' . ($successCount === 1 ? '' : 's') . ' created successfully.';
+        if (count($failures)) {
+            $message .= ' ' . count($failures) . ' row' . (count($failures) === 1 ? '' : 's') . ' skipped.';
+        }
+
+        return redirect()
+            ->route('list.jobs', ['company_id' => $company->id])
+            ->with('bulk_import_success', $message)
+            ->with('bulk_import_failures', $failures);
+    }
+
+    private function isBlankGridRow(array $row): bool
+    {
+        foreach ($row as $value) {
+            if (is_array($value)) {
+                if (count(array_filter($value, static function ($item) {
+                    return trim((string) $item) !== '';
+                }))) {
+                    return false;
+                }
+                continue;
+            }
+
+            if ($value !== null && trim((string) $value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function fetchJobsData(Request $request)

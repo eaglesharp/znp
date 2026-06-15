@@ -2353,6 +2353,529 @@ class CompanyController extends Controller
         return $map[$mode] ?? $mode;
     }
 
+    /**
+     * Build enriched applicant rows + metrics + stage counts for the ZNP Applicants page.
+     */
+    private function znpBuildApplicantsPageData(PostJob $job, Company $company): array
+    {
+        $jobSkillRows = \DB::table('manage_job_skills')
+            ->join('job_skills', 'manage_job_skills.job_skill_id', '=', 'job_skills.id')
+            ->where('manage_job_skills.job_id', $job->id)
+            ->orderBy('manage_job_skills.id')
+            ->get(['job_skills.id', 'job_skills.job_skill as name']);
+
+        $jobSkillNamesLower = $jobSkillRows
+            ->map(function ($r) {
+                return strtolower(trim((string) $r->name));
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $jobSkillCount = max(count($jobSkillNamesLower), 1);
+
+        $applications = JobApply::with('user')
+            ->where('job_id', $job->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $userIds = $applications->pluck('user_id')->filter()->unique()->values()->all();
+        $appIds  = $applications->pluck('id')->all();
+
+        $shortlistedSet = [];
+        if (! empty($userIds)) {
+            $shortlistedSet = FavouriteApplicant::where('job_id', $job->id)
+                ->where('company_id', $company->id)
+                ->whereIn('user_id', $userIds)
+                ->pluck('user_id')
+                ->flip()
+                ->all();
+        }
+
+        $today = \Carbon\Carbon::now()->format('Y-m-d');
+        $interviewSet = [];
+        if (! empty($userIds)) {
+            $interviewSet = \App\Interview::whereIn('user_id', $userIds)
+                ->where('date', '>=', $today)
+                ->pluck('user_id')
+                ->flip()
+                ->all();
+        }
+
+        $notesByApp = [];
+        $feedbacksByApp = [];
+        $reportsByApp = [];
+        $eventsByApp = [];
+
+        if (! empty($appIds)) {
+            $notesByApp = \App\ApplicantNote::whereIn('job_apply_id', $appIds)
+                ->get()
+                ->keyBy('job_apply_id');
+
+            $feedbacksByApp = \App\ApplicantFeedback::whereIn('job_apply_id', $appIds)
+                ->orderByDesc('created_at')
+                ->get()
+                ->groupBy('job_apply_id')
+                ->map(function ($group) {
+                    return $group->first();
+                });
+
+            $reportsByApp = \App\ApplicantReport::whereIn('job_apply_id', $appIds)
+                ->orderByDesc('created_at')
+                ->get()
+                ->groupBy('job_apply_id')
+                ->map(function ($group) {
+                    return $group->first();
+                });
+
+            $eventsByApp = \App\ApplicantEvent::whereIn('job_apply_id', $appIds)
+                ->orderBy('created_at')
+                ->get()
+                ->groupBy('job_apply_id');
+        }
+
+        $applicants = [];
+        foreach ($applications as $application) {
+            $user = $application->user;
+            if (! $user) {
+                continue;
+            }
+
+            $applicants[] = $this->znpEnrichApplicantRow(
+                $application,
+                $user,
+                $job,
+                $jobSkillNamesLower,
+                $jobSkillCount,
+                isset($shortlistedSet[$user->id]),
+                isset($interviewSet[$user->id]),
+                $notesByApp[$application->id] ?? null,
+                $feedbacksByApp[$application->id] ?? null,
+                $reportsByApp[$application->id] ?? null,
+                $eventsByApp[$application->id] ?? collect()
+            );
+        }
+
+        return [
+            'applicants' => $applicants,
+            'metrics'    => $this->znpBuildApplicantMetrics($applicants, $job),
+            'stages'     => $this->znpBuildApplicantStageCounts($applicants),
+        ];
+    }
+
+    private function znpEnrichApplicantRow(
+        JobApply $application,
+        $user,
+        PostJob $job,
+        array $jobSkillNamesLower,
+        int $jobSkillCount,
+        bool $isShortlisted,
+        bool $hasInterview,
+        $note = null,
+        $feedback = null,
+        $report = null,
+        $events = null
+    ): array {
+        $summary  = \App\ProfileSummary::where('user_id', $user->id)->first();
+        $details  = ProfileDetails::where('user_id', $user->id)->first();
+        $nop      = \App\ProfileNop::where('user_id', $user->id)->first();
+        $educations = \App\ProfileEducation::where('user_id', $user->id)->get();
+
+        $experienceRaw = $summary->totalexp ?? '';
+        $expYears = 0;
+        if (preg_match('/(\d+(?:\.\d+)?)/', (string) $experienceRaw, $m)) {
+            $expYears = (int) round((float) $m[1]);
+        }
+
+        $currCtc = $details->expect_ctc_lakhs ?? null;
+        $expCtc  = $details->expect_ctc_lakhs3 ?? $details->expect_ctc_lakhs ?? null;
+        $expCtcNum = is_numeric($expCtc) ? (float) $expCtc : (preg_match('/(\d+)/', (string) $expCtc, $em) ? (float) $em[1] : 0);
+
+        [$noticeLabel, $noticeSlug, $noticeVerified] = $this->znpApplicantNoticeMeta($nop);
+
+        $workType = trim((string) ($details->work_type ?? ''));
+        $modeSlug = $this->znpApplicantWorkModeSlug($workType, $details->candidate_wfh ?? null);
+        $modeLabel = $workType !== '' ? $workType : ($modeSlug === 'remote' ? 'Remote / WFH' : ucfirst($modeSlug));
+
+        $isContract = stripos($workType, 'contract') !== false
+            || stripos((string) ($details->contract_type ?? ''), 'contract') !== false;
+
+        $storedStage = trim((string) ($application->stage ?? ''));
+        if ($storedStage !== '' && in_array($storedStage, ['rejected', 'offer', 'resumedb', 'shortlisted'], true)) {
+            $stage = $storedStage;
+        } elseif ($hasInterview) {
+            $stage = 'interview';
+        } elseif ($isShortlisted || $storedStage === 'shortlisted') {
+            $stage = 'shortlisted';
+        } else {
+            $stage = 'new';
+        }
+        if ($isContract && $stage === 'new') {
+            $stage = 'contractor';
+        }
+
+        $userSkills = \App\KeySkill::where('user_id', $user->id)->take(12)->get();
+        $skills = [];
+        $matched = 0;
+        foreach ($userSkills as $ks) {
+            $skillRow = JobSkill::find($ks->keyskill);
+            $name = trim((string) ($skillRow->job_skill ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $isMatch = in_array(strtolower($name), $jobSkillNamesLower, true);
+            if ($isMatch) {
+                $matched++;
+            }
+            $skills[] = ['name' => $name, 'match' => $isMatch];
+        }
+
+        $fit = (int) round(($matched / $jobSkillCount) * 100);
+        $fitClass = $fit >= 80 ? 'fs-high' : ($fit >= 60 ? 'fs-mid' : 'fs-low');
+        $cardClass = $isContract ? 'contract' : ($fit >= 85 ? 'top' : ($fit >= 70 ? 'good' : 'watch'));
+
+        $courseName = '';
+        $collegeName = '';
+        $highEducation = null;
+        foreach ($educations as $education) {
+            $highEducation = \App\Education::where('id', $education->degree_title)
+                ->where(function ($q) {
+                    $q->where('high_value', 1)->orWhere('high_value', 2)->orWhere('high_value', 3);
+                })
+                ->first();
+            if ($highEducation) {
+                break;
+            }
+        }
+        if ($highEducation) {
+            $final = \App\ProfileEducation::where('user_id', $user->id)
+                ->where('degree_title', $highEducation->id)
+                ->first();
+            if ($final) {
+                $institute = \App\Degree::where('id', $final->organization)->first();
+                $course    = \App\Course::where('id', $final->course)->first();
+                $courseName  = $course->course ?? '';
+                $collegeName = $institute->educations ?? '';
+            }
+        }
+
+        $questionnaire = $this->znpDecodeJsonColumn($application->questionnaire_answers, []);
+
+        $first = trim((string) ($user->first_name ?? ''));
+        $last  = trim((string) ($user->last_name ?? ''));
+        $displayName = trim($first . ' ' . $last) ?: trim((string) ($user->name ?? 'Candidate'));
+        $initials = '';
+        if ($first !== '') {
+            $initials .= strtoupper(mb_substr($first, 0, 1));
+        }
+        if ($last !== '') {
+            $initials .= strtoupper(mb_substr($last, 0, 1));
+        }
+        $initials = $initials ?: 'CN';
+
+        $locationCity = trim((string) ($user->current_city ?? ''));
+        $locationSlug = $this->znpApplicantLocationSlug($locationCity);
+
+        $activity = $this->znpBuildApplicantActivity($application, $events, $isShortlisted, $hasInterview);
+
+        $verdictLabels = [
+            'sy' => 'Strong Yes',
+            'y'  => 'Yes',
+            'm'  => 'Maybe',
+            'n'  => 'No',
+            'sn' => 'Strong No',
+        ];
+        $offerLabels = [
+            'offered' => 'Offered',
+            'joined'  => 'Joined',
+            'dropout' => 'Offer Dropout',
+        ];
+
+        $noteData = null;
+        if ($note) {
+            $noteData = [
+                'body'       => $note->body,
+                'updated_at' => $note->updated_at ? $note->updated_at->format('M j, Y g:i A') : '—',
+            ];
+        }
+
+        $feedbackData = null;
+        if ($feedback) {
+            $feedbackData = [
+                'verdict'       => $feedback->verdict,
+                'verdict_label' => $verdictLabels[$feedback->verdict] ?? $feedback->verdict,
+                'comments'      => $feedback->comments,
+                'created_at'    => $feedback->created_at ? $feedback->created_at->format('M j, Y g:i A') : '—',
+            ];
+        }
+
+        $offerStatus = $application->offer_status;
+        $offerLabel = $offerStatus ? ($offerLabels[$offerStatus] ?? $offerStatus) : null;
+        $isReported = (bool) ($application->reported_at || $report);
+
+        $withinBudget = $job->max_salary && $expCtcNum > 0
+            ? $expCtcNum <= (float) $job->max_salary
+            : true;
+
+        return [
+            'application_id'   => $application->id,
+            'user_id'          => $user->id,
+            'slug'             => 'u' . $user->id,
+            'stage'            => $stage,
+            'card_class'       => $cardClass,
+            'fit'              => $fit,
+            'fit_class'        => $fitClass,
+            'initials'         => $initials,
+            'display_name'     => $displayName,
+            'photo_url'        => ! empty($user->image) ? asset('user_images/' . $user->image) : null,
+            'current_role'     => trim((string) ($summary->latestdesg ?? '')),
+            'current_company'  => trim((string) ($summary->latestcom ?? '')),
+            'location_display' => $locationCity,
+            'location_slug'    => $locationSlug,
+            'badges'           => array_values(array_filter([
+                $noticeVerified ? 'Notice Verified' : null,
+                $isContract ? 'Open to Contract' : null,
+            ])),
+            'exp_years'        => $expYears,
+            'exp_label'        => $expYears > 0 ? $expYears . ' yrs' : ($experienceRaw ?: '—'),
+            'curr_ctc'         => $currCtc !== null && $currCtc !== '' ? '₹' . $currCtc . ' LPA' : '—',
+            'exp_ctc'          => $expCtcNum > 0 ? '₹' . rtrim(rtrim(number_format($expCtcNum, 1), '0'), '.') . ' LPA' : '—',
+            'exp_ctc_num'      => $expCtcNum,
+            'notice_label'     => $noticeLabel,
+            'notice_slug'      => $noticeSlug,
+            'pref_mode'        => $modeLabel,
+            'mode_slug'        => $modeSlug,
+            'education'        => $courseName ?: '—',
+            'college'          => $collegeName ?: '—',
+            'skills'           => $skills,
+            'questionnaire'    => is_array($questionnaire) ? $questionnaire : [],
+            'applied_label'    => $application->created_at ? $application->created_at->diffForHumans(null, true) . ' ago' : 'Recently',
+            'applied_ref'      => '#' . $application->id,
+            'activity'         => $activity,
+            'has_interview'    => $hasInterview,
+            'is_shortlisted'   => $isShortlisted || $stage === 'shortlisted',
+            'is_contract'      => $isContract,
+            'type_slug'        => $isContract ? 'contract' : 'fulltime',
+            'within_budget'    => $withinBudget,
+            'verified'         => (bool) $noticeVerified,
+            'data_exp'         => $expYears,
+            'data_ctc'         => (int) round($expCtcNum),
+            'data_fit'         => $fit,
+            'note'             => $noteData,
+            'feedback'         => $feedbackData,
+            'offer_status'     => $offerStatus,
+            'offer_label'      => $offerLabel,
+            'is_reported'      => $isReported,
+            'rejected_reason'  => $application->rejected_reason,
+            'profile_url'      => route('applicant.profile', $application->id),
+            'has_resume'       => ! empty($user->resume),
+        ];
+    }
+
+    private function znpBuildApplicantActivity(
+        JobApply $application,
+        $events,
+        bool $isShortlisted,
+        bool $hasInterview
+    ): array {
+        $eventList = $events instanceof \Illuminate\Support\Collection ? $events : collect($events ?: []);
+
+        if ($eventList->isNotEmpty()) {
+            $order = [
+                'applied'       => 10,
+                'viewed'        => 20,
+                'downloaded'    => 30,
+                'note'          => 40,
+                'feedback'      => 50,
+                'reported'      => 60,
+                'shortlisted'   => 70,
+                'unshortlisted' => 71,
+                'offer'         => 80,
+                'rejected'      => 90,
+            ];
+
+            $eventsByType = [];
+            foreach ($eventList as $event) {
+                if ($application->stage === 'rejected' && $event->type === 'offer') {
+                    continue;
+                }
+                if ($application->stage === 'offer' && $event->type === 'rejected') {
+                    continue;
+                }
+                $eventsByType[$event->type] = $event;
+            }
+
+            uasort($eventsByType, function ($a, $b) use ($order) {
+                $ao = $order[$a->type] ?? 999;
+                $bo = $order[$b->type] ?? 999;
+
+                return $ao <=> $bo;
+            });
+
+            $compactEvents = array_slice(array_values($eventsByType), 0, 7);
+            $activity = [];
+            $lastIndex = count($compactEvents) - 1;
+            foreach ($compactEvents as $i => $event) {
+                $activity[] = [
+                    'label' => $event->label,
+                    'date'  => $event->created_at ? $event->created_at->format('M j') : '—',
+                    'state' => $i === $lastIndex ? 'now' : 'done',
+                ];
+            }
+
+            return $activity;
+        }
+
+        $activity = [['label' => 'Applied', 'date' => $application->created_at ? $application->created_at->format('M j') : '—', 'state' => 'done']];
+        if ($isShortlisted) {
+            $activity[] = ['label' => 'Shortlisted', 'date' => '—', 'state' => 'done'];
+        }
+        if ($hasInterview) {
+            $activity[] = ['label' => 'Interview', 'date' => 'Scheduled', 'state' => 'now'];
+        }
+
+        return $activity;
+    }
+
+    private function znpApplicantNoticeMeta(?\App\ProfileNop $nop): array
+    {
+        if (! $nop) {
+            return ['—', 'immediate', false];
+        }
+
+        $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
+        $noticed = $nop->nop_days ?? null;
+
+        if ((int) $noticed === 1) {
+            return ['0 days', 'immediate', true];
+        }
+
+        if ((int) $noticed === 2 && ! empty($nop->last_working_day)) {
+            $datetime1 = strtotime($todayDate);
+            $datetime2 = strtotime($nop->last_working_day);
+            if ($datetime1 !== false && $datetime2 !== false && $datetime1 < $datetime2) {
+                $days = (int) (($datetime2 - $datetime1) / 86400);
+                return [$days . ' days (Serving)', 'serving', true];
+            }
+            return ['0 days', 'immediate', true];
+        }
+
+        if ((int) $noticed === 3) {
+            return ['Buyable', 'immediate', true];
+        }
+
+        return ['Not under notice', 'immediate', false];
+    }
+
+    private function znpApplicantWorkModeSlug(?string $workType, $wfh = null): string
+    {
+        $hay = strtolower(trim((string) $workType . ' ' . (string) $wfh));
+        if (strpos($hay, 'remote') !== false || strpos($hay, 'wfh') !== false) {
+            return 'remote';
+        }
+        if (strpos($hay, 'hybrid') !== false) {
+            return 'hybrid';
+        }
+        return 'wfo';
+    }
+
+    private function znpApplicantLocationSlug(string $city): string
+    {
+        $c = strtolower(trim($city));
+        if ($c === '') {
+            return 'other';
+        }
+        $map = [
+            'mumbai'     => ['mumbai', 'andheri', 'powai', 'malad', 'bandra'],
+            'pune'       => ['pune', 'hinjewadi'],
+            'bengaluru'  => ['bengaluru', 'bangalore', 'whitefield'],
+            'hyderabad'  => ['hyderabad'],
+            'delhi'      => ['delhi', 'ncr', 'gurgaon', 'noida'],
+            'chennai'    => ['chennai'],
+        ];
+        foreach ($map as $slug => $needles) {
+            foreach ($needles as $needle) {
+                if (strpos($c, $needle) !== false) {
+                    return $slug;
+                }
+            }
+        }
+        return 'other';
+    }
+
+    private function znpBuildApplicantMetrics(array $applicants, PostJob $job): array
+    {
+        $total = count($applicants);
+        $within = 0;
+        $over = 0;
+        $mumbai = 0;
+        $otherCities = 0;
+        $expInRange = 0;
+        $expSenior = 0;
+        $verified = 0;
+
+        $jobExpMin = $job->exp_min !== null ? (float) $job->exp_min : 0;
+        $jobExpMax = $job->exp_max !== null ? (float) $job->exp_max : 999;
+
+        foreach ($applicants as $a) {
+            if ($a['within_budget']) {
+                $within++;
+            } else {
+                $over++;
+            }
+            if ($a['location_slug'] === 'mumbai') {
+                $mumbai++;
+            } else {
+                $otherCities++;
+            }
+            if ($a['data_exp'] >= $jobExpMin && $a['data_exp'] <= $jobExpMax) {
+                $expInRange++;
+            } elseif ($a['data_exp'] > $jobExpMax) {
+                $expSenior++;
+            }
+            if ($a['verified']) {
+                $verified++;
+            }
+        }
+
+        return [
+            'total'       => $total,
+            'resumedb'    => 0,
+            'within'      => $within,
+            'over'        => $over,
+            'mumbai'      => $mumbai,
+            'other_cities'=> $otherCities,
+            'exp_in_range'=> $expInRange,
+            'exp_senior'  => $expSenior,
+            'verified'    => $verified,
+            'shortlisted' => collect($applicants)->where('is_shortlisted', true)->count(),
+            'interview'   => collect($applicants)->where('has_interview', true)->count(),
+        ];
+    }
+
+    private function znpBuildApplicantStageCounts(array $applicants): array
+    {
+        $counts = [
+            'all'         => count($applicants),
+            'new'         => 0,
+            'shortlisted' => 0,
+            'interview'   => 0,
+            'offer'       => 0,
+            'contractor'  => 0,
+            'resumedb'    => 0,
+            'rejected'    => 0,
+        ];
+
+        foreach ($applicants as $a) {
+            $s = $a['stage'] ?? 'new';
+            if (isset($counts[$s])) {
+                $counts[$s]++;
+            }
+        }
+
+        return $counts;
+    }
+
     /* ════════════════════════════════════════════════════════════════════════
      *  ZNP "Edit a Job" page (mirrors postJobZNP, drives the same blade)
      *  Route GET  /post-job-page/{id}/edit  → editJobZNP()
@@ -2492,6 +3015,27 @@ class CompanyController extends Controller
             'companyPerks'      => $companyPerks,
             'prefillSkills'     => $prefillSkills,
         ]);
+    }
+
+    /**
+     * ZNP Applicants page — visual-only phase 1.
+     * Renders real applicants for a job the logged-in company owns.
+     * Action buttons are stubbed in the blade (toast only).
+     */
+    public function applicantsZNP($id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $pageData = $this->znpBuildApplicantsPageData($job, $company);
+
+        return view('znp.applicants', array_merge([
+            'job'     => $job,
+            'company' => $company,
+        ], $pageData));
     }
 
     /**
