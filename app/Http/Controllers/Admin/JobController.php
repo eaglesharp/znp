@@ -19,6 +19,7 @@ use App\Helpers\MiscHelper;
 use App\Helpers\DataArrayHelper;
 use App\Exports\JobsTemplateExport;
 use App\Exports\JobsTemplateCsvExport;
+use App\Exports\JobsTemplateXlsxBuilder;
 use App\Imports\JobsImport;
 use App\Services\JobBulkUploadService;
 use GeoIp2\Record\Postal;
@@ -81,14 +82,45 @@ class JobController extends Controller
         $awards = $this->decodeCompanyJsonList($company->awards);
         $perks = $this->decodeCompanyJsonList($company->perks);
 
-        /* CSV: opens natively in Google Sheets and survives byte-level transport
-           quirks that corrupt binary .xls/.xlsx downloads on some servers. */
-        return Excel::download(
-            new JobsTemplateCsvExport($countries, $awards, $perks),
-            'bulk-jobs-template.csv',
-            \Maatwebsite\Excel\Excel::CSV,
-            ['Content-Type' => 'text/csv']
-        );
+        /* Build the .xlsx with native ZipArchive (not PhpSpreadsheet's writer) so
+           it works on PHP 7.4/8.0, keeps the dropdown data-validation the client
+           needs, and opens cleanly in Google Sheets/Excel. */
+        $path = (new JobsTemplateXlsxBuilder($countries, $awards, $perks))->build();
+
+        return $this->streamBinaryDownload($path, 'bulk-jobs-template.xlsx');
+    }
+
+    /**
+     * Stream a binary file to the browser in a way that survives shared/cPanel
+     * servers which would otherwise corrupt the download.
+     *
+     * The root cause of the earlier "garbled on server" downloads was a stray
+     * leading newline emitted into every response (a blank line before <?php in
+     * a route file, since fixed). As a defensive belt-and-suspenders against any
+     * other stray output (e.g. a PHP 7.4 notice) or server-side gzip mangling a
+     * payload that is already a zip, we disable output compression and discard
+     * any pending output buffers immediately before streaming the raw bytes.
+     */
+    private function streamBinaryDownload(string $path, string $downloadName)
+    {
+        $size = (int) filesize($path);
+
+        return response()->streamDownload(function () use ($path) {
+            @ini_set('zlib.output_compression', 'Off');
+
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            readfile($path);
+            @unlink($path);
+        }, $downloadName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Length' => (string) $size,
+            'Cache-Control' => 'must-revalidate, no-store, no-cache, private',
+            'Pragma' => 'public',
+            'Expires' => '0',
+        ]);
     }
 
     private function decodeCompanyJsonList($value): array

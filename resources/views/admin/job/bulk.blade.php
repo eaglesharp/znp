@@ -38,7 +38,7 @@
                             <div class="caption font-red-sunglo">
                                 <i class="icon-settings font-red-sunglo"></i>
                                 <span class="caption-subject bold uppercase">Upload Jobs Spreadsheet</span>
-                                <a href="{{ route('bulk.jobs.template', ['company_id' => $company->id]) }}" class="btn btn-xs btn-success">Download Template</a>
+                                <a href="{{ route('bulk.jobs.template', ['company_id' => $company->id]) }}" class="btn btn-xs btn-success">Download Template (Excel)</a>
                                 {{-- Web grid hidden for now — re-enable later
                                 <a href="{{ route('jobs.grid', ['company_id' => $company->id]) }}" class="btn btn-xs btn-info">Use Web Grid Instead</a>
                                 --}}
@@ -74,16 +74,17 @@
                     </div>
                     <div class="portlet-body">
                         <ul style="padding-left:18px;">
-                            <li>Download the CSV template, open it in <strong>Google Sheets</strong> or Excel, and fill one job per row.</li>
+                            <li>Download the Excel template (<code>.xlsx</code>), open it in <strong>Google Sheets</strong> or Excel, and fill one job per row.</li>
+                            <li>The <strong>Jobs</strong> sheet has <strong>dropdowns</strong> on fields like <code>work_mode</code>, <code>job_type</code>, <code>job_shift</code>, <code>primary_language</code>, <code>posting_type</code>, <code>client_industry</code> and the 0/1 toggles — just pick from the list.</li>
                             <li>Keep the first (header) row unchanged, and remove the two sample rows before uploading.</li>
-                            <li>Use comma-separated values for <code>location</code>, <code>keyskills</code>, <code>interview_modes</code>, <code>profile_requirements</code>, <code>countries_presence</code>, <code>awards</code>, and <code>perks</code> (the cell will be auto-quoted).</li>
-                            <li>See the <strong>Allowed Values Reference</strong> below for valid options for each field.</li>
+                            <li>Use comma-separated values for <code>location</code>, <code>keyskills</code>, <code>interview_modes</code>, <code>profile_requirements</code>, <code>countries_presence</code>, <code>awards</code>, and <code>perks</code>.</li>
+                            <li>The <strong>Allowed Values</strong> sheet (second tab) lists every valid option for each field.</li>
                             <li><code>location</code> is required unless <code>work_mode</code> is <strong>Remote / WFH</strong>.</li>
                             <li><code>client_industry</code> is required when <code>posting_type</code> is <strong>client</strong>.</li>
                             <li>Description fields can be plain text; line breaks are converted to paragraphs.</li>
                             <li><code>countries_presence</code>, <code>awards</code>, and <code>perks</code> are pre-filled from <strong>{{ $company->name }}</strong>'s profile — edit them if needed.</li>
                             <li><code>video_question_enabled</code>: set <code>1</code> to include the optional "video introduction" question, or <code>0</code> to hide it. The other two screening questions are always included.</li>
-                            <li>When saving from Google Sheets, use <strong>File → Download → Comma-separated values (.csv)</strong>, then upload here.</li>
+                            <li>Save/upload as <code>.xlsx</code> (or export to <code>.csv</code> if you prefer). Both formats import fine.</li>
                         </ul>
                     </div>
                 </div>
