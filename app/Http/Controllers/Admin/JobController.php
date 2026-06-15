@@ -18,6 +18,7 @@ use App\Traits\JobTrait;
 use App\Helpers\MiscHelper;
 use App\Helpers\DataArrayHelper;
 use App\Exports\JobsTemplateExport;
+use App\Exports\JobsTemplateCsvExport;
 use App\Imports\JobsImport;
 use App\Services\JobBulkUploadService;
 use GeoIp2\Record\Postal;
@@ -80,10 +81,13 @@ class JobController extends Controller
         $awards = $this->decodeCompanyJsonList($company->awards);
         $perks = $this->decodeCompanyJsonList($company->perks);
 
+        /* CSV: opens natively in Google Sheets and survives byte-level transport
+           quirks that corrupt binary .xls/.xlsx downloads on some servers. */
         return Excel::download(
-            new JobsTemplateExport($countries, $awards, $perks),
-            'bulk-jobs-template.xls',
-            \Maatwebsite\Excel\Excel::XLS
+            new JobsTemplateCsvExport($countries, $awards, $perks),
+            'bulk-jobs-template.csv',
+            \Maatwebsite\Excel\Excel::CSV,
+            ['Content-Type' => 'text/csv']
         );
     }
 

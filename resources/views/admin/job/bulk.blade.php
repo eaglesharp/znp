@@ -74,14 +74,16 @@
                     </div>
                     <div class="portlet-body">
                         <ul style="padding-left:18px;">
-                            <li>Download the template and fill one job per row on the <strong>Jobs</strong> sheet.</li>
-                            <li>Use comma-separated values for <code>location</code>, <code>keyskills</code>, <code>interview_modes</code>, <code>profile_requirements</code>, <code>countries_presence</code>, <code>awards</code>, and <code>perks</code>.</li>
-                            <li>See the <strong>Allowed Values</strong> sheet for valid dropdown options.</li>
+                            <li>Download the CSV template, open it in <strong>Google Sheets</strong> or Excel, and fill one job per row.</li>
+                            <li>Keep the first (header) row unchanged, and remove the two sample rows before uploading.</li>
+                            <li>Use comma-separated values for <code>location</code>, <code>keyskills</code>, <code>interview_modes</code>, <code>profile_requirements</code>, <code>countries_presence</code>, <code>awards</code>, and <code>perks</code> (the cell will be auto-quoted).</li>
+                            <li>See the <strong>Allowed Values Reference</strong> below for valid options for each field.</li>
                             <li><code>location</code> is required unless <code>work_mode</code> is <strong>Remote / WFH</strong>.</li>
                             <li><code>client_industry</code> is required when <code>posting_type</code> is <strong>client</strong>.</li>
                             <li>Description fields can be plain text; line breaks are converted to paragraphs.</li>
                             <li><code>countries_presence</code>, <code>awards</code>, and <code>perks</code> are pre-filled from <strong>{{ $company->name }}</strong>'s profile — edit them if needed.</li>
                             <li><code>video_question_enabled</code>: set <code>1</code> to include the optional "video introduction" question, or <code>0</code> to hide it. The other two screening questions are always included.</li>
+                            <li>When saving from Google Sheets, use <strong>File → Download → Comma-separated values (.csv)</strong>, then upload here.</li>
                         </ul>
                     </div>
                 </div>
