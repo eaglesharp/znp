@@ -199,7 +199,7 @@
     <nav class="nav">
         <a class="logo" href="{{ url('/') }}"><span class="la">Zero</span><span class="lb">Notice</span><span class="lc">Period</span></a>
         <div class="nav-r">
-            <a class="nbtn nb-ghost" href="{{ route('employer.dashboard.page') }}">Back to Jobs</a>
+            <a class="nbtn nb-ghost" href="{{ route('my-jobs') }}">Back to Jobs</a>
             <a class="nbtn nb-primary" href="{{ route('employer.post.job.page') }}">+ Post Another Job</a>
             <div class="nav-av" title="{{ $company->name }}">{{ $companyInitials }}</div>
         </div>

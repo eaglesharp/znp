@@ -500,7 +500,7 @@
                             </div>
                         </div>
                         <div class="job-right">
-                            <a class="app-panel" href="{{ route('view.applicants.list', ['id' => $job->id]) }}" title="View applicants">
+                            <a class="app-panel" href="{{ route('employer.post.job.applicants', ['id' => $job->id]) }}" title="View applicants">
                                 <div class="app-panel-header">
                                     <div class="app-total-row">
                                         <span class="app-big-num">{{ $d['applicants_total'] }}</span>
