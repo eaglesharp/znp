@@ -201,6 +201,19 @@
 .znp-ap .om-item:hover{background:var(--blue-50);color:var(--blue)}
 .znp-ap .cv-frame{width:100%;height:70vh;border:none}
 @media(max-width:960px){.znp-ap .page{grid-template-columns:1fr}.znp-ap .sidebar{position:static}}
+@media(max-width:640px){
+    .znp-ap .page{padding:14px 12px 44px}
+    .znp-ap .card-main{padding:12px;gap:10px}
+    .znp-ap .card-top{flex-direction:column;gap:7px}
+    .znp-ap .cbadges{justify-content:flex-start;flex-shrink:1}
+    .znp-ap .cbadge{font-size:10px;padding:3px 8px}
+    .znp-ap .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible}
+    .znp-ap .ig-item{border-right:none;border-top:1px solid var(--border)}
+    .znp-ap .ig-item:nth-child(odd){border-right:1px solid var(--border)}
+    .znp-ap .ig-item:nth-child(-n+2){border-top:none}
+    .znp-ap .qa-item{grid-template-columns:1fr;gap:3px}
+    .znp-ap .action-btns,.znp-ap .reject-row{justify-content:flex-start}
+}
 </style>
 @endpush
 
