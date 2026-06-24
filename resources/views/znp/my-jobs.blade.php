@@ -65,6 +65,9 @@
 .znp-myjobs .av { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .znp-myjobs .btn-post { background: var(--blue); color: #fff; border: none; border-radius: 50px; padding: 7px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; }
 .znp-myjobs .btn-post:hover { background: var(--blue-d); transform: translateY(-1px); }
+.znp-myjobs .logout-form { margin: 0; }
+.znp-myjobs .logout-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 50px; color: var(--t2); cursor: pointer; font-size: 12px; font-weight: 700; padding: 6px 14px; transition: all .15s; }
+.znp-myjobs .logout-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
 /* ── LAYOUT ── */
 .znp-myjobs .shell { display: grid; grid-template-columns: var(--side-w) 1fr; min-height: calc(100vh - var(--nav-h)); }
@@ -106,6 +109,8 @@
 
 /* TOP BAR */
 .znp-myjobs .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.znp-myjobs .back-dashboard { display: inline-flex; align-items: center; gap: 4px; color: var(--blue); font-size: 12px; font-weight: 700; margin-bottom: 5px; text-decoration: none; }
+.znp-myjobs .back-dashboard:hover { text-decoration: underline; }
 .znp-myjobs .top-left h1 { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -.3px; margin-bottom: 1px; }
 .znp-myjobs .top-left p  { font-size: 12px; color: var(--t3); }
 .znp-myjobs .top-right { display: flex; align-items: center; gap: 10px; }
@@ -160,8 +165,6 @@
 .znp-myjobs .job-actions { display: flex; gap: 7px; align-items: center; }
 .znp-myjobs .act-btn { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1.5px solid var(--border); background: var(--surface); color: var(--t2); transition: all .15s; }
 .znp-myjobs .act-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
-.znp-myjobs .act-btn.repost { border-color: #0891b2; color: #0891b2; background: #ecfeff; }
-.znp-myjobs .act-btn.repost:hover { background: #0891b2; color: #fff; }
 .znp-myjobs .act-btn.toggle-off { border-color: var(--border); color: var(--t3); background: var(--surface); }
 .znp-myjobs .act-btn.toggle-off:hover { border-color: var(--t3); color: var(--text); background: var(--bg); }
 .znp-myjobs .act-btn.clone { border-color: var(--blue-100); color: var(--blue); background: var(--blue-light); }
@@ -274,6 +277,10 @@
                 </a>
             @endif
             <div class="av" title="{{ $company->name ?? 'Employer' }}">{{ $companyInitials }}</div>
+            <form method="POST" action="{{ route('company.logout') }}" class="logout-form">
+                @csrf
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
         </div>
     </nav>
 
@@ -416,6 +423,7 @@
 
             <div class="top-bar">
                 <div class="top-left">
+                    <a href="{{ route('employer.dashboard.page') }}" class="back-dashboard">← Dashboard</a>
                     <h1>My Job Postings</h1>
                     <p id="jobCount">
                         @if ($statusCounts['all'] === 0)
@@ -471,7 +479,8 @@
                                     @if (!empty($d['type_label']))
                                         <span class="jm-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>{{ $d['type_label'] }}</span>
                                     @endif
-                                    <span class="jm-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{{ $d['posted_label'] }}</span>
+                                    <span class="jm-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{{ $d['posted_date_label'] }}</span>
+                                    <span class="jm-item"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/></svg>{{ $d['expiry_date_label'] }}</span>
                                     @if (!empty($d['expires_label']))
                                         <span class="expires {{ $d['expires_tone'] }}"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{{ $d['expires_label'] }}</span>
                                     @endif
@@ -485,8 +494,11 @@
                             </div>
                             <div class="job-footer">
                                 <div class="job-actions">
-                                    @if ($d['status_key'] === 'expired')
-                                        <button class="act-btn repost" onclick="MJ.repost(this, {{ $job->id }})">Repost</button>
+                                    @if ($d['status_key'] === 'expired' || $d['expires_label'] === 'Expires today')
+                                        <a class="act-btn clone" href="{{ route('clone.front.job', ['id' => $job->id]) }}">Repost</a>
+                                    @endif
+                                    @if (!empty($job->slug))
+                                        <a class="act-btn" href="{{ route('job.detail.znp', ['slug' => $job->slug]) }}" target="_blank" rel="noopener noreferrer">View Job</a>
                                     @endif
                                     <button class="act-btn clone" onclick="MJ.openClone(this)">Clone</button>
                                     <a class="act-btn" href="{{ route('employer.post.job.edit', ['id' => $job->id]) }}">Edit</a>
@@ -496,7 +508,7 @@
                                         <button class="act-btn toggle-off" data-toggle-target="0" onclick="MJ.toggleStatus(this, {{ $job->id }}, 'active')">Deactivate</button>
                                     @endif
                                 </div>
-                                <div class="posted-by">Posted by <span>{{ $company->name ?: 'Employer' }}</span></div>
+                                <div class="posted-by">Posted by <span>{{ $posterName ?? ($company->name ?: 'Employer') }}</span></div>
                             </div>
                         </div>
                         <div class="job-right">
@@ -900,12 +912,6 @@ window.MJ = (function () {
         window.location = '/clone-front-job/' + encodeURIComponent(cloneJobId);
     }
 
-    /* ── Repost (no dedicated backend yet — flips status to active) ─────── */
-    function repost(btn, jobId) {
-        // For an expired job, "Repost" simply re-activates so it shows on listings again.
-        toggleStatus(btn, jobId, 'inactive');
-    }
-
     /* ── Toast ──────────────────────────────────────────────────────────── */
     function showToast(msg) {
         var t = document.getElementById('toast');
@@ -934,7 +940,6 @@ window.MJ = (function () {
         closeClone: closeClone,
         handleOverlayClick: handleOverlayClick,
         confirmClone: confirmClone,
-        repost: repost,
         showToast: showToast,
     };
 })();

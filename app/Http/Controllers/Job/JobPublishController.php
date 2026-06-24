@@ -139,16 +139,16 @@ class JobPublishController extends Controller
             $expiresAt = $createdAt->copy()->addDays($jobLifespanDays);
             $now = \Carbon\Carbon::now();
 
-            if ((int) $job->status === 0) {
-                $statusKey   = 'inactive';
-                $statusLabel = 'Inactive';
-                $expiresLabel = null;
-                $expiresTone  = '';
-            } elseif ($expiresAt->lt($now)) {
+            if ($expiresAt->lt($now)) {
                 $statusKey   = 'expired';
                 $statusLabel = 'Expired';
                 $expiresLabel = 'Expired';
                 $expiresTone  = 'exp';
+            } elseif ((int) $job->status === 0) {
+                $statusKey   = 'inactive';
+                $statusLabel = 'Inactive';
+                $expiresLabel = null;
+                $expiresTone  = '';
             } else {
                 $statusKey   = 'active';
                 $statusLabel = 'Active';
@@ -224,7 +224,7 @@ class JobPublishController extends Controller
             } elseif ($job->min_salary) {
                 $salaryLabel = '₹' . $job->min_salary . '+ LPA';
             } else {
-                $salaryLabel = '';
+                $salaryLabel = 'Confidential';
             }
 
             // ── Skills label (top 3 skills joined) ─────────────────────────
@@ -264,7 +264,9 @@ class JobPublishController extends Controller
                 'status_key'        => $statusKey,
                 'status_label'     => $statusLabel,
                 'posted_label'     => 'Posted ' . $createdAt->format('M j, Y'),
+                'posted_date_label'=> 'Date posted: ' . $createdAt->format('M j, Y'),
                 'expires_label'    => $expiresLabel,
+                'expiry_date_label'=> 'Date of expiry: ' . $expiresAt->format('M j, Y'),
                 'expires_tone'     => $expiresTone,
                 'expires_ts'       => $statusKey === 'inactive' ? null : $expiresAt->getTimestamp(),
                 'location_label'   => empty($locations) ? '—' : implode(', ', $locations),
@@ -341,6 +343,25 @@ class JobPublishController extends Controller
             }
         }
 
+        if ($vm['has_plan'] && ! $vm['is_unlimited']) {
+            $actualPosted = (int) $statusCounts['all'];
+            $effectiveUsed = max((int) $plan['used'], $actualPosted);
+            $plan['used'] = $effectiveUsed;
+            $plan['remaining'] = max(0, (int) $plan['limit'] - $effectiveUsed);
+            $plan['percent'] = (int) round(($effectiveUsed / max(1, (int) $plan['limit'])) * 100);
+            $plan['label'] = $plan['name'] . ' · ' . $effectiveUsed . ' of ' . $plan['limit'] . ' used';
+
+            if (! $plan['is_expired'] && (int) $plan['limit'] > 0 && $effectiveUsed >= (int) $plan['limit']) {
+                $plan['tone'] = 'full';
+                $plan['can_post'] = false;
+                $plan['sub_line'] = 'All ' . $plan['limit'] . ' posts used. Buy another pack to post more.';
+                $plan['cta_label'] = 'Buy More Posts';
+                $plan['cta_url'] = $plan['pricing_url'];
+            } elseif (! $plan['is_expired'] && $plan['percent'] >= 80) {
+                $plan['tone'] = 'warn';
+            }
+        }
+
         // Upsell options for the "Buy more" nudge — show the other active
         // plans (excluding the user's current one) ranked by display order.
         $upsellPlans = \App\ZnpPricingPlan::active()->ordered()->get()
@@ -359,9 +380,15 @@ class JobPublishController extends Controller
         }
         if ($initials === '') $initials = 'EM';
 
+        $posterName = trim((string) ($company->ceo ?: ($company->person_name ?? '')));
+        if ($posterName === '') {
+            $posterName = trim((string) ($company->name ?? 'Employer'));
+        }
+
         return view('znp.my-jobs', [
             'company'          => $company,
             'companyInitials'  => $initials,
+            'posterName'       => $posterName,
             'plan'             => $plan,
             'upsellPlans'      => $upsellPlans,
             'jobs'             => $jobs,

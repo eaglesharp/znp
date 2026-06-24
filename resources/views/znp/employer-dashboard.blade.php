@@ -3,12 +3,14 @@
 @section('page_title', 'Employer Dashboard | ZeroNoticePeriod')
 
 @php
-    $words = preg_split('/\s+/', trim($company->name ?? 'ZNP'));
+    $displayCompanyName = trim((string) ($companyDisplayName ?? ($company->name ?? '')));
+    $displayCompanyName = $displayCompanyName !== '' ? $displayCompanyName : 'Employer';
+    $words = preg_split('/\s+/', $displayCompanyName);
     $companyInitials = '';
     foreach (array_slice($words, 0, 2) as $w) {
         $companyInitials .= $w !== '' ? strtoupper(mb_substr($w, 0, 1)) : '';
     }
-    $companyInitials = $companyInitials ?: 'ZN';
+    $companyInitials = $companyInitials ?: 'EM';
 @endphp
 
 @push('styles')
@@ -192,7 +194,7 @@
 .znp-ed .ed-help-title { font-size: 11px; font-weight: 800; color: var(--ed-blue); margin-bottom: 4px; }
 .znp-ed .ed-help-text { font-size: 10.5px; color: var(--ed-t3); line-height: 1.55; margin-bottom: 10px; }
 .znp-ed .ed-help-mail {
-    display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10.5px; font-weight: 600;
     color: var(--ed-blue) !important; background: var(--ed-blue-50);
     border: 1px solid var(--ed-blue-100); border-radius: 50px;
     padding: 5px 10px; margin-bottom: 7px; white-space: nowrap;
@@ -252,6 +254,14 @@
     font-size: 11px; color: var(--ed-t4); font-weight: 500;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
 }
+.znp-ed .ed-logout-form { margin: 0; }
+.znp-ed .ed-logout-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 700;
+    color: var(--ed-blue) !important; background: var(--ed-blue-50);
+    border: 1px solid var(--ed-blue-100); transition: all .15s;
+}
+.znp-ed .ed-logout-btn:hover { background: var(--ed-blue-100); }
 
 /* ── CONTENT ── */
 .znp-ed .ed-content { padding: 22px 26px; }
@@ -390,6 +400,7 @@
 .znp-ed .ed-ctc-card {
     border: 1px solid var(--ed-purple-100); border-radius: var(--ed-r);
     padding: 14px; background: var(--ed-purple-50); transition: all .18s;
+    display: flex; flex-direction: column; min-height: 100%;
 }
 .znp-ed .ed-ctc-card:hover { border-color: var(--ed-purple); box-shadow: 0 4px 14px rgba(124,58,237,.1); transform: translateY(-2px); }
 .znp-ed .ed-ctc-top { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
@@ -426,7 +437,7 @@
     width: 100%; padding: 7px; background: transparent;
     border: 1.5px solid var(--ed-blue-100); color: var(--ed-blue) !important;
     border-radius: 50px; font-size: 12px; font-weight: 700;
-    text-decoration: none !important; transition: all .15s;
+    text-decoration: none !important; transition: all .15s; margin-top: auto;
 }
 .znp-ed .ed-ctc-cta:hover { background: var(--ed-blue); color: #fff !important; border-color: var(--ed-blue); }
 
@@ -692,7 +703,6 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     My Job Postings
                     <span class="ed-nbadge">{{ $jobsPostedCount }}</span>
                 </a>
-                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
 
             {{-- ResumeDB --}}
@@ -704,7 +714,6 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <div id="edSubCz" class="ed-nav-sub is-open">
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('cv-search') }}" class="ed-nav-sub-item">Browse Contractors</a>
                 <a target="_blank" rel="noopener noreferrer" href="{{ url('/cv-search') }}" class="ed-nav-sub-item">Browse Resumes</a>
-                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
 
             {{-- Profile --}}
@@ -716,9 +725,9 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <div id="edSubPf" class="ed-nav-sub is-open">
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('company.profile') }}" class="ed-nav-sub-item">Company Profile</a>
                 <a href="#" target="_blank" rel="noopener noreferrer" class="ed-nav-sub-item">Users &amp; Reports</a>
-                <a target="_blank" rel="noopener noreferrer" href="{{ url('company-profile') }}#kyc" class="ed-nav-sub-item">
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.dashboard') }}" class="ed-nav-sub-item">
                     KYC &amp; Verification
-                    @if($company->kyc_verified == 3)
+                    @if((int) $company->kyc_verified === 2)
                         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-left:4px;flex-shrink:0;"></span>
                     @else
                         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#f97316;margin-left:4px;flex-shrink:0;"></span>
@@ -783,11 +792,11 @@ if (!function_exists('znp_ed_job_location_preview')) {
 
         {{-- Sidebar footer --}}
         <div class="ed-sb-footer">
-            <div class="ed-sf-name">{{ $company->name }}</div>
+            <div class="ed-sf-name">{{ $displayCompanyName }}</div>
             @if($contactLine !== '')
                 <div class="ed-sf-sub">{{ $contactLine }}</div>
-            @elseif(!empty($company->email))
-                <div class="ed-sf-sub">{{ $company->email }}</div>
+            @elseif(!empty($company->designation))
+                <div class="ed-sf-sub">{{ $company->designation }}</div>
             @endif
         </div>
     </aside>
@@ -807,14 +816,20 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <div class="ed-co-wrap">
                 <div class="ed-co-av">
                     @if(!empty($company->logo))
-                        <img src="{{ asset('company_logos/'.$company->logo) }}" alt="{{ $company->name }}">
+                        <img src="{{ asset('company_logos/'.$company->logo) }}" alt="{{ $displayCompanyName }}">
                     @else
                         {{ $companyInitials }}
                     @endif
                 </div>
                 <div>
-                    <div class="ed-co-name">{{ $company->name }}</div>
-                    <div class="ed-co-sub">{{ $contactLine !== '' ? $contactLine : $company->email }}</div>
+                    <div class="ed-co-name">{{ $displayCompanyName }}</div>
+                    <form method="POST" action="{{ route('company.logout') }}" class="ed-logout-form">
+                        @csrf
+                        <button type="submit" class="ed-logout-btn">
+                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Logout
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -826,7 +841,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <div class="ed-hero-eyebrow">ZeroNoticePeriod · Employer Portal</div>
                 <h1 class="ed-hero-title">Welcome, {{ $welcomeName }}</h1>
                 <div class="ed-hero-badge">
-                    {{ $company->name }}
+                    {{ $displayCompanyName }}
                     @if(! $znpPlan['has_plan'])
                         &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Choose a plan to post jobs</a>
                     @elseif($znpPlan['is_expired'])
@@ -855,8 +870,6 @@ if (!function_exists('znp_ed_job_location_preview')) {
                         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Browse ResumeDB
                     </a>
-                    <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-btn ed-btn-ghost">Job Post Pricing</a>
-                    <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-btn ed-btn-ghost">ResumeDB Pricing</a>
                 </div>
                 <div class="ed-stats-strip">
                     <div class="ed-stat-cell">
@@ -919,7 +932,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <div class="ed-sum-cell">
                     <div class="ed-sum-lbl">ResumeDB available</div>
                     <div class="ed-sum-num">{{ $resumezSpotlightCount }}</div>
-                    <div class="ed-sum-sub is-muted">This week · Immediate start</div>
+                    <div class="ed-sum-sub is-muted">Visible contract profiles</div>
                 </div>
             </section>
 
@@ -954,7 +967,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     </div>
                     <div class="ed-ai-item">
                         <span class="ed-ai-dot" style="background:var(--ed-orange)"></span>
-                        <div class="ed-ai-text">{{ $resumezSpotlightCount }} contractors matching your industry are available this week and can start immediately</div>
+                        <div class="ed-ai-text">{{ $resumezSpotlightCount }} visible contract-role profiles are currently available in ResumeDB</div>
                         <span class="ed-ai-time">Today</span>
                     </div>
                     <div class="ed-ai-item">
@@ -971,8 +984,8 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     <div class="ed-ctc-hl">
                         <div class="ed-ctc-icon" aria-hidden="true">🔧</div>
                         <div>
-                            <div class="ed-ctc-head-title">ResumeDB — Available This Week</div>
-                            <div class="ed-ctc-head-sub">{{ $resumezSpotlightCount }} verified contract-role profiles · Immediate start readiness</div>
+                            <div class="ed-ctc-head-title">ResumeDB Spotlight</div>
+                            <div class="ed-ctc-head-sub">{{ $resumezSpotlightCount }} visible contract-role profiles · Availability shown per profile</div>
                         </div>
                     </div>
                     <a target="_blank" rel="noopener noreferrer" href="{{ route('cv-search') }}" class="ed-btn-purple">Browse all {{ $resumezSpotlightCount }}</a>

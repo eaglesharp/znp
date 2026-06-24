@@ -136,6 +136,8 @@ Route::post('post-job-page/{id}/applicants/{app}/report', 'Company\ApplicantPipe
 Route::post('post-job-page/{id}/applicants/{app}/offer', 'Company\ApplicantPipelineController@offer')->name('employer.applicant.offer')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
 Route::post('post-job-page/{id}/applicants/{app}/view-cv', 'Company\ApplicantPipelineController@viewCv')->name('employer.applicant.viewcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
 Route::post('post-job-page/{id}/applicants/{app}/download-cv', 'Company\ApplicantPipelineController@downloadCv')->name('employer.applicant.downloadcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::get('post-job-page/{id}/applicants-email/templates', 'Company\ApplicantPipelineController@emailTemplates')->name('employer.applicant.email.templates')->where('id', '[0-9]+');
+Route::post('post-job-page/{id}/applicants-email/send', 'Company\ApplicantPipelineController@sendEmail')->name('employer.applicant.email.send')->where('id', '[0-9]+');
 
 
 

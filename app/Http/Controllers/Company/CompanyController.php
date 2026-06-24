@@ -2406,6 +2406,7 @@ class CompanyController extends Controller
         $feedbacksByApp = [];
         $reportsByApp = [];
         $eventsByApp = [];
+        $emailCountsByApp = [];
 
         if (! empty($appIds)) {
             $notesByApp = \App\ApplicantNote::whereIn('job_apply_id', $appIds)
@@ -2432,6 +2433,13 @@ class CompanyController extends Controller
                 ->orderBy('created_at')
                 ->get()
                 ->groupBy('job_apply_id');
+
+            $emailCountsByApp = \App\ApplicantEmail::whereIn('job_apply_id', $appIds)
+                ->where('status', 'sent')
+                ->select('job_apply_id', \DB::raw('count(*) as total'))
+                ->groupBy('job_apply_id')
+                ->pluck('total', 'job_apply_id')
+                ->all();
         }
 
         $applicants = [];
@@ -2452,7 +2460,8 @@ class CompanyController extends Controller
                 $notesByApp[$application->id] ?? null,
                 $feedbacksByApp[$application->id] ?? null,
                 $reportsByApp[$application->id] ?? null,
-                $eventsByApp[$application->id] ?? collect()
+                $eventsByApp[$application->id] ?? collect(),
+                (int) ($emailCountsByApp[$application->id] ?? 0)
             );
         }
 
@@ -2474,7 +2483,8 @@ class CompanyController extends Controller
         $note = null,
         $feedback = null,
         $report = null,
-        $events = null
+        $events = null,
+        int $emailCount = 0
     ): array {
         $summary  = \App\ProfileSummary::where('user_id', $user->id)->first();
         $details  = ProfileDetails::where('user_id', $user->id)->first();
@@ -2627,6 +2637,7 @@ class CompanyController extends Controller
             'fit_class'        => $fitClass,
             'initials'         => $initials,
             'display_name'     => $displayName,
+            'candidate_email'   => $user->email ?? '',
             'photo_url'        => ! empty($user->image) ? asset('user_images/' . $user->image) : null,
             'current_role'     => trim((string) ($summary->latestdesg ?? '')),
             'current_company'  => trim((string) ($summary->latestcom ?? '')),
@@ -2669,6 +2680,8 @@ class CompanyController extends Controller
             'rejected_reason'  => $application->rejected_reason,
             'profile_url'      => route('applicant.profile', $application->id),
             'has_resume'       => ! empty($user->resume),
+            'email_count'      => $emailCount,
+            'has_emailed'      => $emailCount > 0,
         ];
     }
 
@@ -2685,6 +2698,7 @@ class CompanyController extends Controller
                 'applied'       => 10,
                 'viewed'        => 20,
                 'downloaded'    => 30,
+                'emailed'       => 35,
                 'note'          => 40,
                 'feedback'      => 50,
                 'reported'      => 60,
@@ -2813,6 +2827,7 @@ class CompanyController extends Controller
         $expInRange = 0;
         $expSenior = 0;
         $verified = 0;
+        $emailed = 0;
 
         $jobExpMin = $job->exp_min !== null ? (float) $job->exp_min : 0;
         $jobExpMax = $job->exp_max !== null ? (float) $job->exp_max : 999;
@@ -2836,6 +2851,9 @@ class CompanyController extends Controller
             if ($a['verified']) {
                 $verified++;
             }
+            if (! empty($a['has_emailed'])) {
+                $emailed++;
+            }
         }
 
         return [
@@ -2848,6 +2866,7 @@ class CompanyController extends Controller
             'exp_in_range'=> $expInRange,
             'exp_senior'  => $expSenior,
             'verified'    => $verified,
+            'emailed'     => $emailed,
             'shortlisted' => collect($applicants)->where('is_shortlisted', true)->count(),
             'interview'   => collect($applicants)->where('has_interview', true)->count(),
         ];
@@ -3381,7 +3400,13 @@ class CompanyController extends Controller
 
 
 
-        $welcomeName = ! empty($company->ceo) ? $company->ceo : ($company->name ?? 'there');
+        $companyDisplayName = trim((string) ($company->name ?? ''));
+
+        $contactPersonName = trim((string) ($company->ceo ?: ($company->person_name ?? '')));
+
+        $welcomeName = mb_strlen($contactPersonName) > 1
+            ? $contactPersonName
+            : ($companyDisplayName !== '' ? $companyDisplayName : 'there');
 
 
 
@@ -3438,6 +3463,8 @@ class CompanyController extends Controller
             'contactLine',
 
             'welcomeName',
+
+            'companyDisplayName',
 
             'planLabel',
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Company;
 
 use App\ApplicantEvent;
+use App\ApplicantEmail;
 use App\ApplicantFeedback;
 use App\ApplicantNote;
 use App\ApplicantReport;
@@ -11,9 +12,13 @@ use App\FavouriteApplicant;
 use App\Http\Controllers\Controller;
 use App\JobApply;
 use App\PostJob;
+use App\Template;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 
 class ApplicantPipelineController extends Controller
 {
@@ -35,6 +40,7 @@ class ApplicantPipelineController extends Controller
         'applied'      => 10,
         'viewed'       => 20,
         'downloaded'   => 30,
+        'emailed'      => 35,
         'note'         => 40,
         'feedback'     => 50,
         'reported'     => 60,
@@ -60,6 +66,20 @@ class ApplicantPipelineController extends Controller
             ->firstOrFail();
 
         return [$company, $job, $application];
+    }
+
+    /**
+     * @return array{0: Company, 1: PostJob}
+     */
+    private function resolveJobContext(int $jobId): array
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $jobId)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        return [$company, $job];
     }
 
     private function ensureAppliedEvent(JobApply $application, PostJob $job, Company $company): void
@@ -143,6 +163,185 @@ class ApplicantPipelineController extends Controller
         }
 
         return $activity;
+    }
+
+    public function emailTemplates(int $id)
+    {
+        [$company] = $this->resolveJobContext($id);
+
+        $templates = Template::where('company_id', $company->id)
+            ->orderBy('templatename')
+            ->get(['id', 'templatename', 'subject', 'message'])
+            ->map(function ($template) {
+                return [
+                    'id'      => $template->id,
+                    'name'    => $template->templatename,
+                    'subject' => $template->subject,
+                    'body'    => $template->message,
+                ];
+            })
+            ->values();
+
+        return response()->json(['ok' => true, 'templates' => $templates]);
+    }
+
+    public function sendEmail(Request $request, int $id)
+    {
+        [$company, $job] = $this->resolveJobContext($id);
+
+        $validator = Validator::make($request->all(), [
+            'scope'             => 'required|in:single,selected,all',
+            'application_ids'   => 'array',
+            'application_ids.*' => 'integer',
+            'subject'           => 'required|string|max:255',
+            'body'              => 'required|string',
+            'template_id'       => 'nullable|integer',
+            'save_template_name'=> 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $scope = (string) $request->input('scope');
+        $applicationIds = array_values(array_filter((array) $request->input('application_ids', [])));
+
+        $query = JobApply::with('user')
+            ->where('job_id', $job->id);
+
+        if ($scope !== 'all') {
+            if (empty($applicationIds)) {
+                return response()->json(['ok' => false, 'message' => 'Select at least one applicant.'], 422);
+            }
+            $query->whereIn('id', $applicationIds);
+        }
+
+        $applications = $query->get()->filter(function ($application) {
+            return $application->user && filter_var($application->user->email, FILTER_VALIDATE_EMAIL);
+        })->values();
+
+        if ($applications->isEmpty()) {
+            return response()->json(['ok' => false, 'message' => 'No applicants with valid email addresses found.'], 422);
+        }
+
+        $subject = trim((string) $request->input('subject'));
+        $body = (string) $request->input('body');
+        $templateId = $request->input('template_id') ?: null;
+
+        if ($request->filled('save_template_name')) {
+            $template = new Template();
+            $template->company_id = $company->id;
+            $template->templatename = trim((string) $request->input('save_template_name'));
+            $template->subject = $subject;
+            $template->message = $body;
+            $template->save();
+            $templateId = $template->id;
+        }
+
+        $fromEmail = filter_var($company->email, FILTER_VALIDATE_EMAIL)
+            ? $company->email
+            : config('mail.from.address');
+        $fromName = $company->name ?: config('mail.from.name', 'ZeroNoticePeriod');
+        $failures = [];
+        $sent = 0;
+        $sentApplicationIds = [];
+        $activities = [];
+
+        foreach ($applications as $application) {
+            $user = $application->user;
+            $recipientSubject = $this->replaceEmailVariables($subject, $application, $job, $company);
+            $recipientBody = $this->replaceEmailVariables($body, $application, $job, $company);
+
+            try {
+                Mail::send('emails.send_message', [
+                    'title'    => $user->email,
+                    'subject'  => $recipientSubject,
+                    'messages' => $recipientBody,
+                ], function ($message) use ($user, $company, $fromEmail, $fromName, $recipientSubject) {
+                    $message->from($fromEmail, $fromName)
+                        ->to($user->email)
+                        ->subject($recipientSubject);
+
+                    if (filter_var($company->email, FILTER_VALIDATE_EMAIL)) {
+                        $message->bcc($company->email);
+                    }
+                });
+
+                ApplicantEmail::create([
+                    'job_apply_id'    => $application->id,
+                    'job_id'          => $job->id,
+                    'company_id'      => $company->id,
+                    'user_id'         => $user->id,
+                    'recipient_email' => $user->email,
+                    'subject'         => $recipientSubject,
+                    'body'            => $recipientBody,
+                    'template_id'     => $templateId,
+                    'send_scope'      => $scope,
+                    'status'          => 'sent',
+                ]);
+
+                if (Schema::hasColumn('users', 'no_of_emails')) {
+                    $user->no_of_emails = ((int) $user->no_of_emails) + 1;
+                    $user->save();
+                }
+
+                $this->logEvent($application, $job, $company, 'emailed', 'Emailed', [
+                    'subject' => $recipientSubject,
+                    'scope'   => $scope,
+                ]);
+
+                $sent++;
+                $sentApplicationIds[] = $application->id;
+                $activities[$application->id] = $this->activityFromEvents($application->id);
+            } catch (\Throwable $e) {
+                ApplicantEmail::create([
+                    'job_apply_id'    => $application->id,
+                    'job_id'          => $job->id,
+                    'company_id'      => $company->id,
+                    'user_id'         => $user->id,
+                    'recipient_email' => $user->email,
+                    'subject'         => $recipientSubject,
+                    'body'            => $recipientBody,
+                    'template_id'     => $templateId,
+                    'send_scope'      => $scope,
+                    'status'          => 'failed',
+                    'error'           => $e->getMessage(),
+                ]);
+
+                $failures[] = [
+                    'application_id' => $application->id,
+                    'email'          => $user->email,
+                    'message'        => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'ok'           => $sent > 0,
+            'sent_count'   => $sent,
+            'failed_count' => count($failures),
+            'failures'     => $failures,
+            'application_ids' => $sentApplicationIds,
+            'activities'      => $activities,
+            'metric'       => ApplicantEmail::where('job_id', $job->id)
+                ->where('company_id', $company->id)
+                ->where('status', 'sent')
+                ->distinct('job_apply_id')
+                ->count('job_apply_id'),
+        ], $sent > 0 ? 200 : 422);
+    }
+
+    private function replaceEmailVariables(string $value, JobApply $application, PostJob $job, Company $company): string
+    {
+        $user = $application->user;
+        $name = trim((string) ($user->first_name ?? '') . ' ' . (string) ($user->last_name ?? ''));
+        $name = $name !== '' ? $name : (string) ($user->name ?? 'Candidate');
+
+        return str_replace(
+            ['[Candidate Name]', '[Role]', '[Company]', '[Job Title]', '[Date]'],
+            [$name, (string) $job->job_title, (string) $company->name, (string) $job->job_title, Carbon::now()->format('M j, Y')],
+            $value
+        );
     }
 
     public function shortlist(Request $request, int $id, int $app)

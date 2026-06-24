@@ -159,6 +159,15 @@
 .znp-ap .sched-footer,.znp-ap .comp-footer{display:flex;gap:8px;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg)}
 .znp-ap .btn-send{padding:7px 20px;background:var(--blue);color:#fff;border:none;border-radius:50px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
 .znp-ap .btn-comp-ghost{padding:7px 13px;background:var(--surface);color:var(--t2);border:1px solid var(--border);border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-left:auto}
+.znp-ap .comp-field-row{display:flex;align-items:center;gap:10px;padding:8px 20px;border-bottom:1px solid var(--border)}
+.znp-ap .cf-label{font-size:11px;font-weight:700;color:var(--t4);width:70px;flex-shrink:0;text-transform:uppercase}
+.znp-ap .cf-input{flex:1;border:none;outline:none;font-size:12.5px;font-family:inherit;color:var(--text);background:transparent}
+.znp-ap .comp-toolbar{display:flex;gap:6px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--border);background:#fafbff;flex-wrap:wrap}
+.znp-ap .ct-fmt,.znp-ap .var-btn{padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:var(--t2);font-size:11px;font-weight:700;cursor:pointer}
+.znp-ap .comp-body{min-height:170px;outline:none;line-height:1.7}
+.znp-ap .comp-jd{border-top:1px solid var(--border);background:#f8fafc;padding:10px 20px}
+.znp-ap .comp-jd-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.znp-ap .comp-jd-block{font-size:11.5px;color:var(--t2);line-height:1.7}
 .znp-ap .toast{display:none;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:11px 20px;border-radius:var(--r-sm);font-size:13px;font-weight:500;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.22);align-items:center;gap:10px}
 .znp-ap .toast.show{display:flex}
 .znp-ap .znp-opt{display:flex;gap:10px;padding:9px 11px;border:1.5px solid var(--border);border-radius:8px;margin-bottom:7px;cursor:pointer}
@@ -168,6 +177,8 @@
 .znp-ap .if-verdict.sel{border-color:var(--blue);background:var(--blue-50);color:var(--blue)}
 .znp-ap .abtn.done{background:#f0fdf4!important;color:#166534!important;border-color:#86d3a8!important;pointer-events:none}
 .znp-ap .abtn.done::after{content:' ✓';font-size:11px}
+.znp-ap .abtn.emailed-done{background:#dbeafe!important;color:#1e40af!important;border-color:#93c5fd!important}
+.znp-ap .abtn.emailed-done::after{content:' ✓';font-size:11px}
 .znp-ap .abtn.locked{opacity:.45;pointer-events:none;cursor:not-allowed}
 .znp-ap .note-preview-strip{display:none;align-items:flex-start;gap:10px;padding:8px 16px;background:#fffef5;border-top:1px solid var(--border)}
 .znp-ap .note-preview-strip.show{display:flex}
@@ -258,6 +269,7 @@
             <div class="metric-item"><div class="m-num blue">{{ $metrics['exp_in_range'] }}</div><div class="m-label">In Exp Range</div></div>
             <div class="metric-item"><div class="m-num blue">{{ $metrics['exp_senior'] }}</div><div class="m-label">Senior Exp</div></div>
             <div class="metric-item"><div class="m-num green">{{ $metrics['verified'] }}</div><div class="m-label">Verified</div></div>
+            <div class="metric-item"><div class="m-num blue" id="apEmailedMetric">{{ $metrics['emailed'] ?? 0 }}</div><div class="m-label">Emailed</div></div>
         </div>
     </div>
 
@@ -299,19 +311,34 @@
 
         <div class="main">
             <div class="toolbar">
-                <div id="apResultCount" style="font-size:13px;color:var(--t3)">Showing <strong>{{ count($applicants) }}</strong> applicants</div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3)">
+                        <input type="checkbox" id="apSelectAll"> Select all
+                    </label>
+                    <button type="button" class="tbtn" data-znp-action="email-all">Send Email to All</button>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div id="apResultCount" style="font-size:13px;color:var(--t3)">Showing <strong>{{ count($applicants) }}</strong> applicants</div>
                 <select class="sort-sel" id="apSort">
                     <option value="fit">Sort: Fitment Score</option>
                     <option value="recent">Sort: Most Recent</option>
                     <option value="exp">Sort: Experience</option>
                     <option value="ctc">Sort: Salary (Low–High)</option>
                 </select>
+                </div>
             </div>
 
             <div class="stage-tabs" id="apStageTabs">
                 @foreach(['all'=>'All','new'=>'New','shortlisted'=>'Shortlisted','interview'=>'Interview','offer'=>'Offer','contractor'=>'Contractors','resumedb'=>'ResumeDB','rejected'=>'Rejected'] as $key => $label)
                     <div class="stab {{ $key === 'all' ? 'active' : '' }}" data-stage="{{ $key }}">{{ $label }} <span class="stab-n">{{ $stages[$key] ?? 0 }}</span></div>
                 @endforeach
+            </div>
+
+            <div id="apBulkBar" style="display:none;align-items:center;gap:10px;background:#EEF1FB;border:1px solid var(--blue-100);border-radius:var(--r-sm);padding:8px 14px;margin-bottom:10px">
+                <span id="apBulkCount" style="font-size:12.5px;font-weight:700;color:var(--blue)">0 selected</span>
+                <div style="flex:1"></div>
+                <button type="button" class="tbtn" data-znp-action="email-selected">Email Selected</button>
+                <button type="button" data-znp-action="clear-selection" style="background:none;border:none;font-size:16px;color:var(--t4);cursor:pointer">×</button>
             </div>
 
             @if(count($applicants) === 0)
@@ -329,6 +356,8 @@
                         <div class="ccard {{ $a['card_class'] }}"
                              data-app-id="{{ $a['application_id'] }}"
                              data-cand="{{ $a['slug'] }}"
+                             data-email="{{ $a['candidate_email'] }}"
+                             data-display-name="{{ $a['display_name'] }}"
                              data-stage="{{ $a['stage'] }}"
                              data-exp="{{ $a['data_exp'] }}"
                              data-ctc="{{ $a['data_ctc'] }}"
@@ -340,6 +369,7 @@
                              data-name="{{ strtolower($a['display_name']) }}"
                              data-search="{{ strtolower($a['display_name'].' '.$a['current_role'].' '.$a['current_company'].' '.collect($a['skills'])->pluck('name')->implode(' ')) }}">
                             <div class="card-main">
+                                <input type="checkbox" class="ap-cand-check" data-app-id="{{ $a['application_id'] }}" style="margin-top:12px;width:15px;height:15px;accent-color:var(--blue);cursor:pointer">
                                 <div class="av-wrap">
                                     <div class="cav" style="{{ $cavStyle }}">{{ $a['initials'] }}</div>
                                     <div class="fit-score {{ $a['fit_class'] }}">{{ $a['fit'] }}% fit</div>
@@ -447,6 +477,9 @@
                                     <button type="button" class="abtn {{ $a['is_shortlisted'] ? 'done' : '' }}" data-znp-action="shortlist" data-name="{{ $a['display_name'] }}">{{ $a['is_shortlisted'] ? 'Shortlisted' : 'Shortlist' }}</button>
                                     <button type="button" class="abtn" data-znp-action="download-cv" data-name="{{ $a['display_name'] }}">Download CV</button>
                                     <button type="button" class="abtn" data-znp-action="notes" data-name="{{ $a['display_name'] }}">Notes</button>
+                                    <button type="button" class="abtn {{ $a['has_emailed'] ? 'emailed-done' : '' }}" data-znp-action="email" data-name="{{ $a['display_name'] }}">
+                                        {{ $a['has_emailed'] ? 'Emailed' : 'Send Email' }}
+                                    </button>
                                     <button type="button" class="abtn" data-znp-action="feedback" data-name="{{ $a['display_name'] }}" style="background:#f5f3ff;color:#7c3aed;border-color:#ddd6fe">Log Feedback</button>
                                 </div>
                                 <div class="reject-row">
@@ -475,6 +508,74 @@
                     @endforeach
                 </div>
             @endif
+        </div>
+    </div>
+
+    {{-- Email composer --}}
+    <div class="modal-overlay" id="apMsgModal" style="align-items:flex-start;overflow-y:auto">
+        <div class="composer">
+            <div class="comp-head">
+                <span class="comp-title" id="apMsgTitle">Send Email</span>
+                <button type="button" class="btn-comp-ghost" data-znp-close="apMsgModal">×</button>
+            </div>
+            <div class="comp-field-row">
+                <span class="cf-label">Template</span>
+                <select class="cf-input" id="apTemplateSelect">
+                    <option value="">Choose template...</option>
+                </select>
+                <input class="cf-input" id="apTemplateName" placeholder="Save as new template (optional)" style="border-left:1px solid var(--border);padding-left:10px">
+            </div>
+            <div class="comp-field-row">
+                <span class="cf-label">To</span>
+                <input class="cf-input" id="apMsgTo" readonly>
+            </div>
+            <div class="comp-field-row">
+                <span class="cf-label">Subject</span>
+                <input class="cf-input" id="apMsgSubject">
+            </div>
+            <div class="comp-toolbar">
+                <button type="button" class="ct-fmt" data-znp-action="fmt-bold"><b>B</b></button>
+                <button type="button" class="ct-fmt" data-znp-action="fmt-italic"><i>I</i></button>
+                <button type="button" class="ct-fmt" data-znp-action="fmt-ul">•≡</button>
+                <button type="button" class="var-btn" data-znp-action="insert-var" data-var="[Candidate Name]">+Name</button>
+                <button type="button" class="var-btn" data-znp-action="insert-var" data-var="[Role]">+Role</button>
+                <button type="button" class="var-btn" data-znp-action="insert-var" data-var="[Date]">+Date</button>
+            </div>
+            <div class="comp-body" id="apMsgBody" contenteditable="true"></div>
+            <div class="comp-jd">
+                <div class="comp-jd-head">
+                    <span style="font-size:10.5px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.06em">Job Description (included)</span>
+                </div>
+                <div class="comp-jd-block">
+                    <strong>Role:</strong> {{ $job->job_title }} &nbsp;·&nbsp;
+                    <strong>Company:</strong> {{ $company->name }} &nbsp;·&nbsp;
+                    <strong>Location:</strong> {{ $jobLocationLabel }}<br>
+                    <strong>Experience:</strong> {{ $expLabel ?: '—' }} &nbsp;·&nbsp;
+                    <strong>Salary:</strong> {{ $salaryLabel }}
+                </div>
+            </div>
+            <div class="comp-footer">
+                <button type="button" class="btn-comp-ghost" data-znp-action="preview-email">Preview</button>
+                <button type="button" class="btn-send" data-znp-action="send-email">Send Email</button>
+                <button type="button" class="btn-comp-ghost" data-znp-close="apMsgModal">Discard</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Email preview --}}
+    <div class="modal-overlay" id="apPreviewModal" style="align-items:flex-start;overflow-y:auto">
+        <div class="composer">
+            <div class="comp-head">
+                <span class="comp-title">Email Preview</span>
+                <button type="button" class="btn-comp-ghost" data-znp-close="apPreviewModal">×</button>
+            </div>
+            <div class="comp-field-row"><span class="cf-label">To</span><span id="apPreviewTo" style="font-size:12px;font-weight:600;color:var(--t2)"></span></div>
+            <div class="comp-field-row"><span class="cf-label">Subject</span><span id="apPreviewSubject" style="font-size:12px;font-weight:600;color:var(--t2)"></span></div>
+            <div class="comp-body" id="apPreviewBody" style="background:#fff;min-height:260px"></div>
+            <div class="comp-footer">
+                <button type="button" class="btn-comp-ghost" data-znp-close="apPreviewModal">Back to Edit</button>
+                <button type="button" class="btn-send" data-znp-action="send-email">Send Email</button>
+            </div>
         </div>
     </div>
 
@@ -585,6 +686,8 @@
         offer:      '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/offer',
         viewCv:     '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/view-cv',
         downloadCv: '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/download-cv',
+        emailTemplates: '{{ route('employer.applicant.email.templates', $job->id) }}',
+        sendEmail: '{{ route('employer.applicant.email.send', $job->id) }}',
         retire:     '{{ route('employer.post.job.retire', $job->id) }}'
     };
 
@@ -592,6 +695,8 @@
         currentStage: 'all',
         activeCard: null,
         activeAppId: null,
+        emailTemplates: [],
+        emailState: { scope: 'single', applicationIds: [], cards: [] },
 
         url: function (key, appId) {
             return routes[key].replace('__APP__', appId);
@@ -613,6 +718,107 @@
                     return j;
                 });
             });
+        },
+
+        escapeHtml: function (value) {
+            return String(value || '').replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[ch];
+            });
+        },
+
+        selectedCards: function () {
+            return Array.from(document.querySelectorAll('#apCandsGrid .ap-cand-check:checked'))
+                .map(function (check) { return check.closest('.ccard'); })
+                .filter(Boolean);
+        },
+
+        updateBulkBar: function () {
+            var selected = znpAp.selectedCards().length;
+            var bar = document.getElementById('apBulkBar');
+            var count = document.getElementById('apBulkCount');
+            if (count) count.textContent = selected + ' selected';
+            if (bar) bar.style.display = selected > 0 ? 'flex' : 'none';
+        },
+
+        clearSelection: function () {
+            document.querySelectorAll('.ap-cand-check').forEach(function (check) { check.checked = false; });
+            var all = document.getElementById('apSelectAll');
+            if (all) all.checked = false;
+            znpAp.updateBulkBar();
+        },
+
+        loadTemplates: function () {
+            if (znpAp._templatesLoaded) return Promise.resolve(znpAp.emailTemplates);
+            return fetch(routes.emailTemplates, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    znpAp.emailTemplates = res.templates || [];
+                    znpAp._templatesLoaded = true;
+                    znpAp.renderTemplateOptions();
+                    return znpAp.emailTemplates;
+                });
+        },
+
+        renderTemplateOptions: function () {
+            var select = document.getElementById('apTemplateSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="">Choose template...</option>';
+            znpAp.emailTemplates.forEach(function (tpl) {
+                var option = document.createElement('option');
+                option.value = tpl.id;
+                option.textContent = tpl.name || ('Template #' + tpl.id);
+                option.dataset.subject = tpl.subject || '';
+                option.dataset.body = tpl.body || '';
+                select.appendChild(option);
+            });
+        },
+
+        defaultEmailBody: function (name) {
+            return '<p>Hi ' + znpAp.escapeHtml(name || '[Candidate Name]') + ',</p>' +
+                '<p>Thank you for applying for <strong>{{ addslashes($job->job_title) }}</strong> at {{ addslashes($company->name) }}. We reviewed your profile and would like to connect further.</p>' +
+                '<p>Regards,<br>{{ addslashes($company->name) }}</p>';
+        },
+
+        openEmailComposer: function (scope, cards) {
+            cards = cards || [];
+            var ids = cards.map(function (card) { return card.getAttribute('data-app-id'); }).filter(Boolean);
+            znpAp.emailState = { scope: scope, applicationIds: ids, cards: cards };
+
+            var toLabel = 'All applicants';
+            var title = 'Email All Applicants';
+            var firstName = '';
+            if (scope === 'single' && cards[0]) {
+                firstName = cards[0].getAttribute('data-display-name') || '';
+                toLabel = firstName + ' <' + (cards[0].getAttribute('data-email') || 'no email') + '>';
+                title = 'Send Email';
+            } else if (scope === 'selected') {
+                toLabel = ids.length + ' selected applicants';
+                title = 'Email Selected Applicants';
+            }
+
+            document.getElementById('apMsgTitle').textContent = title;
+            document.getElementById('apMsgTo').value = toLabel;
+            document.getElementById('apMsgSubject').value = 'Interview Opportunity — {{ addslashes($job->job_title) }} · {{ addslashes($company->name) }}';
+            document.getElementById('apMsgBody').innerHTML = znpAp.defaultEmailBody(firstName || '[Candidate Name]');
+            document.getElementById('apTemplateName').value = '';
+            document.getElementById('apTemplateSelect').value = '';
+
+            znpAp.loadTemplates().finally(function () {
+                znpAp.openModal('apMsgModal');
+            });
+        },
+
+        previewEmail: function () {
+            document.getElementById('apPreviewTo').textContent = document.getElementById('apMsgTo').value;
+            document.getElementById('apPreviewSubject').textContent = document.getElementById('apMsgSubject').value;
+            document.getElementById('apPreviewBody').innerHTML = document.getElementById('apMsgBody').innerHTML;
+            znpAp.openModal('apPreviewModal');
+        },
+
+        insertAtEditor: function (text) {
+            var body = document.getElementById('apMsgBody');
+            body.focus();
+            document.execCommand('insertText', false, text);
         },
 
         toast: function (msg) {
@@ -772,6 +978,32 @@
     var sortEl = document.getElementById('apSort');
     if (sortEl) sortEl.addEventListener('change', function () { znpAp.sortCards(this.value); });
 
+    var selectAll = document.getElementById('apSelectAll');
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            var checked = this.checked;
+            document.querySelectorAll('#apCandsGrid .ccard').forEach(function (card) {
+                var box = card.querySelector('.ap-cand-check');
+                if (box && card.style.display !== 'none') box.checked = checked;
+            });
+            znpAp.updateBulkBar();
+        });
+    }
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('ap-cand-check')) znpAp.updateBulkBar();
+    });
+
+    var templateSelect = document.getElementById('apTemplateSelect');
+    if (templateSelect) {
+        templateSelect.addEventListener('change', function () {
+            var option = this.options[this.selectedIndex];
+            if (!option || !option.value) return;
+            document.getElementById('apMsgSubject').value = option.dataset.subject || '';
+            document.getElementById('apMsgBody').innerHTML = option.dataset.body || '';
+        });
+    }
+
     document.querySelectorAll('[data-znp-close]').forEach(function (btn) {
         btn.addEventListener('click', function () { znpAp.closeModal(btn.getAttribute('data-znp-close')); });
     });
@@ -810,6 +1042,98 @@
         if (action === 'toggle-offer-menu') {
             var wrap = btn.closest('.offer-wrap');
             if (wrap) wrap.classList.toggle('open');
+            return;
+        }
+
+        if (action === 'clear-selection') {
+            znpAp.clearSelection();
+            return;
+        }
+
+        if (action === 'email') {
+            znpAp.openEmailComposer('single', [card]);
+            return;
+        }
+
+        if (action === 'email-selected') {
+            var selected = znpAp.selectedCards();
+            if (!selected.length) {
+                znpAp.toast('Select at least one applicant.');
+                return;
+            }
+            znpAp.openEmailComposer('selected', selected);
+            return;
+        }
+
+        if (action === 'email-all') {
+            znpAp.openEmailComposer('all', []);
+            return;
+        }
+
+        if (action === 'preview-email') {
+            znpAp.previewEmail();
+            return;
+        }
+
+        if (action === 'fmt-bold') {
+            document.execCommand('bold', false, null);
+            return;
+        }
+
+        if (action === 'fmt-italic') {
+            document.execCommand('italic', false, null);
+            return;
+        }
+
+        if (action === 'fmt-ul') {
+            document.execCommand('insertUnorderedList', false, null);
+            return;
+        }
+
+        if (action === 'insert-var') {
+            znpAp.insertAtEditor(btn.getAttribute('data-var') || '');
+            return;
+        }
+
+        if (action === 'send-email') {
+            var payload = {
+                scope: znpAp.emailState.scope,
+                application_ids: znpAp.emailState.applicationIds,
+                subject: document.getElementById('apMsgSubject').value,
+                body: document.getElementById('apMsgBody').innerHTML,
+                template_id: document.getElementById('apTemplateSelect').value || null,
+                save_template_name: document.getElementById('apTemplateName').value || null
+            };
+
+            btn.disabled = true;
+            znpAp.post(routes.sendEmail, payload).then(function (res) {
+                var cards = znpAp.emailState.scope === 'all'
+                    ? Array.from(document.querySelectorAll('#apCandsGrid .ccard'))
+                    : (znpAp.emailState.cards || []);
+                cards.forEach(function (emailCard) {
+                    if (res.application_ids && res.application_ids.indexOf(parseInt(emailCard.getAttribute('data-app-id'), 10)) === -1) return;
+                    var emailBtn = emailCard.querySelector('[data-znp-action="email"]');
+                    if (emailBtn) {
+                        emailBtn.classList.add('emailed-done');
+                        emailBtn.textContent = 'Emailed';
+                    }
+                    if (res.activities && res.activities[emailCard.getAttribute('data-app-id')]) {
+                        znpAp.renderActivity(emailCard, res.activities[emailCard.getAttribute('data-app-id')]);
+                    }
+                });
+
+                var metric = document.getElementById('apEmailedMetric');
+                if (metric && res.metric !== undefined) metric.textContent = res.metric;
+
+                znpAp.closeModal('apMsgModal');
+                znpAp.closeModal('apPreviewModal');
+                znpAp.clearSelection();
+                znpAp.toast('Email sent to ' + res.sent_count + ' applicant(s)' + (res.failed_count ? ', ' + res.failed_count + ' failed' : ''));
+            }).catch(function (err) {
+                znpAp.toast(err.message);
+            }).finally(function () {
+                btn.disabled = false;
+            });
             return;
         }
 
