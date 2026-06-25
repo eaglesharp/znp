@@ -703,6 +703,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     My Job Postings
                     <span class="ed-nbadge">{{ $jobsPostedCount }}</span>
                 </a>
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
 
             {{-- ResumeDB --}}
@@ -714,6 +715,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <div id="edSubCz" class="ed-nav-sub is-open">
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('cv-search') }}" class="ed-nav-sub-item">Browse Contractors</a>
                 <a target="_blank" rel="noopener noreferrer" href="{{ url('/cv-search') }}" class="ed-nav-sub-item">Browse Resumes</a>
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
 
             {{-- Profile --}}
