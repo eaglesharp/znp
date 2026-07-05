@@ -239,7 +239,15 @@
 .znp-ap .offer-wrap.open .offer-menu{display:block}
 .znp-ap .om-item{padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer}
 .znp-ap .om-item:hover{background:var(--blue-50);color:var(--blue)}
-.znp-ap .cv-frame{width:100%;height:70vh;border:none}
+.znp-ap .cv-frame{width:100%;height:70vh;border:none;display:none}
+.znp-ap .cv-pdf-container{width:100%;height:70vh;overflow-y:auto;padding:16px;background:#f8fafc}
+.znp-ap .cv-pdf-container canvas{display:block;margin:0 auto 16px;max-width:100%;height:auto;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.znp-ap .cv-word-container{width:100%;height:70vh;overflow-y:auto;padding:16px;background:#fff}
+.znp-ap .cv-word-container .docx-wrapper{background:#fff;padding:0}
+.znp-ap .cv-fallback{display:none;padding:32px 24px;text-align:center}
+.znp-ap .cv-fallback p{font-size:13px;color:var(--t3);margin-bottom:14px}
+.znp-ap .cv-download-btn{margin-left:auto;font-size:11px;font-weight:700;color:var(--blue);text-decoration:none}
+.znp-ap .cv-download-btn:hover{text-decoration:underline}
 @media(max-width:960px){.znp-ap .page{grid-template-columns:1fr}.znp-ap .sidebar{position:static}}
 @media(max-width:640px){
     .znp-ap .page{padding:14px 12px 44px}
@@ -729,10 +737,17 @@
         <div class="sched-modal" style="max-width:900px;width:95%">
             <div class="sched-head">
                 <span class="sched-title" id="apCvTitle">View CV</span>
+                <a href="#" id="apCvDownloadBtn" class="cv-download-btn" target="_blank" rel="noopener">Download</a>
                 <button type="button" class="btn-comp-ghost" data-znp-close="apCvModal">×</button>
             </div>
             <div class="sched-body" style="padding:0">
                 <iframe id="apCvFrame" class="cv-frame" title="Candidate CV"></iframe>
+                <div id="apCvPdfContainer" class="cv-pdf-container" style="display:none"></div>
+                <div id="apCvWordContainer" class="cv-word-container" style="display:none"></div>
+                <div id="apCvFallback" class="cv-fallback">
+                    <p id="apCvFallbackMsg">This resume format cannot be previewed in the browser.</p>
+                    <a href="#" id="apCvFallbackLink" class="btn-send" target="_blank" rel="noopener">Download Resume</a>
+                </div>
             </div>
         </div>
     </div>
@@ -853,6 +868,15 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+<script>
+    if (window['pdfjs-dist/build/pdf']) {
+        window['pdfjs-dist/build/pdf'].GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js';
+    }
+</script>
+<script src="https://unpkg.com/jszip/dist/jszip.min.js"></script>
+<script src="{{ asset('asset/script/docx-preview.js') }}"></script>
 <script>
 (function () {
     'use strict';
@@ -1035,6 +1059,102 @@
         closeModal: function (id) {
             var m = document.getElementById(id);
             if (m) m.classList.remove('open');
+            if (id === 'apCvModal') znpAp.resetCvViewer();
+        },
+
+        resetCvViewer: function () {
+            var frame = document.getElementById('apCvFrame');
+            var pdf = document.getElementById('apCvPdfContainer');
+            var word = document.getElementById('apCvWordContainer');
+            var fallback = document.getElementById('apCvFallback');
+            if (frame) { frame.style.display = 'none'; frame.src = 'about:blank'; }
+            if (pdf) { pdf.style.display = 'none'; pdf.innerHTML = ''; }
+            if (word) { word.style.display = 'none'; word.innerHTML = ''; }
+            if (fallback) fallback.style.display = 'none';
+        },
+
+        showCv: function (res, name) {
+            znpAp.resetCvViewer();
+            document.getElementById('apCvTitle').textContent = 'CV — ' + name;
+            var dlBtn = document.getElementById('apCvDownloadBtn');
+            if (dlBtn) dlBtn.href = res.download_url;
+            var fallbackLink = document.getElementById('apCvFallbackLink');
+            if (fallbackLink) fallbackLink.href = res.download_url;
+
+            var type = (res.file_type || '').toLowerCase();
+            if (type === 'pdf') {
+                znpAp._renderPdfCv(res.cv_url);
+            } else if (type === 'docx') {
+                znpAp._renderDocxCv(res.cv_url);
+            } else {
+                var fb = document.getElementById('apCvFallback');
+                var fbMsg = document.getElementById('apCvFallbackMsg');
+                if (fbMsg) {
+                    fbMsg.textContent = type === 'doc'
+                        ? 'Older Word (.doc) files cannot be previewed here. Please download to view.'
+                        : 'This resume format cannot be previewed in the browser.';
+                }
+                if (fb) fb.style.display = 'block';
+            }
+            znpAp.openModal('apCvModal');
+        },
+
+        _renderPdfCv: function (url) {
+            var container = document.getElementById('apCvPdfContainer');
+            var pdfjsLib = window['pdfjs-dist/build/pdf'];
+            if (!container || !pdfjsLib) {
+                var frame = document.getElementById('apCvFrame');
+                if (frame) { frame.style.display = 'block'; frame.src = url; }
+                return;
+            }
+            container.style.display = 'block';
+            pdfjsLib.getDocument(url).promise.then(function (pdfDoc) {
+                container.innerHTML = '';
+                for (var i = 1; i <= pdfDoc.numPages; i++) {
+                    (function (pageNum) {
+                        pdfDoc.getPage(pageNum).then(function (page) {
+                            var viewport = page.getViewport({ scale: 1.2 });
+                            var canvas = document.createElement('canvas');
+                            var ctx = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            container.appendChild(canvas);
+                            page.render({ canvasContext: ctx, viewport: viewport });
+                        });
+                    })(i);
+                }
+            }).catch(function () {
+                container.style.display = 'none';
+                var frame = document.getElementById('apCvFrame');
+                if (frame) { frame.style.display = 'block'; frame.src = url; }
+            });
+        },
+
+        _renderDocxCv: function (url) {
+            var container = document.getElementById('apCvWordContainer');
+            if (!container || typeof docx === 'undefined') {
+                document.getElementById('apCvFallback').style.display = 'block';
+                return;
+            }
+            container.style.display = 'block';
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.responseType = 'blob';
+            request.onload = function () {
+                var doc = new File([request.response], 'resume.docx', {
+                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+                var docxOptions = Object.assign(docx.defaultOptions, { useMathMLPolyfill: true });
+                docx.renderAsync(doc, container, null, docxOptions).catch(function () {
+                    container.style.display = 'none';
+                    document.getElementById('apCvFallback').style.display = 'block';
+                });
+            };
+            request.onerror = function () {
+                container.style.display = 'none';
+                document.getElementById('apCvFallback').style.display = 'block';
+            };
+            request.send();
         },
 
         cardFromBtn: function (btn) {
@@ -1555,9 +1675,7 @@
         }
         if (action === 'view-cv') {
             znpAp.post(znpAp.url('viewCv', appId), {}).then(function (res) {
-                document.getElementById('apCvTitle').textContent = 'CV — ' + name;
-                document.getElementById('apCvFrame').src = res.cv_url;
-                znpAp.openModal('apCvModal');
+                znpAp.showCv(res, name);
                 znpAp.renderActivity(card, res.activity);
             }).catch(function (err) { znpAp.toast(err.message); });
             return;

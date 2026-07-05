@@ -370,11 +370,7 @@ class ApplicantPipelineController extends Controller
             ]);
         }
 
-        FavouriteApplicant::create([
-            'user_id'    => $userId,
-            'job_id'     => $job->id,
-            'company_id' => $company->id,
-        ]);
+        FavouriteApplicant::addShortlist($userId, $job->id, $company->id);
 
         $application->stage = 'shortlisted';
         $application->save();
@@ -596,11 +592,14 @@ class ApplicantPipelineController extends Controller
 
         $cvUrl = asset('cvs/' . $user->resume);
         $downloadUrl = route('download.resume', $user->id);
+        $ext = strtolower(pathinfo((string) $user->resume, PATHINFO_EXTENSION));
+        $fileType = in_array($ext, ['pdf', 'docx', 'doc'], true) ? $ext : 'other';
 
         return response()->json([
             'ok'           => true,
             'cv_url'       => $cvUrl,
             'download_url' => $downloadUrl,
+            'file_type'    => $fileType,
             'activity'     => $this->activityFromEvents($application->id),
         ]);
     }

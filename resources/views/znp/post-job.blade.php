@@ -1627,10 +1627,11 @@
             var bar = document.getElementById('cloneBar');
             if (bar) bar.classList.toggle('open');
         },
-        applyClone: function () {
-            /* One-click clone — always uses the latest posted job (id rendered server-side). */
+        applyClone: function (jobId, opts) {
+            opts = opts || {};
+            /* Clone from a specific job id, or fall back to the latest posted job. */
             var idEl = document.getElementById('cloneLatestId');
-            var key  = idEl ? idEl.value : '';
+            var key  = jobId ? String(jobId) : (idEl ? idEl.value : '');
             if (!key || !pastJobs[key]) {
                 ZnpPostJob.toast('No previous job found to clone from.', 'error');
                 return;
@@ -1660,7 +1661,7 @@
                 }
             };
 
-            setVal('jobTitle', job.job_title);
+            setVal('jobTitle', opts.title || job.job_title);
 
             /* ── Role & Location ── */
             if (flags.basics) {
@@ -2370,6 +2371,18 @@
                 }
             });
         });
+
+        /* Deep-link clone from My Jobs (?clone=123&title=...) */
+        try {
+            var cloneParams = new URLSearchParams(window.location.search);
+            var cloneFromId = cloneParams.get('clone');
+            if (cloneFromId) {
+                ZnpPostJob.applyClone(cloneFromId, { title: cloneParams.get('title') || '' });
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', window.location.pathname);
+                }
+            }
+        } catch (e) {}
 
         /* Trigger conditional panels for restored old-input values. */
         var jt = document.getElementById('jobTypeSelect');

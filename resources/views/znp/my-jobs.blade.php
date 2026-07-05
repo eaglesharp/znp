@@ -499,7 +499,7 @@
                             <div class="job-footer">
                                 <div class="job-actions">
                                     @if ($d['status_key'] === 'expired' || $d['expires_label'] === 'Expires today')
-                                        <a class="act-btn clone" href="{{ route('clone.front.job', ['id' => $job->id]) }}">Repost</a>
+                                        <a class="act-btn clone" href="{{ route('employer.post.job.page', ['clone' => $job->id, 'title' => ($job->job_title ?? '') . ' (Copy)']) }}">Repost</a>
                                     @endif
                                     @if (!empty($job->slug))
                                         <a class="act-btn" href="{{ route('job.detail.znp', ['slug' => $job->slug]) }}" target="_blank" rel="noopener noreferrer">View Job</a>
@@ -679,7 +679,7 @@ window.MJ = (function () {
     /* ── Endpoints / config injected from Blade ─────────────────────────── */
     var ROUTES = {
         toggleStatus: @json(route('make.active.job')),
-        cloneStore:   '/clone-front-job/',     // POST /clone-front-job/{id}
+        postJobPage:  @json(route('employer.post.job.page')),
         editPrefix:   '/post-job-page/',       // GET  /post-job-page/{id}/edit
     };
     var CSRF = document.querySelector('meta[name=csrf-token]')?.content || '';
@@ -911,9 +911,10 @@ window.MJ = (function () {
         var btn = document.getElementById('cmConfirmBtn');
         if (btn.dataset.busy === '1') return;
         btn.dataset.busy = '1';
-        // Existing legacy clone flow: GET /clone-front-job/{id} returns the editor with prefilled job.
-        // We just navigate to it and let the user adjust the title/details before publishing.
-        window.location = '/clone-front-job/' + encodeURIComponent(cloneJobId);
+        var title = (document.getElementById('cloneTitle').value || '').trim();
+        var url = ROUTES.postJobPage + '?clone=' + encodeURIComponent(cloneJobId);
+        if (title) url += '&title=' + encodeURIComponent(title);
+        window.location = url;
     }
 
     /* ── Toast ──────────────────────────────────────────────────────────── */
