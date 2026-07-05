@@ -1392,7 +1392,9 @@ class CompanyController extends Controller
 
         $profileCv = $job_application->getProfileCv();
 
-
+        $unlocked = Unlocked_users::where('company_id', Auth::guard('company')->user()->id)
+            ->where('unlocked_users_ids', $user->id)
+            ->exists();
 
         /*         * ********************************************** */
 
@@ -1415,6 +1417,8 @@ class CompanyController extends Controller
             ->with('company', $company)
 
             ->with('profileCv', $profileCv)
+
+            ->with('unlocked', $unlocked)
 
             ->with('page_title', 'Applicant Profile')
 
