@@ -212,8 +212,8 @@ margin-left: 12px;
                                         class="text-danger px-1">*</span></label>
 
                                 @if($company->email_verified == 1)
-                                <input type="" class="w-100 py-2 px-3 signin_input rounded pricing-mobile " disabled
-                                    placeholder="Office Email" maxlength="100" name="email" min="0"
+                                <input type="email" class="w-100 py-2 px-3 signin_input rounded pricing-mobile" readonly
+                                    placeholder="Office Email" maxlength="100" name="email"
                                     value="{{ $company->email??'' }}">
                                     <p  class="email_verify mt-3 "
                                             value="">Verified</p>

@@ -7635,7 +7635,10 @@ class CompanyController extends Controller
         $company = Company::where('id', $request->company_id)->first();
 
         $company->name = $request->name;
-        $company->email = $request->email;
+        $email = $request->input('email');
+        if ($email !== null && $email !== '' && (int) $company->email_verified !== 1) {
+            $company->email = $email;
+        }
         $company->phone = $request->phone;
         $company->ceo = $request->ceo;
         $company->description = nl2br($request->description);
