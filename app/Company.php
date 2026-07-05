@@ -512,7 +512,7 @@ class Company extends Authenticatable
                 'days_remaining'  => null,
                 'status_line'     => 'No active plan',
                 'sub_line'        => 'Choose a plan to start posting jobs.',
-                'cta_label'       => 'Choose a Plan',
+                'cta_label'       => 'Post a Job',
                 'cta_url'         => $pricingUrl,
                 'pricing_url'     => $pricingUrl,
             ];
@@ -547,8 +547,8 @@ class Company extends Authenticatable
                 'expires_label'   => $expiresLabel,
                 'days_remaining'  => $daysRemaining,
                 'status_line'     => $sub->plan_name . ' · expired',
-                'sub_line'        => 'Your plan expired on ' . $expiresLabel . '. Renew to keep posting.',
-                'cta_label'       => 'Renew Plan',
+                'sub_line'        => 'Your plan expired on ' . $expiresLabel . '. Renew To Post Jobs.',
+                'cta_label'       => 'Post a Job',
                 'cta_url'         => $pricingUrl,
                 'pricing_url'     => $pricingUrl,
             ];

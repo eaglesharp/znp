@@ -195,7 +195,7 @@
     display: grid;
     grid-template-columns: 1fr 284px;
     gap: 16px;
-    align-items: start;
+    align-items: stretch;
     margin-top: 16px;
 }
 .znp-job-detail .lc,
@@ -203,6 +203,15 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-height: 100%;
+}
+.znp-job-detail .rc .card.rc-grow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.znp-job-detail .rc .card.rc-grow .bb {
+    margin-top: auto;
 }
 
 /* ─── cards ──────────────────────────────────────────── */
@@ -619,6 +628,27 @@
     height: 11px;
     flex-shrink: 0;
 }
+
+/* ─── perks collapse (read more) ─────────────────────── */
+.znp-job-detail .perks-inner {
+    max-height: 108px;
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.3s ease;
+}
+.znp-job-detail .perks-inner.expanded { max-height: none; }
+.znp-job-detail .perks-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 44px;
+    background: linear-gradient(transparent, var(--white));
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+.znp-job-detail .perks-inner.expanded .perks-fade { opacity: 0; }
+.znp-job-detail .rm.is-hidden { display: none; }
 
 /* ─── company details (extended about-company) ──────── */
 .znp-job-detail .cmeta {
@@ -1361,7 +1391,7 @@
                     @endif
                     <div class="desc-fade" id="jd-fade"></div>
                 </div>
-                <button class="rm" id="jd-rm-btn" onclick="znpToggleDesc()">read more ▾</button>
+                <button type="button" class="rm is-hidden" id="jd-rm-btn" onclick="znpToggleDesc()">read more ▾</button>
             </div>
         </div>
         @endif
@@ -1534,11 +1564,15 @@
         @if(count($perks))
         <div class="card rail-card">
             <div class="ct">Perks &amp; benefits</div>
-            <div class="pill-list">
-                @foreach($perks as $p)
-                    <span class="pl-perk">{{ $p }}</span>
-                @endforeach
+            <div class="perks-inner" id="jd-perks">
+                <div class="pill-list">
+                    @foreach($perks as $p)
+                        <span class="pl-perk">{{ $p }}</span>
+                    @endforeach
+                </div>
+                <div class="perks-fade" id="jd-perks-fade"></div>
             </div>
+            <button type="button" class="rm is-hidden" id="jd-perks-rm-btn" onclick="znpTogglePerks()">read more ▾</button>
         </div>
         @endif
 
@@ -1560,7 +1594,7 @@
         @endif
 
         {{-- Similar Jobs --}}
-        <div class="card">
+        <div class="card rc-grow">
             <div class="ct">Similar jobs on ZNP</div>
             @forelse($similarJobs as $sj)
                 @php
@@ -1720,7 +1754,7 @@
 
 @push('scripts')
 <script>
-/* ── read-more toggle ─────────────────────────────────── */
+/* ── read-more toggle (job description) ─────────────── */
 function znpToggleDesc() {
     var inner = document.getElementById('jd-desc');
     var fade  = document.getElementById('jd-fade');
@@ -1729,13 +1763,42 @@ function znpToggleDesc() {
     if (inner.classList.contains('expanded')) {
         inner.classList.remove('expanded');
         if (fade) fade.style.opacity = '1';
-        btn.textContent = 'read more ▾';
+        if (btn) btn.textContent = 'read more ▾';
     } else {
         inner.classList.add('expanded');
         if (fade) fade.style.opacity = '0';
-        btn.textContent = 'show less ▴';
+        if (btn) btn.textContent = 'show less ▴';
     }
 }
+
+/* ── read-more toggle (perks & benefits) ────────────── */
+function znpTogglePerks() {
+    var inner = document.getElementById('jd-perks');
+    var btn   = document.getElementById('jd-perks-rm-btn');
+    if (!inner) return;
+    if (inner.classList.contains('expanded')) {
+        inner.classList.remove('expanded');
+        if (btn) btn.textContent = 'read more ▾';
+    } else {
+        inner.classList.add('expanded');
+        if (btn) btn.textContent = 'show less ▴';
+    }
+}
+
+function znpInitCollapsibles() {
+    function bindToggle(innerId, btnId, maxHeight) {
+        var inner = document.getElementById(innerId);
+        var btn   = document.getElementById(btnId);
+        if (!inner || !btn) return;
+        if (inner.scrollHeight > maxHeight + 4) {
+            btn.classList.remove('is-hidden');
+        }
+    }
+    bindToggle('jd-desc', 'jd-rm-btn', 260);
+    bindToggle('jd-perks', 'jd-perks-rm-btn', 108);
+}
+
+document.addEventListener('DOMContentLoaded', znpInitCollapsibles);
 
 /* ── report job ───────────────────────────────────────── */
 function znpReportJob() {

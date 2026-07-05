@@ -63,8 +63,10 @@
 .znp-myjobs .plan-chip.growth     { background: #fef3e8; color: var(--orange); border-color: #fed7aa; }
 .znp-myjobs .plan-chip.enterprise { background: var(--green-light); color: var(--green); border-color: var(--green-100); }
 .znp-myjobs .av { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.znp-myjobs .btn-post { background: var(--blue); color: #fff; border: none; border-radius: 50px; padding: 7px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; }
+.znp-myjobs .btn-post { background: var(--blue); color: #fff; border: none; border-radius: 50px; padding: 7px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; text-decoration: none; }
 .znp-myjobs .btn-post:hover { background: var(--blue-d); transform: translateY(-1px); }
+.znp-myjobs .btn-dash { background: transparent; color: var(--blue); border: 1.5px solid var(--blue-100); border-radius: 50px; padding: 7px 18px; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+.znp-myjobs .btn-dash:hover { background: var(--blue-light); border-color: var(--blue); }
 .znp-myjobs .logout-form { margin: 0; }
 .znp-myjobs .logout-btn { background: transparent; border: 1.5px solid var(--border); border-radius: 50px; color: var(--t2); cursor: pointer; font-size: 12px; font-weight: 700; padding: 6px 14px; transition: all .15s; }
 .znp-myjobs .logout-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
@@ -265,6 +267,7 @@
                title="{{ $plan['sub_line'] ?? '' }}">
                 {{ $plan['label'] }}
             </a>
+            <a class="btn-dash" href="{{ route('employer.dashboard.page') }}" title="Back to employer dashboard">Dashboard</a>
             @if ($canPost)
                 <a class="btn-post" href="{{ route('employer.post.job.page') }}" title="Post a new job">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -438,7 +441,8 @@
                         <option value="newest">Newest first</option>
                         <option value="oldest">Oldest first</option>
                         <option value="applicants">Most applicants</option>
-                        <option value="expiring">Expiring soon</option>
+                        {{-- Expiring soon — hidden pending client review of sort logic --}}
+                        {{-- <option value="expiring">Expiring soon</option> --}}
                     </select>
                 </div>
             </div>
@@ -763,8 +767,8 @@ window.MJ = (function () {
                 return num(a, 'data-posted-ts') - num(b, 'data-posted-ts');
             case 'applicants':
                 return num(b, 'data-applicants') - num(a, 'data-applicants');
-            case 'expiring':
-                return (num(a, 'data-expires-ts') || Infinity) - (num(b, 'data-expires-ts') || Infinity);
+            {{-- case 'expiring':
+                return (num(a, 'data-expires-ts') || Infinity) - (num(b, 'data-expires-ts') || Infinity); --}}
             case 'newest':
             default:
                 return num(b, 'data-posted-ts') - num(a, 'data-posted-ts');

@@ -127,6 +127,7 @@ Route::post('post-job-page/{id}/edit', 'Company\CompanyController@updateJobZNP')
 
 /* New ZNP Applicants page — per-job applicant list. */
 Route::get('post-job-page/{id}/applicants', 'Company\CompanyController@applicantsZNP')->name('employer.post.job.applicants')->where('id', '[0-9]+');
+Route::post('post-job-page/{id}/help-support', 'Company\CompanyController@submitHelpSupportZNP')->name('employer.help.support')->where('id', '[0-9]+');
 Route::post('post-job-page/{id}/retire', 'Company\ApplicantPipelineController@retireJob')->name('employer.post.job.retire')->where('id', '[0-9]+');
 Route::post('post-job-page/{id}/applicants/{app}/shortlist', 'Company\ApplicantPipelineController@shortlist')->name('employer.applicant.shortlist')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
 Route::post('post-job-page/{id}/applicants/{app}/note', 'Company\ApplicantPipelineController@note')->name('employer.applicant.note')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);

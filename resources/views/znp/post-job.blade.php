@@ -36,6 +36,10 @@
     /* Headcount pill labels used by the new UI. */
     $headcountPills = ['1–10','11–50','51–200','201–500','500–1K','1K–5K','5K–10K','10K–25K','25K–50K','50K–75K','75K–1L','1L+'];
 
+    $canPublish = $canPublish ?? true;
+    $znpPlan    = $znpPlan ?? null;
+    $standardProfileReqs = ['Current CTC', 'Expected CTC', 'Notice Period'];
+
 @endphp
 
 @push('styles')
@@ -66,9 +70,9 @@
     padding: 0 32px; display: flex; align-items: center; justify-content: space-between;
     height: 56px; position: sticky; top: 0; z-index: 50;
 }
-.znp-pj .pj-logo { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
-.znp-pj .pj-la, .znp-pj .pj-lc { color: #1c3faa; }
-.znp-pj .pj-lb { color: #ea580c; }
+.znp-pj .pj-logo { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
+.znp-pj .pj-la, .znp-pj .pj-lc { color: #3B5CCC; }
+.znp-pj .pj-lb { color: #F2994A; }
 .znp-pj .pj-nb {
     padding: 7px 18px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
     transition: all .2s; display: inline-flex; align-items: center; border: none;
@@ -357,10 +361,13 @@
 .znp-pj .pj-preview-notice { max-width: 880px; margin: 14px auto 0; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 9px; padding: 9px 14px; font-size: 12px; color: #1e40af; display: flex; align-items: center; gap: 8px; }
 .znp-pj .pj-preview-body { max-width: 880px; margin: 16px auto 0; padding: 0 22px; }
 .znp-pj .pj-preview-footer { max-width: 880px; margin: 12px auto 0; padding: 16px 22px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-.znp-pj .pj-logo { font-size: 12.5px; font-weight: 800; letter-spacing: -.2px; }
-.znp-pj .pj-la { color: #1c3faa; }
-.znp-pj .pj-lb { color: #0f172a; }
-.znp-pj .pj-lc { color: #ea580c; }
+
+/* ── PLAN NOTICE ── */
+.znp-pj .pj-plan-notice {
+    background: #FEF3E8; border: 1px solid #fde8c8; border-radius: 10px;
+    padding: 12px 16px; margin-bottom: 16px; font-size: 12.5px; color: #9a3412; line-height: 1.55;
+}
+.znp-pj .pj-plan-notice a { color: #3B5CCC; font-weight: 700; text-decoration: underline; }
 
 /* ── CONDITIONAL PANELS ── */
 .znp-pj .conditional-panel { display: none; margin-top: 14px; padding: 14px 16px; background: #f8fafc; border: 1px dashed #d1dae8; border-radius: 8px; }
@@ -378,6 +385,38 @@
 .znp-pj .select2-container--default .select2-selection--multiple .select2-selection__choice { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; font-weight: 600; font-size: 11.5px; border-radius: 20px; padding: 2px 10px; }
 .znp-pj .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: #93c5fd; margin-right: 4px; }
 .znp-pj .select2-container--default.select2-container--focus .select2-selection--multiple { border-color: #1c3faa !important; box-shadow: 0 0 0 3px rgba(28,63,170,.08); }
+.znp-pj .select2-container--default .select2-selection--multiple .select2-selection__placeholder {
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+}
+.znp-pj .select2-container .select2-search--inline .select2-search__field {
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 12.5px !important;
+    color: #0f172a !important;
+    background: transparent !important;
+}
+.znp-pj .select2-container .select2-search--inline .select2-search__field::placeholder {
+    font-family: 'Manrope', sans-serif;
+    font-size: 12.5px;
+    color: #94a3b8;
+    opacity: 1;
+}
+.znp-pj .select2-container--default .select2-search--dropdown .select2-search__field {
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 12.5px !important;
+    color: #0f172a !important;
+}
+.znp-pj .select2-container--default .select2-results__option,
+.znp-pj .select2-container--default .select2-results__message {
+    font-family: 'Manrope', sans-serif !important;
+    font-size: 12.5px !important;
+    color: #0f172a;
+}
+.znp-pj .select2-container--default .select2-results__message {
+    color: #94a3b8 !important;
+    padding: 8px 12px;
+}
 
 /* ── SALARY ROW ── */
 .znp-pj .sal-wrap { display: flex; align-items: center; gap: 8px; }
@@ -440,9 +479,17 @@
                 @endif
             </div>
 
+            @if(! $canPublish)
+            <div class="pj-plan-notice">
+                <strong>Buy now to post jobs.</strong>
+                <a href="{{ route('employer.job.pricing') }}">Choose a plan below</a> when you're ready to publish.
+                @if(! $isEdit) You can <strong>save as draft</strong> anytime and come back later.@endif
+            </div>
+            @endif
+
             {{-- ── STEP INDICATOR (1 of 5) — clickable; classes are managed by JS ── --}}
             @php
-                $stepLabels = ['Job Details', 'Description', 'Company', 'Perks', 'Profile Update'];
+                $stepLabels = ['Job Details', 'Description', 'Company', 'Perks', 'Questionnaire'];
             @endphp
             <div class="steps" aria-label="Job posting progress" id="pjSteps">
                 @foreach($stepLabels as $i => $label)
@@ -517,7 +564,6 @@
                             <label class="clone-check-pill on"><input type="checkbox" data-cc="desc" checked> Job Description</label>
                             <label class="clone-check-pill on"><input type="checkbox" data-cc="eligibility" checked> Eligibility</label>
                             <label class="clone-check-pill on"><input type="checkbox" data-cc="skills" checked> Skills</label>
-                            <label class="clone-check-pill"><input type="checkbox" data-cc="profile"> Profile Requirements</label>
                             <label class="clone-check-pill"><input type="checkbox" data-cc="interview"> Interview Modes</label>
                             <label class="clone-check-pill"><input type="checkbox" data-cc="perks"> Perks &amp; Awards</label>
                         </div>
@@ -1164,74 +1210,13 @@
                             </div>
                         </div>
                     </div>
-
-                    <div id="customQuestionsList"></div>
-                </div>
-
-                <div class="q-add-row">
-                    <button class="q-add-btn" type="button" onclick="ZnpPostJob.toggleCustomQ()">
-                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                        Add a custom question
-                    </button>
-                </div>
-
-                <div id="customQWrap" style="display:none;margin-top:10px;">
-                    <div class="fg2">
-                        <input class="finput" type="text" id="customQText" placeholder="e.g. Do you have a valid passport?">
-                        <select class="fselect" id="customQType">
-                            <option value="text">Text answer</option>
-                            <option value="yesno">Yes / No</option>
-                            <option value="number">Number</option>
-                        </select>
-                    </div>
-                    <div style="display:flex;gap:8px;margin-top:8px;">
-                        <button class="award-btn" type="button" onclick="ZnpPostJob.saveCustomQ()">Add Question</button>
-                        <button class="save-draft" type="button" onclick="ZnpPostJob.toggleCustomQ()">Cancel</button>
-                    </div>
                 </div>
             </div>
 
-            {{-- ════════════════════ SECTION 7 — PROFILE REQUIREMENTS ════════════════════ --}}
-            <div class="sec">
-                <div class="sec-bar indigo"></div>
-                <div class="sec-title">
-                    <svg width="16" height="16" fill="none" stroke="#6366f1" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Candidate Profile Requirements
-                    <span style="font-size:11px;font-weight:400;color:#94a3b8;margin-left:4px;">candidates must confirm these before applying</span>
-                </div>
-                <div class="sec-sub">Select the profile fields candidates must verify and update before submitting their application.</div>
-
-                @php
-                    $profileReqs = [
-                        'Current CTC','Expected CTC','Notice Period',
-                    ];
-                    /* No defaults — recruiters must explicitly pick what they want. */
-                    $oldProfileReqs = (array) old('profile_requirements', []);
-                @endphp
-
-                <div class="field" id="profileReqsField">
-                    <label class="flabel" style="font-weight:600;color:#475569;">Pick at least one <span class="req">*</span></label>
-                    <div class="check-grid col2" id="profileReqsGrid">
-                        @foreach($profileReqs as $pr)
-                            <label class="check-item {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}">
-                                <input type="checkbox" name="profile_requirements[]" value="{{ $pr }}" {{ in_array($pr, $oldProfileReqs) ? 'checked' : '' }}>
-                                <span class="check-box"></span>
-                                <span class="check-label">{{ $pr }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @error('profile_requirements') <span class="field-error">{{ $message }}</span> @enderror
-                </div>
-
-                <div class="toggle-row" style="margin-top:12px;margin-bottom:0;">
-                    <div class="save-toggle {{ (int) old('strict_mode', 0) === 1 ? 'on' : '' }}" id="strictModeToggle" onclick="ZnpPostJob.toggleStrict()"><div class="save-knob"></div></div>
-                    <input type="hidden" name="strict_mode" id="strictModeField" value="{{ old('strict_mode', 0) }}">
-                    <div>
-                        <div class="toggle-title">Strict mode <span id="strictModeStatus" style="font-weight:600;color:{{ (int) old('strict_mode', 0) === 1 ? '#1c3faa' : '#94a3b8' }};">— {{ (int) old('strict_mode', 0) === 1 ? 'On' : 'Off' }}</span></div>
-                        <div class="toggle-sub" id="strictModeDesc">{{ (int) old('strict_mode', 0) === 1 ? 'Candidates must complete every selected field — no skipping.' : 'Candidates can skip required profile fields with a warning.' }}</div>
-                    </div>
-                </div>
-            </div>
+            @foreach($standardProfileReqs as $pr)
+                <input type="hidden" name="profile_requirements[]" value="{{ $pr }}">
+            @endforeach
+            <input type="hidden" name="strict_mode" value="0">
 
             {{-- Auto-save reassurance banner (informational only — no buttons here to avoid duplicates). --}}
             <div class="save-info-banner">
@@ -1325,6 +1310,8 @@
 <script>
 (function () {
     'use strict';
+
+    window.znpCanPublish = @json($canPublish);
 
     var pastJobs = {};
     try {
@@ -1509,7 +1496,7 @@
             tmp.innerHTML = String(html);
 
             /* Drop dangerous / noisy elements outright. */
-            tmp.querySelectorAll('script, style, link, meta, iframe, object, embed').forEach(function (n) { n.remove(); });
+            tmp.querySelectorAll('script, style, link, meta, iframe, object, embed, a').forEach(function (n) { n.remove(); });
 
             var allowed = { P: 1, BR: 1, STRONG: 1, B: 1, EM: 1, I: 1, U: 1, UL: 1, OL: 1, LI: 1 };
             var walk = function (node) {
@@ -1532,11 +1519,27 @@
             walk(tmp);
 
             /* Collapse non-breaking spaces and excessive whitespace. */
-            return tmp.innerHTML
+            return ZnpPostJob._stripHyperlinks(tmp.innerHTML
                 .replace(/&nbsp;/g, ' ')
                 .replace(/\s{2,}/g, ' ')
                 .replace(/<p>\s*<\/p>/g, '')
+                .trim());
+        },
+
+        _stripHyperlinks: function (text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/<a\b[^>]*>(.*?)<\/a>/gi, '$1')
+                .replace(/\bhttps?:\/\/[^\s<>"']+/gi, '')
+                .replace(/\bwww\.[^\s<>"']+/gi, '')
+                .replace(/\s{2,}/g, ' ')
                 .trim();
+        },
+
+        _containsHyperlink: function (text) {
+            if (!text) return false;
+            var plain = String(text).replace(/<[^>]+>/g, ' ');
+            return /<a\b/i.test(text) || /\bhttps?:\/\//i.test(plain) || /\bwww\./i.test(plain);
         },
 
         /** Bind a paste handler that runs every drop through _sanitizeRich. */
@@ -1556,10 +1559,10 @@
                     clean = ZnpPostJob._sanitizeRich(html);
                     /* If the sanitised HTML stripped everything, fall back to text. */
                     if (!clean.replace(/<[^>]+>/g, '').trim()) {
-                        clean = ZnpPostJob._escapeHtml(text || '').replace(/\n/g, '<br>');
+                        clean = ZnpPostJob._escapeHtml(ZnpPostJob._stripHyperlinks(text || '')).replace(/\n/g, '<br>');
                     }
                 } else {
-                    clean = ZnpPostJob._escapeHtml(text || '').replace(/\n/g, '<br>');
+                    clean = ZnpPostJob._escapeHtml(ZnpPostJob._stripHyperlinks(text || '')).replace(/\n/g, '<br>');
                 }
                 /* Insert at caret position via execCommand to preserve undo stack. */
                 try { document.execCommand('insertHTML', false, clean); } catch (err) {
@@ -2039,6 +2042,11 @@
                 if (descWrap) descWrap.classList.add('has-error');
                 ZnpPostJob._markError(descWrap, 'Job description is required');
                 errors.push(descWrap);
+            } else if (ZnpPostJob._containsHyperlink(byId('jobDescriptionField').value)) {
+                var descWrap2 = byId('jobDesc') && byId('jobDesc').closest('.rich-wrap');
+                if (descWrap2) descWrap2.classList.add('has-error');
+                ZnpPostJob._markError(descWrap2, 'Hyperlinks are not allowed in job description');
+                errors.push(descWrap2);
             }
             var ovrVal = (byId('jobOverviewField').value || '').replace(/<[^>]+>/g, '').trim();
             if (!ovrVal) {
@@ -2046,6 +2054,11 @@
                 if (ovrWrap) ovrWrap.classList.add('has-error');
                 ZnpPostJob._markError(ovrWrap, 'Candidate eligibility is required');
                 errors.push(ovrWrap);
+            } else if (ZnpPostJob._containsHyperlink(byId('jobOverviewField').value)) {
+                var ovrWrap2 = byId('jobOverview') && byId('jobOverview').closest('.rich-wrap');
+                if (ovrWrap2) ovrWrap2.classList.add('has-error');
+                ZnpPostJob._markError(ovrWrap2, 'Hyperlinks are not allowed in candidate eligibility');
+                errors.push(ovrWrap2);
             }
             return errors;
         },
@@ -2060,6 +2073,11 @@
             };
 
             require(document.querySelector('[name="about_company"]'), 'About the company is required');
+            var aboutEl = document.querySelector('[name="about_company"]');
+            if (aboutEl && aboutEl.value.trim() && ZnpPostJob._containsHyperlink(aboutEl.value)) {
+                ZnpPostJob._markError(aboutEl, 'Hyperlinks are not allowed in about the company');
+                errors.push(aboutEl);
+            }
             var webHost = (byId('websiteHost').value || '').trim();
             if (!webHost) {
                 ZnpPostJob._markError(byId('websiteHost'), 'Website URL is required');
@@ -2082,20 +2100,8 @@
         /* Step 4 (Awards / Perks) — both optional. */
         _validateStep4: function () { return []; },
 
-        /* Step 5 — Profile Requirements must have at least one ticked. */
-        _validateStep5: function () {
-            var errors = [];
-            var anyProfile = document.querySelector('input[name="profile_requirements[]"]:checked');
-            if (!anyProfile) {
-                var prField = document.getElementById('profileReqsField');
-                if (prField) {
-                    prField.classList.add('has-error');
-                    ZnpPostJob._markError(prField, 'Pick at least one profile field candidates must confirm');
-                    errors.push(prField);
-                }
-            }
-            return errors;
-        },
+        /* Step 5 — questionnaire only (profile requirements are standard + hidden). */
+        _validateStep5: function () { return []; },
 
         /* ───────── Preview before submit ───────── */
         showPreview: function () {
@@ -2140,6 +2146,10 @@
             document.body.style.overflow = '';
         },
         confirmPost: function () {
+            if (!window.znpCanPublish) {
+                window.location.href = "{{ route('employer.job.pricing') }}";
+                return;
+            }
             /* Final submit after the user has reviewed the preview. Re-sync and
                re-validate so programmatic submit cannot bypass client checks. */
             if (!ZnpPostJob.beforeSubmit()) {
@@ -2428,18 +2438,31 @@
             });
         });
 
-        /* ── Select2: skills + locations (same endpoints as legacy post-job) ── */
+        /* ── Select2: skills + locations (aligned with candidate registration form) ── */
         if (window.jQuery && jQuery.fn && jQuery.fn.select2) {
+            var pjSkillLang = {
+                inputTooShort: function () { return 'Please enter key skills or technologies'; },
+                noResults: function () { return 'No skills found'; },
+                searching: function () { return 'Searching…'; },
+                errorLoading: function () { return 'Could not load skills'; }
+            };
+            var pjLocationLang = {
+                inputTooShort: function () { return '(Add Location)'; },
+                noResults: function () { return 'No locations found'; },
+                searching: function () { return 'Searching…'; },
+                errorLoading: function () { return 'Could not load locations'; }
+            };
+
             jQuery('#chooseskill').select2({
                 tags: true,
                 tokenSeparators: [','],
-                placeholder: 'Add a skill or technology',
-                minimumInputLength: 1,
+                placeholder: 'Please enter key skills or technologies',
+                language: pjSkillLang,
                 ajax: {
                     url: "{{ url('search-skills') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) { return { q: params.term }; },
+                    data: function (params) { return { q: params.term || '' }; },
                     processResults: function (data) {
                         return {
                             results: jQuery.map(data, function (skill) {
@@ -2454,13 +2477,13 @@
             jQuery('#locationFilter41').select2({
                 tags: true,
                 tokenSeparators: [','],
-                placeholder: 'Add a city / location',
-                minimumInputLength: 1,
+                placeholder: '(Add Location)',
+                language: pjLocationLang,
                 ajax: {
                     url: "{{ url('autocomplete/search-location-job') }}",
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) { return { q: params.term }; },
+                    data: function (params) { return { q: params.term || '' }; },
                     processResults: function (data) {
                         return {
                             results: jQuery.map(data, function (loc) {

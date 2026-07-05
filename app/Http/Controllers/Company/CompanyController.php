@@ -1928,25 +1928,10 @@ class CompanyController extends Controller
         $company = Company::findOrFail(Auth::guard('company')->user()->id);
 
         /* ── ZNP plan gate ──
-           Bounce before the user fills out a long form they can't submit.
-           Mirrors the gate inside storeJobZNP(); see that method for the
-           full rationale + error strings. */
-        $sub = $company->activeZnpSubscription();
-        if (! $sub) {
-            return redirect()->route('employer.job.pricing')
-                ->with('error', 'You need an active job-posting plan before you can publish. Choose a plan below.');
-        }
-        if (! $sub->isLive()) {
-            return redirect()->route('employer.job.pricing')
-                ->with('error', 'Your ' . $sub->plan_name . ' plan expired on '
-                    . optional($sub->expires_at)->format('d M Y') . '. Renew to continue posting.');
-        }
-        if (! $sub->hasQuotaLeft()) {
-            return redirect()->route('employer.job.pricing')
-                ->with('error', 'You have used all '
-                    . $sub->posts_limit . ' job posts on your '
-                    . $sub->plan_name . ' plan. Upgrade or buy another pack to post more.');
-        }
+           Employers without a plan can still open the form and save drafts.
+           Publishing is gated in storeJobZNP(). */
+        $znpPlan    = $company->znpPlanViewModel();
+        $canPublish = (bool) $znpPlan['can_post'];
 
         /* Industry options (active + localised). */
         $industries = Industry::lang()->active()->orderBy('industry')->get();
@@ -1975,7 +1960,9 @@ class CompanyController extends Controller
             'cloneJobsPayload',
             'companyCountries',
             'companyAwards',
-            'companyPerks'
+            'companyPerks',
+            'znpPlan',
+            'canPublish'
         ));
     }
 
@@ -2005,7 +1992,7 @@ class CompanyController extends Controller
 
             if (! $sub) {
                 return redirect()->route('employer.job.pricing')
-                    ->with('error', 'You need an active job-posting plan before you can publish. Choose a plan below.');
+                    ->with('error', 'Buy now to post jobs. Choose a plan below.');
             }
             if (! $sub->isLive()) {
                 return redirect()->route('employer.job.pricing')
@@ -2037,7 +2024,6 @@ class CompanyController extends Controller
             'job_overview'      => 'required',
             'about_company'     => 'required',
             'website_address'   => 'required',
-            'profile_requirements' => 'required|array|min:1',
         ];
 
         $wm = (string) $request->input('work_mode');
@@ -2054,6 +2040,16 @@ class CompanyController extends Controller
         }
 
         $request->validate($rules);
+
+        if (! $isDraft) {
+            foreach (['job_description' => 'Job description', 'job_overview' => 'Candidate eligibility', 'about_company' => 'About the company'] as $field => $label) {
+                if ($this->znpTextContainsHyperlink($request->input($field))) {
+                    return back()->withInput()->withErrors([
+                        $field => $label . ' cannot contain hyperlinks or website URLs.',
+                    ]);
+                }
+            }
+        }
 
         /* ── Insert into post_jobs ── */
         $job = new PostJob();
@@ -2101,7 +2097,7 @@ class CompanyController extends Controller
         $job->roles_responsibility = null; /* dropped from new UI; column kept nullable */
 
         /* Section 3 snapshot (also written to companies below for auto-save). */
-        $job->about_company    = $request->input('about_company');
+        $job->about_company    = $this->znpStripHyperlinksFromText(strip_tags((string) $request->input('about_company')));
         $job->website_address  = $request->input('website_address');
         $job->industry         = $request->input('industry');
         $job->headcount        = $request->input('headcount');
@@ -2112,37 +2108,21 @@ class CompanyController extends Controller
         /* Sections 4 / 5 / 6 / 7. */
         $awards  = array_values(array_filter((array) $request->input('awards', []), 'strlen'));
         $perks   = array_values(array_filter((array) $request->input('perks', []), 'strlen'));
-        $profile = array_values(array_filter((array) $request->input('profile_requirements', []), 'strlen'));
+        $profile = $this->znpDefaultProfileRequirements();
 
         $job->awards = json_encode($awards);
         $job->perks  = json_encode($perks);
 
-        /* Questionnaire is built server-side: 2 fixed required + optional video link + customs. */
+        /* Questionnaire is built server-side: 2 fixed required + optional video link. */
         $questionnaire = [
             ['key' => 'years_relevant', 'label' => 'How many years of experience do you have relevant to this role?', 'type' => 'number', 'required' => true,  'enabled' => true],
             ['key' => 'why_hire',       'label' => 'Why should we hire you?',                                         'type' => 'text',   'required' => true,  'enabled' => true],
             ['key' => 'video_intro',    'label' => 'Share a link to your video introduction',                         'type' => 'url',    'required' => false, 'enabled' => (int) $request->input('q_video_enabled', 1) === 1],
         ];
-        $customQsRaw = $request->input('custom_questions', '[]');
-        $customQs = is_string($customQsRaw)
-            ? (json_decode($customQsRaw, true) ?: [])
-            : (array) $customQsRaw;
-        foreach ($customQs as $cq) {
-            if (! is_array($cq) || empty($cq['label'])) {
-                continue;
-            }
-            $questionnaire[] = [
-                'key'      => 'custom_' . md5($cq['label']),
-                'label'    => (string) $cq['label'],
-                'type'     => in_array(($cq['type'] ?? 'text'), ['text', 'yesno', 'number'], true) ? $cq['type'] : 'text',
-                'required' => true,
-                'enabled'  => true,
-            ];
-        }
         $job->questionnaire = json_encode($questionnaire);
 
         $job->profile_requirements = json_encode($profile);
-        $job->strict_mode = (int) $request->input('strict_mode', 0);
+        $job->strict_mode = 0;
         $job->is_draft    = $isDraft ? 1 : 0;
 
         $job->save();
@@ -2321,7 +2301,39 @@ class CompanyController extends Controller
         $clean = preg_replace('/\s{2,}/u', ' ', $clean) ?? $clean;
         $clean = preg_replace('#<p>\s*</p>#i', '', $clean) ?? $clean;
 
-        return trim($clean);
+        return $this->znpStripHyperlinksFromText(trim($clean));
+    }
+
+    /** Standard candidate profile fields applied to every ZNP job (hidden from employers). */
+    private function znpDefaultProfileRequirements(): array
+    {
+        return ['Current CTC', 'Expected CTC', 'Notice Period'];
+    }
+
+    /** Strip hyperlinks and bare URL patterns from free-text / rich HTML. */
+    private function znpStripHyperlinksFromText(?string $text): ?string
+    {
+        if ($text === null || $text === '') {
+            return $text;
+        }
+
+        $clean = preg_replace('#<a\b[^>]*>(.*?)</a>#is', '$1', $text) ?? $text;
+        $clean = preg_replace('#\bhttps?://[^\s<>"\']+#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#\bwww\.[^\s<>"\']+#i', '', $clean) ?? $clean;
+
+        return trim(preg_replace('/\s{2,}/u', ' ', $clean) ?? $clean);
+    }
+
+    /** Detect hyperlinks / bare URLs before save (used for validation errors). */
+    private function znpTextContainsHyperlink(?string $text): bool
+    {
+        if ($text === null || trim($text) === '') {
+            return false;
+        }
+
+        $plain = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return (bool) preg_match('#<a\b|https?://|www\.#i', $text . ' ' . $plain);
     }
 
     /* ── Reverse maps (DB value → UI label) — used by editJobZNP ── */
@@ -2407,6 +2419,15 @@ class CompanyController extends Controller
         $reportsByApp = [];
         $eventsByApp = [];
         $emailCountsByApp = [];
+        $jobsAppliedByUser = [];
+
+        if (! empty($userIds)) {
+            $jobsAppliedByUser = JobApply::whereIn('user_id', $userIds)
+                ->select('user_id', \DB::raw('count(distinct job_id) as total'))
+                ->groupBy('user_id')
+                ->pluck('total', 'user_id')
+                ->all();
+        }
 
         if (! empty($appIds)) {
             $notesByApp = \App\ApplicantNote::whereIn('job_apply_id', $appIds)
@@ -2453,6 +2474,7 @@ class CompanyController extends Controller
                 $application,
                 $user,
                 $job,
+                $company,
                 $jobSkillNamesLower,
                 $jobSkillCount,
                 isset($shortlistedSet[$user->id]),
@@ -2461,14 +2483,19 @@ class CompanyController extends Controller
                 $feedbacksByApp[$application->id] ?? null,
                 $reportsByApp[$application->id] ?? null,
                 $eventsByApp[$application->id] ?? collect(),
-                (int) ($emailCountsByApp[$application->id] ?? 0)
+                (int) ($emailCountsByApp[$application->id] ?? 0),
+                (int) ($jobsAppliedByUser[$user->id] ?? 1)
             );
         }
 
+        $metrics = $this->znpBuildApplicantMetrics($applicants, $job);
+
         return [
-            'applicants' => $applicants,
-            'metrics'    => $this->znpBuildApplicantMetrics($applicants, $job),
-            'stages'     => $this->znpBuildApplicantStageCounts($applicants),
+            'applicants'    => $applicants,
+            'metrics'       => $metrics,
+            'stages'        => $this->znpBuildApplicantStageCounts($applicants),
+            'filterCounts'  => $this->znpBuildApplicantFilterCounts($applicants),
+            'jobListing'    => $this->znpApplicantJobListingMeta($job),
         ];
     }
 
@@ -2476,6 +2503,7 @@ class CompanyController extends Controller
         JobApply $application,
         $user,
         PostJob $job,
+        Company $company,
         array $jobSkillNamesLower,
         int $jobSkillCount,
         bool $isShortlisted,
@@ -2484,7 +2512,8 @@ class CompanyController extends Controller
         $feedback = null,
         $report = null,
         $events = null,
-        int $emailCount = 0
+        int $emailCount = 0,
+        int $jobsAppliedCount = 1
     ): array {
         $summary  = \App\ProfileSummary::where('user_id', $user->id)->first();
         $details  = ProfileDetails::where('user_id', $user->id)->first();
@@ -2627,6 +2656,21 @@ class CompanyController extends Controller
             ? $expCtcNum <= (float) $job->max_salary
             : true;
 
+        $educationSlug = $this->znpApplicantEducationSlug($courseName);
+        $eventList = $events instanceof \Illuminate\Support\Collection ? $events : collect($events ?: []);
+        $hasViewed = $eventList->contains('type', 'viewed');
+        $isShortlistedRow = $isShortlisted || $stage === 'shortlisted';
+        $nextAction = $this->znpApplicantNextAction(
+            $stage,
+            $isShortlistedRow,
+            $emailCount > 0,
+            $hasInterview,
+            (bool) $feedback,
+            $hasViewed
+        );
+        $emailPreviewSubject = 'Interview Opportunity — ' . $job->job_title . ' · ' . $company->name;
+        $emailPreviewBody = 'Hi ' . $displayName . ', thank you for applying. We reviewed your profile and would like to connect further.';
+
         return [
             'application_id'   => $application->id,
             'user_id'          => $user->id,
@@ -2657,7 +2701,12 @@ class CompanyController extends Controller
             'pref_mode'        => $modeLabel,
             'mode_slug'        => $modeSlug,
             'education'        => $courseName ?: '—',
+            'education_slug'   => $educationSlug,
             'college'          => $collegeName ?: '—',
+            'jobs_applied_count' => $jobsAppliedCount,
+            'next_action'      => $nextAction,
+            'email_preview_subject' => $emailPreviewSubject,
+            'email_preview_body'    => $emailPreviewBody,
             'skills'           => $skills,
             'questionnaire'    => is_array($questionnaire) ? $questionnaire : [],
             'applied_label'    => $application->created_at ? $application->created_at->diffForHumans(null, true) . ' ago' : 'Recently',
@@ -2856,20 +2905,176 @@ class CompanyController extends Controller
             }
         }
 
+        $fmtExp = function ($value) {
+            return rtrim(rtrim(number_format((float) $value, 1), '0'), '.');
+        };
+        $expInRangeLabel = ($job->exp_min !== null && $job->exp_max !== null)
+            ? 'Exp ' . $fmtExp($job->exp_min) . '–' . $fmtExp($job->exp_max) . ' yrs'
+            : 'In Exp Range';
+        $expSeniorLabel = $job->exp_max !== null
+            ? 'Exp ' . $fmtExp((float) $job->exp_max + 1) . '+ yrs'
+            : 'Senior Exp';
+
         return [
-            'total'       => $total,
-            'resumedb'    => 0,
-            'within'      => $within,
-            'over'        => $over,
-            'mumbai'      => $mumbai,
-            'other_cities'=> $otherCities,
-            'exp_in_range'=> $expInRange,
-            'exp_senior'  => $expSenior,
-            'verified'    => $verified,
-            'emailed'     => $emailed,
-            'shortlisted' => collect($applicants)->where('is_shortlisted', true)->count(),
-            'interview'   => collect($applicants)->where('has_interview', true)->count(),
+            'total'             => $total,
+            'resumedb'          => 0,
+            'within'            => $within,
+            'over'              => $over,
+            'mumbai'            => $mumbai,
+            'other_cities'      => $otherCities,
+            'exp_in_range'      => $expInRange,
+            'exp_senior'        => $expSenior,
+            'exp_in_range_label'=> $expInRangeLabel,
+            'exp_senior_label'  => $expSeniorLabel,
+            'verified'          => $verified,
+            'emailed'           => $emailed,
+            'shortlisted'       => collect($applicants)->where('is_shortlisted', true)->count(),
+            'interview'         => collect($applicants)->where('has_interview', true)->count(),
         ];
+    }
+
+    private function znpBuildApplicantFilterCounts(array $applicants): array
+    {
+        $counts = [
+            'fit_high' => 0, 'fit_mid' => 0, 'fit_low' => 0,
+            'notice_immediate' => 0, 'notice_serving' => 0,
+            'loc_mumbai' => 0, 'loc_pune' => 0, 'loc_bengaluru' => 0, 'loc_hyderabad' => 0,
+            'loc_delhi' => 0, 'loc_other' => 0,
+            'mode_office' => 0, 'mode_hybrid' => 0, 'mode_remote' => 0,
+            'type_fulltime' => 0, 'type_contract' => 0,
+            'edu_btech' => 0, 'edu_mca' => 0, 'edu_bca' => 0, 'edu_other' => 0,
+            'stage_new' => 0, 'stage_shortlisted' => 0, 'stage_interview' => 0,
+        ];
+
+        foreach ($applicants as $a) {
+            $fit = (int) ($a['data_fit'] ?? 0);
+            if ($fit >= 80) {
+                $counts['fit_high']++;
+            } elseif ($fit >= 60) {
+                $counts['fit_mid']++;
+            } else {
+                $counts['fit_low']++;
+            }
+
+            $notice = $a['notice_slug'] ?? 'immediate';
+            if ($notice === 'serving') {
+                $counts['notice_serving']++;
+            } else {
+                $counts['notice_immediate']++;
+            }
+
+            $loc = $a['location_slug'] ?? 'other';
+            if ($loc === 'mumbai') {
+                $counts['loc_mumbai']++;
+            } elseif ($loc === 'pune') {
+                $counts['loc_pune']++;
+            } elseif ($loc === 'bengaluru') {
+                $counts['loc_bengaluru']++;
+            } elseif ($loc === 'hyderabad') {
+                $counts['loc_hyderabad']++;
+            } elseif ($loc === 'delhi') {
+                $counts['loc_delhi']++;
+            } else {
+                $counts['loc_other']++;
+            }
+
+            $mode = $a['mode_slug'] ?? 'office';
+            if ($mode === 'remote') {
+                $counts['mode_remote']++;
+            } elseif ($mode === 'hybrid') {
+                $counts['mode_hybrid']++;
+            } else {
+                $counts['mode_office']++;
+            }
+
+            if (($a['type_slug'] ?? '') === 'contract') {
+                $counts['type_contract']++;
+            } else {
+                $counts['type_fulltime']++;
+            }
+
+            $edu = $a['education_slug'] ?? 'other';
+            if (isset($counts['edu_' . $edu])) {
+                $counts['edu_' . $edu]++;
+            } else {
+                $counts['edu_other']++;
+            }
+
+            $stage = $a['stage'] ?? 'new';
+            if ($stage === 'shortlisted') {
+                $counts['stage_shortlisted']++;
+            } elseif ($stage === 'interview') {
+                $counts['stage_interview']++;
+            } elseif ($stage === 'new') {
+                $counts['stage_new']++;
+            }
+        }
+
+        return $counts;
+    }
+
+    private function znpApplicantJobListingMeta(PostJob $job): array
+    {
+        $created = $job->created_at ? $job->created_at->copy() : \Carbon\Carbon::now();
+        $expires = $job->expiry_date ? $job->expiry_date->copy() : $created->copy()->addDays(90);
+        $listingDays = max(1, (int) $created->diffInDays($expires));
+        $daysLeft = max(0, (int) \Carbon\Carbon::now()->startOfDay()->diffInDays($expires->copy()->startOfDay(), false));
+
+        return [
+            'days_left'    => $daysLeft,
+            'listing_days' => $listingDays,
+            'label'        => $daysLeft . ' days left · ' . $listingDays . '-day listing',
+        ];
+    }
+
+    private function znpApplicantEducationSlug(string $courseName): string
+    {
+        $c = strtolower(trim($courseName));
+        if ($c === '') {
+            return 'other';
+        }
+        if (strpos($c, 'b.tech') !== false || strpos($c, 'b.e') !== false || strpos($c, 'btech') !== false || strpos($c, 'b.e.') !== false) {
+            return 'btech';
+        }
+        if (strpos($c, 'mca') !== false || strpos($c, 'm.tech') !== false || strpos($c, 'mtech') !== false) {
+            return 'mca';
+        }
+        if (strpos($c, 'bca') !== false || strpos($c, 'b.sc') !== false || strpos($c, 'bsc') !== false) {
+            return 'bca';
+        }
+
+        return 'other';
+    }
+
+    private function znpApplicantNextAction(
+        string $stage,
+        bool $isShortlisted,
+        bool $hasEmailed,
+        bool $hasInterview,
+        bool $hasFeedback,
+        bool $hasViewed
+    ): ?array {
+        if (in_array($stage, ['rejected', 'offer', 'resumedb'], true)) {
+            return null;
+        }
+
+        if (! $isShortlisted) {
+            return ['action' => 'shortlist', 'label' => '→ Shortlist'];
+        }
+
+        if (! $hasEmailed) {
+            return ['action' => 'email', 'label' => '→ Send Email'];
+        }
+
+        if (! $hasFeedback && ($hasInterview || $isShortlisted)) {
+            return ['action' => 'feedback', 'label' => '→ Log Feedback'];
+        }
+
+        if (! $hasViewed) {
+            return ['action' => 'profile', 'label' => '→ View Profile'];
+        }
+
+        return null;
     }
 
     private function znpBuildApplicantStageCounts(array $applicants): array
@@ -3022,6 +3227,9 @@ class CompanyController extends Controller
         $companyAwards    = $jobAwards;
         $companyPerks     = $jobPerks;
 
+        $znpPlan    = $company->znpPlanViewModel();
+        $canPublish = (bool) $znpPlan['can_post'];
+
         return view('znp.post-job', [
             'mode'              => 'edit',
             'job'               => $job,
@@ -3033,6 +3241,8 @@ class CompanyController extends Controller
             'companyAwards'     => $companyAwards,
             'companyPerks'      => $companyPerks,
             'prefillSkills'     => $prefillSkills,
+            'znpPlan'           => $znpPlan,
+            'canPublish'        => $canPublish,
         ]);
     }
 
@@ -3054,7 +3264,73 @@ class CompanyController extends Controller
         return view('znp.applicants', array_merge([
             'job'     => $job,
             'company' => $company,
+            'znpPlan' => $company->znpPlanViewModel(),
         ], $pageData));
+    }
+
+    public function submitHelpSupportZNP(Request $request, int $id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'category' => 'nullable|string|max:255',
+            'message'  => 'required|string|max:5000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $category = trim((string) $request->input('category', ''));
+        $messageBody = trim((string) $request->input('message', ''));
+
+        $supportTo = config('mail.recieve_to.address', 'support@zeronoticeperiod.com');
+        $supportName = config('mail.recieve_to.name', 'ZeroNoticePeriod Support');
+        $companyEmail = filter_var($company->email, FILTER_VALIDATE_EMAIL)
+            ? $company->email
+            : config('mail.from.address');
+        $companyName = $company->name ?: 'Employer';
+
+        $mailData = [
+            'company_name'  => $companyName,
+            'company_email' => $companyEmail,
+            'company_phone' => $company->phone ?? '',
+            'job_title'     => $job->job_title,
+            'job_id'        => $job->id,
+            'category'      => $category,
+            'message_body'  => $messageBody,
+        ];
+
+        try {
+            Mail::send('emails.employer_support_request', $mailData, function ($message) use (
+                $supportTo,
+                $supportName,
+                $companyEmail,
+                $companyName,
+                $category,
+                $job
+            ) {
+                $subject = 'Employer Support: ' . ($category ?: 'General') . ' — ' . $companyName;
+                $message->from(config('mail.from.address'), config('mail.from.name', 'ZeroNoticePeriod'))
+                    ->replyTo($companyEmail, $companyName)
+                    ->to($supportTo, $supportName)
+                    ->subject($subject);
+            });
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Could not send support request. Please try again or email support directly.',
+            ], 500);
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Support request submitted. We will reply to your company email.',
+        ]);
     }
 
     /**
@@ -3087,7 +3363,6 @@ class CompanyController extends Controller
             'job_overview'      => 'required',
             'about_company'     => 'required',
             'website_address'   => 'required',
-            'profile_requirements' => 'required|array|min:1',
         ];
 
         $wm = (string) $request->input('work_mode');
@@ -3100,6 +3375,14 @@ class CompanyController extends Controller
         }
 
         $request->validate($rules);
+
+        foreach (['job_description' => 'Job description', 'job_overview' => 'Candidate eligibility', 'about_company' => 'About the company'] as $field => $label) {
+            if ($this->znpTextContainsHyperlink($request->input($field))) {
+                return back()->withInput()->withErrors([
+                    $field => $label . ' cannot contain hyperlinks or website URLs.',
+                ]);
+            }
+        }
 
         /* ── Update post_jobs row ── */
         $job->job_title = $request->input('job_title');
@@ -3138,7 +3421,7 @@ class CompanyController extends Controller
         $job->job_overview         = $this->znpSanitizeRichHtml($request->input('job_overview'));
         $job->roles_responsibility = null;
 
-        $job->about_company    = $request->input('about_company');
+        $job->about_company    = $this->znpStripHyperlinksFromText(strip_tags((string) $request->input('about_company')));
         $job->website_address  = $request->input('website_address');
         $job->industry         = $request->input('industry');
         $job->headcount        = $request->input('headcount');
@@ -3148,7 +3431,7 @@ class CompanyController extends Controller
 
         $awards  = array_values(array_filter((array) $request->input('awards', []), 'strlen'));
         $perks   = array_values(array_filter((array) $request->input('perks', []), 'strlen'));
-        $profile = array_values(array_filter((array) $request->input('profile_requirements', []), 'strlen'));
+        $profile = $this->znpDefaultProfileRequirements();
 
         $job->awards = json_encode($awards);
         $job->perks  = json_encode($perks);
@@ -3158,26 +3441,10 @@ class CompanyController extends Controller
             ['key' => 'why_hire',       'label' => 'Why should we hire you?',                                         'type' => 'text',   'required' => true,  'enabled' => true],
             ['key' => 'video_intro',    'label' => 'Share a link to your video introduction',                         'type' => 'url',    'required' => false, 'enabled' => (int) $request->input('q_video_enabled', 1) === 1],
         ];
-        $customQsRaw = $request->input('custom_questions', '[]');
-        $customQs = is_string($customQsRaw)
-            ? (json_decode($customQsRaw, true) ?: [])
-            : (array) $customQsRaw;
-        foreach ($customQs as $cq) {
-            if (! is_array($cq) || empty($cq['label'])) {
-                continue;
-            }
-            $questionnaire[] = [
-                'key'      => 'custom_' . md5($cq['label']),
-                'label'    => (string) $cq['label'],
-                'type'     => in_array(($cq['type'] ?? 'text'), ['text', 'yesno', 'number'], true) ? $cq['type'] : 'text',
-                'required' => true,
-                'enabled'  => true,
-            ];
-        }
         $job->questionnaire = json_encode($questionnaire);
 
         $job->profile_requirements = json_encode($profile);
-        $job->strict_mode = (int) $request->input('strict_mode', 0);
+        $job->strict_mode = 0;
 
         /* Refresh slug if title changed. */
         $job->slug = \Illuminate\Support\Str::slug($job->job_title, '-') . '-' . $job->id;
@@ -3426,6 +3693,8 @@ class CompanyController extends Controller
 
         $dashContractRoles = PostJob::status()->where('job_type', 'LIKE', '%Contract%')->count();
 
+        $dashFresherRoles = PostJob::status()->where('job_type', 'LIKE', '%Fresher%')->count();
+
 
 
         $contractorsShowcase = $this->buildEmployerDashboardContractShowcase(4);
@@ -3483,6 +3752,8 @@ class CompanyController extends Controller
             'dashPermanentRoles',
 
             'dashContractRoles',
+
+            'dashFresherRoles',
 
             'resumezSpotlightCount'
 

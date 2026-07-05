@@ -11,6 +11,8 @@
         $companyInitials .= $w !== '' ? strtoupper(mb_substr($w, 0, 1)) : '';
     }
     $companyInitials = $companyInitials ?: 'EM';
+    /* ResumeDB UI hidden until module is production-ready (Job Ad go-live). */
+    $showResumeDb = false;
 @endphp
 
 @push('styles')
@@ -245,7 +247,7 @@
     font-weight: 800; display: flex; align-items: center; justify-content: center;
     overflow: hidden; flex-shrink: 0;
 }
-.znp-ed .ed-co-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 9px; }
+.znp-ed .ed-co-av img { width: 100%; height: 100%; object-fit: contain; border-radius: 9px; padding: 2px; }
 .znp-ed .ed-co-name {
     font-size: 13px; font-weight: 700; color: var(--ed-text);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
@@ -256,12 +258,12 @@
 }
 .znp-ed .ed-logout-form { margin: 0; }
 .znp-ed .ed-logout-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-    padding: 5px 12px; border-radius: 50px; font-size: 11px; font-weight: 700;
-    color: var(--ed-blue) !important; background: var(--ed-blue-50);
-    border: 1px solid var(--ed-blue-100); transition: all .15s;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 6px 14px; border-radius: 50px; font-size: 12px; font-weight: 700;
+    color: var(--ed-t2) !important; background: transparent;
+    border: 1.5px solid var(--ed-border); transition: all .15s; cursor: pointer;
 }
-.znp-ed .ed-logout-btn:hover { background: var(--ed-blue-100); }
+.znp-ed .ed-logout-btn:hover { border-color: var(--ed-blue); color: var(--ed-blue) !important; background: var(--ed-blue-50); }
 
 /* ── CONTENT ── */
 .znp-ed .ed-content { padding: 22px 26px; }
@@ -288,6 +290,9 @@
     padding: 5px 16px; margin-bottom: 22px; font-weight: 600;
 }
 .znp-ed .ed-cta-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap; }
+.znp-ed .ed-cta-row .ed-btn { min-width: 0; }
+.znp-ed .ed-cta-row.is-single { justify-content: center; }
+.znp-ed .ed-cta-row.is-single .ed-btn { flex: none; }
 .znp-ed .ed-btn {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 11px 24px; border-radius: 50px; font-size: 13px; font-weight: 700;
@@ -534,6 +539,8 @@
 /* ── RESPONSIVE ── */
 @media (max-width: 1024px) {
     .znp-ed .ed-ctc-grid { grid-template-columns: repeat(2, 1fr); }
+    .znp-ed .ed-cta-row:not(.is-single) { flex-wrap: nowrap; width: 100%; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .znp-ed .ed-cta-row:not(.is-single) .ed-btn { flex: 1; justify-content: center; }
 }
 #ed-copy-toast {
     position: fixed;
@@ -706,6 +713,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
 
+            @if($showResumeDb)
             {{-- ResumeDB --}}
             <button type="button" class="ed-nav-item" onclick="EdDash.toggleSub('edSubCz','edArrCz')" aria-expanded="true">
                 <svg class="ed-nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -717,6 +725,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <a target="_blank" rel="noopener noreferrer" href="{{ url('/cv-search') }}" class="ed-nav-sub-item">Browse Resumes</a>
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.job.pricing') }}" class="ed-nav-sub-item">Pricing</a>
             </div>
+            @endif
 
             {{-- Profile --}}
             <button type="button" class="ed-nav-item" onclick="EdDash.toggleSub('edSubPf','edArrPf')" aria-expanded="true">
@@ -751,7 +760,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 @if($znpPlan['tag_label'])
                     <span class="ed-plan-tag">{{ $znpPlan['tag_label'] }}</span>
                 @elseif(! $znpPlan['has_plan'])
-                    <span class="ed-plan-tag">Required</span>
+                    <span class="ed-plan-tag">Buy Now!</span>
                 @elseif($znpPlan['is_expired'])
                     <span class="ed-plan-tag">Expired</span>
                 @elseif($znpPlan['tone'] === 'full')
@@ -786,9 +795,9 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 hello@zeronoticeperiod.com
             </span>
-            <a target="_blank" rel="noopener noreferrer" href="tel:+919876543210" class="ed-help-call">
+            <a target="_blank" rel="noopener noreferrer" href="tel:+919035479715" class="ed-help-call">
                 <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6.5-6.5 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.89 4.93h3a2 2 0 0 1 2 1.72c.127.962.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 13.91a16 16 0 0 0 6 6l3.06-3.06a2 2 0 0 1 2.11-.45c.907.339 1.848.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                +91 98765 43210
+                +91 90354 79715
             </a>
         </div>
 
@@ -827,10 +836,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     <div class="ed-co-name">{{ $displayCompanyName }}</div>
                     <form method="POST" action="{{ route('company.logout') }}" class="ed-logout-form">
                         @csrf
-                        <button type="submit" class="ed-logout-btn">
-                            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            Logout
-                        </button>
+                        <button type="submit" class="ed-logout-btn">Logout</button>
                     </form>
                 </div>
             </div>
@@ -845,16 +851,16 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <div class="ed-hero-badge">
                     {{ $displayCompanyName }}
                     @if(! $znpPlan['has_plan'])
-                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Choose a plan to post jobs</a>
+                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Hire Talent, Buy Now!</a>
                     @elseif($znpPlan['is_expired'])
-                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Plan expired — renew to keep posting</a>
+                        &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Plan expired — Renew To Post Jobs</a>
                     @elseif(! $znpPlan['can_post'])
                         &nbsp;·&nbsp; <a target="_blank" rel="noopener noreferrer" href="{{ $znpPlan['pricing_url'] }}" style="color:var(--ed-orange-d);font-weight:700">Out of posts — buy more</a>
                     @else
                         &nbsp;·&nbsp; <span style="color:var(--ed-blue);font-weight:700">{{ $znpPlan['plan_name'] }}@if(! $znpPlan['is_unlimited']) · {{ $znpPlan['posts_remaining'] }} post{{ $znpPlan['posts_remaining'] === 1 ? '' : 's' }} left @endif</span>
                     @endif
                 </div>
-                <div class="ed-cta-row">
+                <div class="ed-cta-row{{ $showResumeDb ? '' : ' is-single' }}">
                     {{-- Primary CTA flips between "Post a Job" and "Choose / Buy a Plan"
                          depending on the live ZNP plan state (see Company::znpPlanViewModel). --}}
                     @if($znpPlan['can_post'])
@@ -868,10 +874,12 @@ if (!function_exists('znp_ed_job_location_preview')) {
                             {{ $znpPlan['cta_label'] }}
                         </a>
                     @endif
+                    @if($showResumeDb)
                     <a target="_blank" rel="noopener noreferrer" href="{{ route('cv-search') }}" class="ed-btn ed-btn-orange">
                         <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Browse ResumeDB
                     </a>
+                    @endif
                 </div>
                 <div class="ed-stats-strip">
                     <div class="ed-stat-cell">
@@ -885,6 +893,10 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     <div class="ed-stat-cell">
                         <div class="ed-sc-num">{{ number_format($dashContractRoles) }}</div>
                         <div class="ed-sc-lbl">Contract roles</div>
+                    </div>
+                    <div class="ed-stat-cell">
+                        <div class="ed-sc-num">{{ number_format($dashFresherRoles) }}</div>
+                        <div class="ed-sc-lbl">Fresher jobs</div>
                     </div>
                 </div>
             </section>
@@ -910,13 +922,13 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 {{-- "Posts remaining" replaces the legacy CV-credits tile so it
                      reflects the actual ZNP job-posting quota the user paid for. --}}
                 <div class="ed-sum-cell">
-                    <div class="ed-sum-lbl">{{ $znpPlan['is_unlimited'] ? 'Plan' : 'Posts remaining' }}</div>
+                    <div class="ed-sum-lbl">{{ $znpPlan['is_unlimited'] ? 'Plan' : ($znpPlan['has_plan'] ? 'Posts remaining' : 'Plan') }}</div>
                     @if(! $znpPlan['has_plan'])
                         <div class="ed-sum-num is-dim">—</div>
-                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}">Choose a plan →</a></div>
+                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}">Buy Now! →</a></div>
                     @elseif($znpPlan['is_expired'])
-                        <div class="ed-sum-num is-dim">0</div>
-                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Renew {{ $znpPlan['plan_name'] }} →</a></div>
+                        <div class="ed-sum-num is-dim">—</div>
+                        <div class="ed-sum-sub"><a href="{{ $znpPlan['pricing_url'] }}" style="color:#b91c1c;font-weight:700">Renew To Post Jobs →</a></div>
                     @elseif($znpPlan['is_unlimited'])
                         <div class="ed-sum-num">∞</div>
                         <div class="ed-sum-sub is-muted">{{ $znpPlan['plan_name'] }}@if($znpPlan['expires_label']) · expires {{ $znpPlan['expires_label'] }} @endif</div>
@@ -931,11 +943,13 @@ if (!function_exists('znp_ed_job_location_preview')) {
                         </div>
                     @endif
                 </div>
+                @if($showResumeDb)
                 <div class="ed-sum-cell">
                     <div class="ed-sum-lbl">ResumeDB available</div>
                     <div class="ed-sum-num">{{ $resumezSpotlightCount }}</div>
                     <div class="ed-sum-sub is-muted">Visible contract profiles</div>
                 </div>
+                @endif
             </section>
 
             {{-- RECRUITER PANEL --}}
@@ -955,9 +969,9 @@ if (!function_exists('znp_ed_job_location_preview')) {
                             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                             hello@zeronoticeperiod.com
                         </span>
-                        <a target="_blank" rel="noopener noreferrer" href="tel:+919876543210" class="ed-rp-call">
+                        <a target="_blank" rel="noopener noreferrer" href="tel:+919035479715" class="ed-rp-call">
                             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6.5-6.5 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.89 4.93h3a2 2 0 0 1 2 1.72c.127.962.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 13.91a16 16 0 0 0 6 6l3.06-3.06a2 2 0 0 1 2.11-.45c.907.339 1.848.574 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                            +91 98765 43210
+                            +91 90354 79715
                         </a>
                     </div>
                 </div>
@@ -967,11 +981,13 @@ if (!function_exists('znp_ed_job_location_preview')) {
                         <div class="ed-ai-text">Upgrade, complete KYC verification, post jobs and hire immediately</div>
                         <span class="ed-ai-time">Today</span>
                     </div>
+                    @if($showResumeDb)
                     <div class="ed-ai-item">
                         <span class="ed-ai-dot" style="background:var(--ed-orange)"></span>
                         <div class="ed-ai-text">{{ $resumezSpotlightCount }} visible contract-role profiles are currently available in ResumeDB</div>
                         <span class="ed-ai-time">Today</span>
                     </div>
+                    @endif
                     <div class="ed-ai-item">
                         <span class="ed-ai-dot" style="background:var(--ed-blue)"></span>
                         <div class="ed-ai-text">Tip: Post your first job now to start receiving applications from zero notice period candidates</div>
@@ -980,6 +996,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 </div>
             </section>
 
+            @if($showResumeDb)
             {{-- RESUMEDB --}}
             <section class="ed-ctc-section" aria-label="ResumeDB spotlight">
                 <div class="ed-ctc-head">
@@ -1061,6 +1078,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                     </div>
                 </div>
             </section>
+            @endif
 
             {{-- JOBS SCROLL --}}
             <section class="ed-jobs-section" aria-label="Recent platform jobs">

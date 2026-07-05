@@ -30,6 +30,15 @@
 
     $workModeLabel = $job->work_mode ?? '';
     $postedLabel = $job->created_at ? $job->created_at->format('M j, Y') : '—';
+    $filterCounts = $filterCounts ?? [];
+    $jobListing = $jobListing ?? ['days_left' => 0, 'listing_days' => 90, 'label' => ''];
+    $znpPlan = $znpPlan ?? [];
+    $planSubLabel = '';
+    if (! empty($znpPlan['has_plan']) && empty($znpPlan['is_unlimited'])) {
+        $planSubLabel = ($znpPlan['plan_name'] ?? 'Plan') . ' · ' . ($znpPlan['posts_remaining'] ?? 0) . ' posts remaining';
+    } elseif (! empty($znpPlan['plan_name'])) {
+        $planSubLabel = $znpPlan['plan_name'];
+    }
 @endphp
 
 @push('styles')
@@ -45,7 +54,19 @@
 .znp-ap .nbtn{padding:6px 16px;border-radius:50px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s}
 .znp-ap .nb-ghost{background:transparent;border:1.5px solid var(--border);color:var(--t2)}
 .znp-ap .nb-primary{background:var(--orange);color:#fff}
-.znp-ap .nav-av{width:30px;height:30px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.znp-ap .nav-av{width:30px;height:30px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer}
+.znp-ap .nav-av-wrap{position:relative}
+.znp-ap .av-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:0 8px 24px rgba(15,23,42,.12);min-width:190px;z-index:200;overflow:hidden}
+.znp-ap .nav-av-wrap.open .av-menu{display:block}
+.znp-ap .av-menu-company{padding:10px 14px 8px;font-size:11.5px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border)}
+.znp-ap .av-menu-company span{display:block;font-size:10.5px;font-weight:500;color:var(--t3);margin-top:1px}
+.znp-ap .av-menu-item{padding:9px 14px;font-size:12.5px;font-weight:500;color:var(--t2);cursor:pointer;display:flex;align-items:center;gap:8px}
+.znp-ap .av-menu-item:hover{background:var(--bg);color:var(--text)}
+.znp-ap .av-menu-item.logout{color:var(--red);border-top:1px solid var(--border)}
+.znp-ap .jb-repost{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#92400e;background:#fffbeb;border:1px solid var(--amber-100);border-radius:50px;padding:2px 10px}
+.znp-ap .metric-item{padding:11px 20px;border-right:1px solid var(--border);text-align:center;flex-shrink:0;min-width:96px;cursor:pointer;transition:background .15s}
+.znp-ap .metric-item:hover{background:var(--blue-50)}
+.znp-ap .metric-item.active{border-bottom:2px solid var(--blue);background:var(--blue-50)}
 .znp-ap .crumb{background:var(--surface);border-bottom:1px solid var(--border);padding:6px 28px;font-size:11.5px;color:var(--t4)}
 .znp-ap .crumb-inner{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:5px}
 .znp-ap .crumb a{color:var(--blue);font-weight:600}
@@ -65,7 +86,6 @@
 .znp-ap .act-btn.retire{background:var(--red-50);color:var(--red);border-color:var(--red-100)}
 .znp-ap .metrics-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px}
 .znp-ap .metrics-inner{max-width:1360px;margin:0 auto;display:flex;overflow-x:auto}
-.znp-ap .metric-item{padding:11px 20px;border-right:1px solid var(--border);text-align:center;flex-shrink:0;min-width:96px}
 .znp-ap .m-num{font-size:17px;font-weight:800;line-height:1.2}
 .znp-ap .m-num.blue{color:var(--blue)}.znp-ap .m-num.green{color:var(--green)}.znp-ap .m-num.red{color:var(--red)}
 .znp-ap .m-label{font-size:10.5px;color:var(--t4);font-weight:500;margin-top:3px}
@@ -134,6 +154,21 @@
 .znp-ap .act-date{font-size:9.5px;color:var(--t4);margin:0 8px 0 3px;white-space:nowrap}
 .znp-ap .act-line{height:1.5px;width:18px;background:#d1dae8;flex-shrink:0}
 .znp-ap .act-line.done{background:var(--blue)}
+.znp-ap .act-pending-sep{width:10px;height:1.5px;border-top:1.5px dotted #cbd5e1;margin:0 4px;flex-shrink:0}
+.znp-ap .act-pending-step{display:flex;align-items:center;gap:4px;cursor:pointer;flex-shrink:0}
+.znp-ap .act-pending-dot{width:8px;height:8px;border-radius:50%;border:1.5px dashed var(--orange);background:transparent}
+.znp-ap .act-pending-label{font-size:10.5px;font-weight:700;color:var(--orange);white-space:nowrap}
+.znp-ap .pending-btn{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#fff7ed;border:1px solid #fed7aa;color:#92400e;margin-left:8px;cursor:pointer;vertical-align:middle}
+.znp-ap .pending-btn:hover{background:#f97316;color:#fff;border-color:#f97316}
+.znp-ap .pending-btn.done{background:#f0fdf4;border-color:#86d3a8;color:#166534;pointer-events:none}
+.znp-ap .jab{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:1px 7px;border-radius:20px;background:var(--purple-50);color:var(--purple);border:1px solid var(--purple-100);margin-left:6px}
+.znp-ap .jab-hot{background:#fff7ed;color:#92400e;border-color:#fed7aa}
+.znp-ap .email-preview-wrap{position:relative;display:inline-flex}
+.znp-ap .email-tip{display:none;position:absolute;bottom:calc(100% + 8px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);min-width:260px;max-width:320px;box-shadow:var(--sh-md);z-index:20;padding:10px 12px}
+.znp-ap .email-preview-wrap:hover .email-tip{display:block}
+.znp-ap .et-label{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;margin-bottom:4px}
+.znp-ap .et-subject{font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px}
+.znp-ap .et-body{font-size:11px;color:var(--t2);line-height:1.5}
 .znp-ap .card-actions{display:flex;flex-direction:column;background:var(--bg);border-top:1px solid var(--border)}
 .znp-ap .action-btns{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px 6px}
 .znp-ap .reject-row{display:flex;gap:6px;justify-content:flex-end;padding:4px 14px 8px;border-top:1px solid var(--border)}
@@ -218,14 +253,23 @@
 @endpush
 
 @section('content')
-<div class="znp-ap" id="znpApRoot" data-job-id="{{ $job->id }}">
+<div class="znp-ap" id="znpApRoot" data-job-id="{{ $job->id }}" data-job-exp-min="{{ $job->exp_min ?? 0 }}" data-job-exp-max="{{ $job->exp_max ?? 99 }}">
 
     <nav class="nav">
         <a class="logo" href="{{ url('/') }}"><span class="la">Zero</span><span class="lb">Notice</span><span class="lc">Period</span></a>
         <div class="nav-r">
             <a class="nbtn nb-ghost" href="{{ route('my-jobs') }}">Back to Jobs</a>
             <a class="nbtn nb-primary" href="{{ route('employer.post.job.page') }}">+ Post Another Job</a>
-            <div class="nav-av" title="{{ $company->name }}">{{ $companyInitials }}</div>
+            <button type="button" class="nbtn nb-ghost" data-znp-action="help-support" style="margin-right:4px">Help / Support</button>
+            <div class="nav-av-wrap" id="apAvWrap" style="margin-left:6px;padding-left:12px;border-left:1px solid var(--border)">
+                <div class="nav-av" data-znp-action="toggle-av-menu" title="{{ $company->name }}">{{ $companyInitials }}</div>
+                <div class="av-menu">
+                    <div class="av-menu-company">{{ $company->name }}@if($planSubLabel !== '')<span>{{ $planSubLabel }}</span>@endif</div>
+                    <a class="av-menu-item" href="{{ route('company.profile') }}">Account Settings</a>
+                    <a class="av-menu-item" href="{{ route('my-jobs') }}">My Job Postings</a>
+                    <a class="av-menu-item logout" href="{{ route('logoutcompany') }}">Log out</a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -253,10 +297,13 @@
                         @if($workModeLabel)<span class="jb-pill">{{ $workModeLabel }}</span>@endif
                         <span class="jb-pill">Posted {{ $postedLabel }}</span>
                     </div>
-                    <div style="margin-top:4px;font-size:11.5px">
+                    <div style="margin-top:4px;font-size:11.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                         <strong style="color:var(--blue)">{{ $metrics['total'] }} applicants</strong>
                         · <span style="color:var(--green);font-weight:600">{{ $metrics['shortlisted'] }} shortlisted</span>
                         · <span style="color:var(--amber);font-weight:600">{{ $metrics['interview'] }} interview</span>
+                        @if(!empty($jobListing['label']))
+                            <span class="jb-repost">{{ $jobListing['label'] }}</span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -273,16 +320,16 @@
 
     <div class="metrics-bar">
         <div class="metrics-inner">
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['total'] }}</div><div class="m-label">Total Applied</div></div>
-            <div class="metric-item"><div class="m-num green">{{ $metrics['resumedb'] }}</div><div class="m-label">ResumeDB</div></div>
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['within'] }}</div><div class="m-label">Within Budget</div></div>
-            <div class="metric-item"><div class="m-num red">{{ $metrics['over'] }}</div><div class="m-label">Over Budget</div></div>
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['mumbai'] }}</div><div class="m-label">Mumbai</div></div>
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['other_cities'] }}</div><div class="m-label">Other Cities</div></div>
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['exp_in_range'] }}</div><div class="m-label">In Exp Range</div></div>
-            <div class="metric-item"><div class="m-num blue">{{ $metrics['exp_senior'] }}</div><div class="m-label">Senior Exp</div></div>
-            <div class="metric-item"><div class="m-num green">{{ $metrics['verified'] }}</div><div class="m-label">Verified</div></div>
-            <div class="metric-item"><div class="m-num blue" id="apEmailedMetric">{{ $metrics['emailed'] ?? 0 }}</div><div class="m-label">Emailed</div></div>
+            <div class="metric-item active" data-metric="all"><div class="m-num blue">{{ $metrics['total'] }}</div><div class="m-label">Total Applied</div></div>
+            <div class="metric-item" data-metric="resumedb"><div class="m-num green">{{ $metrics['resumedb'] }}</div><div class="m-label">ResumeDB</div></div>
+            <div class="metric-item" data-metric="within"><div class="m-num blue">{{ $metrics['within'] }}</div><div class="m-label">Within Budget</div></div>
+            <div class="metric-item" data-metric="over"><div class="m-num red">{{ $metrics['over'] }}</div><div class="m-label">Over Budget</div></div>
+            <div class="metric-item" data-metric="mumbai"><div class="m-num blue">{{ $metrics['mumbai'] }}</div><div class="m-label">Mumbai</div></div>
+            <div class="metric-item" data-metric="other_cities"><div class="m-num blue">{{ $metrics['other_cities'] }}</div><div class="m-label">Other Cities</div></div>
+            <div class="metric-item" data-metric="exp_in_range"><div class="m-num blue">{{ $metrics['exp_in_range'] }}</div><div class="m-label">{{ $metrics['exp_in_range_label'] ?? 'In Exp Range' }}</div></div>
+            <div class="metric-item" data-metric="exp_senior"><div class="m-num blue">{{ $metrics['exp_senior'] }}</div><div class="m-label">{{ $metrics['exp_senior_label'] ?? 'Senior Exp' }}</div></div>
+            <div class="metric-item" data-metric="verified"><div class="m-num green">{{ $metrics['verified'] }}</div><div class="m-label">Verified</div></div>
+            <div class="metric-item" data-metric="emailed"><div class="m-num blue" id="apEmailedMetric">{{ $metrics['emailed'] ?? 0 }}</div><div class="m-label">Emailed</div></div>
         </div>
     </div>
 
@@ -295,14 +342,14 @@
             </div>
             <div class="sb-sec">
                 <div class="sb-sec-title">Fitment Score</div>
-                <div class="filter-opt checked" data-filter="fit-high"><div class="fo-check">✓</div><div class="fo-label">Strong (80–100%)</div></div>
-                <div class="filter-opt checked" data-filter="fit-mid"><div class="fo-check">✓</div><div class="fo-label">Good (60–79%)</div></div>
-                <div class="filter-opt checked" data-filter="fit-low"><div class="fo-check">✓</div><div class="fo-label">Partial (&lt;60%)</div></div>
+                <div class="filter-opt checked" data-filter="fit-high"><div class="fo-check">✓</div><div class="fo-label">Strong (80–100%)</div><div class="fo-count">{{ $filterCounts['fit_high'] ?? 0 }}</div></div>
+                <div class="filter-opt checked" data-filter="fit-mid"><div class="fo-check">✓</div><div class="fo-label">Good (60–79%)</div><div class="fo-count">{{ $filterCounts['fit_mid'] ?? 0 }}</div></div>
+                <div class="filter-opt checked" data-filter="fit-low"><div class="fo-check">✓</div><div class="fo-label">Partial (&lt;60%)</div><div class="fo-count">{{ $filterCounts['fit_low'] ?? 0 }}</div></div>
             </div>
             <div class="sb-sec">
                 <div class="sb-sec-title">Notice Period</div>
-                <div class="filter-opt checked" data-filter="notice-immediate"><div class="fo-check">✓</div><div class="fo-label">Immediate</div></div>
-                <div class="filter-opt checked" data-filter="notice-serving"><div class="fo-check">✓</div><div class="fo-label">Serving Notice</div></div>
+                <div class="filter-opt checked" data-filter="notice-immediate"><div class="fo-check">✓</div><div class="fo-label">Immediate</div><div class="fo-count">{{ $filterCounts['notice_immediate'] ?? 0 }}</div></div>
+                <div class="filter-opt checked" data-filter="notice-serving"><div class="fo-check">✓</div><div class="fo-label">Serving Notice</div><div class="fo-count">{{ $filterCounts['notice_serving'] ?? 0 }}</div></div>
             </div>
             <div class="sb-sec">
                 <div class="sb-sec-title">Experience (Years)</div>
@@ -319,6 +366,36 @@
                     <span style="font-size:11px;color:var(--t4)">to</span>
                     <input class="range-inp" type="number" id="apCtcMax" placeholder="Max" value="{{ $job->max_salary ?: 999 }}">
                 </div>
+            </div>
+            <div class="sb-sec">
+                <div class="sb-sec-title">Location</div>
+                @foreach(['loc-mumbai'=>'Mumbai','loc-pune'=>'Pune','loc-bengaluru'=>'Bengaluru','loc-hyderabad'=>'Hyderabad','loc-delhi'=>'Delhi NCR','loc-other'=>'Other'] as $key => $label)
+                    <div class="filter-opt checked" data-filter="{{ $key }}"><div class="fo-check">✓</div><div class="fo-label">{{ $label }}</div><div class="fo-count">{{ $filterCounts[str_replace('-', '_', $key)] ?? 0 }}</div></div>
+                @endforeach
+            </div>
+            <div class="sb-sec">
+                <div class="sb-sec-title">Preferred Mode</div>
+                @foreach(['mode-office'=>'Work from Office','mode-hybrid'=>'Hybrid','mode-remote'=>'Remote / WFH'] as $key => $label)
+                    <div class="filter-opt checked" data-filter="{{ $key }}"><div class="fo-check">✓</div><div class="fo-label">{{ $label }}</div><div class="fo-count">{{ $filterCounts[str_replace('-', '_', $key)] ?? 0 }}</div></div>
+                @endforeach
+            </div>
+            <div class="sb-sec">
+                <div class="sb-sec-title">Candidate Type</div>
+                @foreach(['type-fulltime'=>'Full-time','type-contract'=>'Open to Contract'] as $key => $label)
+                    <div class="filter-opt checked" data-filter="{{ $key }}"><div class="fo-check">✓</div><div class="fo-label">{{ $label }}</div><div class="fo-count">{{ $filterCounts[str_replace('-', '_', $key)] ?? 0 }}</div></div>
+                @endforeach
+            </div>
+            <div class="sb-sec">
+                <div class="sb-sec-title">Education</div>
+                @foreach(['edu-btech'=>'B.Tech / B.E.','edu-mca'=>'MCA / M.Tech','edu-bca'=>'BCA / BSc','edu-other'=>'Other'] as $key => $label)
+                    <div class="filter-opt checked" data-filter="{{ $key }}"><div class="fo-check">✓</div><div class="fo-label">{{ $label }}</div><div class="fo-count">{{ $filterCounts[str_replace('-', '_', $key)] ?? 0 }}</div></div>
+                @endforeach
+            </div>
+            <div class="sb-sec">
+                <div class="sb-sec-title">Stage</div>
+                @foreach(['stage-new'=>'New / Unreviewed','stage-shortlisted'=>'Shortlisted','stage-interview'=>'Interview Scheduled'] as $key => $label)
+                    <div class="filter-opt checked" data-filter="{{ $key }}"><div class="fo-check">✓</div><div class="fo-label">{{ $label }}</div><div class="fo-count">{{ $filterCounts[str_replace('-', '_', $key)] ?? 0 }}</div></div>
+                @endforeach
             </div>
         </aside>
 
@@ -379,6 +456,12 @@
                              data-notice="{{ $a['notice_slug'] }}"
                              data-type="{{ $a['type_slug'] }}"
                              data-fit="{{ $a['data_fit'] }}"
+                             data-education="{{ $a['education_slug'] ?? 'other' }}"
+                             data-within-budget="{{ $a['within_budget'] ? '1' : '0' }}"
+                             data-verified="{{ $a['verified'] ? '1' : '0' }}"
+                             data-emailed="{{ $a['has_emailed'] ? '1' : '0' }}"
+                             data-next-action="{{ $a['next_action']['action'] ?? '' }}"
+                             data-next-label="{{ $a['next_action']['label'] ?? '' }}"
                              data-name="{{ strtolower($a['display_name']) }}"
                              data-search="{{ strtolower($a['display_name'].' '.$a['current_role'].' '.$a['current_company'].' '.collect($a['skills'])->pluck('name')->implode(' ')) }}">
                             <div class="card-main">
@@ -391,12 +474,20 @@
                                 <div class="cbody">
                                     <div class="card-top">
                                         <div>
-                                            <div class="cname">{{ $a['display_name'] }}</div>
+                                            <div class="cname">
+                                                {{ $a['display_name'] }}
+                                                @if(!empty($a['next_action']))
+                                                    <button type="button" class="pending-btn" data-znp-action="pending-{{ $a['next_action']['action'] }}" data-name="{{ $a['display_name'] }}">{{ $a['next_action']['label'] }}</button>
+                                                @endif
+                                            </div>
                                             <div class="ccurrent">
                                                 @if($a['current_role'] || $a['current_company'])
                                                     {{ $a['current_role'] }}{{ ($a['current_role'] && $a['current_company']) ? ' · ' : '' }}{{ $a['current_company'] }}
                                                 @endif
                                                 @if($a['location_display']) · {{ $a['location_display'] }} @endif
+                                                @if(($a['jobs_applied_count'] ?? 1) > 0)
+                                                    <span class="jab {{ ($a['jobs_applied_count'] ?? 1) >= 3 ? 'jab-hot' : '' }}" title="Applied to {{ $a['jobs_applied_count'] }} job(s) on ZNP">📋 {{ $a['jobs_applied_count'] }} job{{ ($a['jobs_applied_count'] ?? 1) === 1 ? '' : 's' }} applied</span>
+                                                @endif
                                             </div>
                                         </div>
                                         <div class="cbadges">
@@ -451,6 +542,13 @@
                                         <span class="act-date">{{ $step['date'] }}</span>
                                     </div>
                                 @endforeach
+                                @if(!empty($a['next_action']))
+                                    <div class="act-pending-sep"></div>
+                                    <div class="act-pending-step" data-znp-action="pending-{{ $a['next_action']['action'] }}" data-name="{{ $a['display_name'] }}" title="Click to act">
+                                        <div class="act-pending-dot"></div>
+                                        <span class="act-pending-label">{{ $a['next_action']['label'] }}?</span>
+                                    </div>
+                                @endif
                             </div>
                             <div class="note-preview-strip {{ !empty($a['note']) ? 'show' : '' }}" data-note-strip>
                                 <div class="nps-av">N</div>
@@ -490,9 +588,16 @@
                                     <button type="button" class="abtn {{ $a['is_shortlisted'] ? 'done' : '' }}" data-znp-action="shortlist" data-name="{{ $a['display_name'] }}">{{ $a['is_shortlisted'] ? 'Shortlisted' : 'Shortlist' }}</button>
                                     <button type="button" class="abtn" data-znp-action="download-cv" data-name="{{ $a['display_name'] }}">Download CV</button>
                                     <button type="button" class="abtn" data-znp-action="notes" data-name="{{ $a['display_name'] }}">Notes</button>
-                                    <button type="button" class="abtn {{ $a['has_emailed'] ? 'emailed-done' : '' }}" data-znp-action="email" data-name="{{ $a['display_name'] }}">
-                                        {{ $a['has_emailed'] ? 'Emailed' : 'Send Email' }}
-                                    </button>
+                                    <div class="email-preview-wrap">
+                                        <button type="button" class="abtn {{ $a['has_emailed'] ? 'emailed-done' : '' }}" data-znp-action="email" data-name="{{ $a['display_name'] }}">
+                                            {{ $a['has_emailed'] ? 'Emailed' : 'Send Email' }}
+                                        </button>
+                                        <div class="email-tip">
+                                            <div class="et-label">Email Preview</div>
+                                            <div class="et-subject">{{ $a['email_preview_subject'] ?? '' }}</div>
+                                            <div class="et-body">{{ $a['email_preview_body'] ?? '' }}</div>
+                                        </div>
+                                    </div>
                                     <button type="button" class="abtn" data-znp-action="feedback" data-name="{{ $a['display_name'] }}" style="background:#f5f3ff;color:#7c3aed;border-color:#ddd6fe">Log Feedback</button>
                                 </div>
                                 <div class="reject-row">
@@ -677,6 +782,46 @@
     </div>
 
     <div class="toast" id="apToast"><span id="apToastMsg">Done</span></div>
+
+    {{-- Help / Support --}}
+    <div class="modal-overlay" id="apHelpModal">
+        <div class="sched-modal" style="max-width:440px">
+            <div class="sched-head">
+                <div>
+                    <span class="sched-title">Help &amp; Support</span>
+                    <div style="font-size:11px;color:var(--t3);margin-top:2px">ZeroNoticePeriod · Employer Support</div>
+                </div>
+                <button type="button" class="btn-comp-ghost" data-znp-close="apHelpModal">×</button>
+            </div>
+            <div class="sched-body">
+                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                    <div style="background:var(--blue-50);border:1px solid var(--blue-100);border-radius:9px;padding:11px 14px">
+                        <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:2px">Call us</div>
+                        <div style="font-size:14px;font-weight:800">+91 98765 43210</div>
+                        <div style="font-size:11px;color:var(--t3);margin-top:2px">Mon–Sat · 9 AM–7 PM</div>
+                    </div>
+                    <div style="background:var(--green-50);border:1px solid var(--green-100);border-radius:9px;padding:11px 14px">
+                        <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:2px">Email us</div>
+                        <div style="font-size:12.5px;font-weight:700">support@zeronoticeperiod.com</div>
+                    </div>
+                </div>
+                <select class="sched-inp" id="apHelpCategory">
+                    <option value="">Select a topic…</option>
+                    <option>Candidate not responding to JD</option>
+                    <option>Interview scheduling issue</option>
+                    <option>Credit balance or billing</option>
+                    <option>Candidate profile seems inaccurate</option>
+                    <option>Technical issue with the platform</option>
+                    <option>Other</option>
+                </select>
+                <textarea class="sched-inp" id="apHelpMessage" rows="4" placeholder="Describe your issue in detail…"></textarea>
+            </div>
+            <div class="sched-footer">
+                <button type="button" class="btn-comp-ghost" data-znp-close="apHelpModal">Cancel</button>
+                <button type="button" class="btn-send" data-znp-action="submit-help">Submit Request</button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -701,11 +846,15 @@
         downloadCv: '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/download-cv',
         emailTemplates: '{{ route('employer.applicant.email.templates', $job->id) }}',
         sendEmail: '{{ route('employer.applicant.email.send', $job->id) }}',
-        retire:     '{{ route('employer.post.job.retire', $job->id) }}'
+        retire:     '{{ route('employer.post.job.retire', $job->id) }}',
+        helpSupport: '{{ route('employer.help.support', $job->id) }}'
     };
 
     var znpAp = {
         currentStage: 'all',
+        currentMetric: 'all',
+        jobExpMin: parseInt(root ? root.getAttribute('data-job-exp-min') || '0' : '0', 10),
+        jobExpMax: parseInt(root ? root.getAttribute('data-job-exp-max') || '99' : '99', 10),
         activeCard: null,
         activeAppId: null,
         emailTemplates: [],
@@ -849,6 +998,13 @@
             if (m) m.classList.add('open');
         },
 
+        resetHelpForm: function () {
+            var cat = document.getElementById('apHelpCategory');
+            var msg = document.getElementById('apHelpMessage');
+            if (cat) cat.value = '';
+            if (msg) msg.value = '';
+        },
+
         closeModal: function (id) {
             var m = document.getElementById(id);
             if (m) m.classList.remove('open');
@@ -883,7 +1039,27 @@
                     '<span class="act-label ' + step.state + '">' + step.label + '</span>' +
                     '<span class="act-date">' + step.date + '</span></div>';
             });
+            var nextAction = card.getAttribute('data-next-action');
+            var nextLabel = card.getAttribute('data-next-label');
+            if (nextAction && nextLabel) {
+                html += '<div class="act-pending-sep"></div>' +
+                    '<div class="act-pending-step" data-znp-action="pending-' + nextAction + '" data-name="' + (card.getAttribute('data-display-name') || '') + '" title="Click to act">' +
+                    '<div class="act-pending-dot"></div><span class="act-pending-label">' + nextLabel + '?</span></div>';
+            }
             bar.innerHTML = html;
+        },
+
+        filterChecked: function (key) {
+            var el = document.querySelector('.filter-opt[data-filter="' + key + '"]');
+            return el ? el.classList.contains('checked') : true;
+        },
+
+        setMetricFilter: function (metric) {
+            znpAp.currentMetric = metric || 'all';
+            document.querySelectorAll('.metric-item[data-metric]').forEach(function (item) {
+                item.classList.toggle('active', item.getAttribute('data-metric') === znpAp.currentMetric);
+            });
+            znpAp.applyFilters();
         },
 
         recountStages: function () {
@@ -933,6 +1109,55 @@
                 var noticeOk = (notice === 'immediate' && nImm) || (notice === 'serving' && nServ) || (notice !== 'immediate' && notice !== 'serving' && nImm);
                 if (!noticeOk) ok = false;
 
+                var loc = card.getAttribute('data-location') || 'other';
+                var locOk = (loc === 'mumbai' && znpAp.filterChecked('loc-mumbai'))
+                    || (loc === 'pune' && znpAp.filterChecked('loc-pune'))
+                    || (loc === 'bengaluru' && znpAp.filterChecked('loc-bengaluru'))
+                    || (loc === 'hyderabad' && znpAp.filterChecked('loc-hyderabad'))
+                    || (loc === 'delhi' && znpAp.filterChecked('loc-delhi'))
+                    || (['mumbai', 'pune', 'bengaluru', 'hyderabad', 'delhi'].indexOf(loc) === -1 && znpAp.filterChecked('loc-other'));
+                if (!locOk) ok = false;
+
+                var mode = card.getAttribute('data-mode') || 'wfo';
+                var modeOk = ((mode === 'wfo' || mode === 'office') && znpAp.filterChecked('mode-office'))
+                    || (mode === 'hybrid' && znpAp.filterChecked('mode-hybrid'))
+                    || (mode === 'remote' && znpAp.filterChecked('mode-remote'));
+                if (!modeOk) ok = false;
+
+                var type = card.getAttribute('data-type') || 'fulltime';
+                var typeOk = (type === 'fulltime' && znpAp.filterChecked('type-fulltime'))
+                    || (type === 'contract' && znpAp.filterChecked('type-contract'));
+                if (!typeOk) ok = false;
+
+                var edu = card.getAttribute('data-education') || 'other';
+                var eduOk = (edu === 'btech' && znpAp.filterChecked('edu-btech'))
+                    || (edu === 'mca' && znpAp.filterChecked('edu-mca'))
+                    || (edu === 'bca' && znpAp.filterChecked('edu-bca'))
+                    || (edu === 'other' && znpAp.filterChecked('edu-other'));
+                if (!eduOk) ok = false;
+
+                if (stage === 'new' || stage === 'shortlisted' || stage === 'interview') {
+                    var stageSidebarOk = (stage === 'new' && znpAp.filterChecked('stage-new'))
+                        || (stage === 'shortlisted' && znpAp.filterChecked('stage-shortlisted'))
+                        || (stage === 'interview' && znpAp.filterChecked('stage-interview'));
+                    if (!stageSidebarOk) ok = false;
+                }
+
+                if (znpAp.currentMetric && znpAp.currentMetric !== 'all') {
+                    var withinBudget = card.getAttribute('data-within-budget');
+                    var verified = card.getAttribute('data-verified');
+                    var emailed = card.getAttribute('data-emailed');
+                    if (znpAp.currentMetric === 'resumedb' && stage !== 'resumedb') ok = false;
+                    if (znpAp.currentMetric === 'within' && withinBudget !== '1') ok = false;
+                    if (znpAp.currentMetric === 'over' && withinBudget !== '0') ok = false;
+                    if (znpAp.currentMetric === 'mumbai' && loc !== 'mumbai') ok = false;
+                    if (znpAp.currentMetric === 'other_cities' && loc === 'mumbai') ok = false;
+                    if (znpAp.currentMetric === 'exp_in_range' && (exp < znpAp.jobExpMin || exp > znpAp.jobExpMax)) ok = false;
+                    if (znpAp.currentMetric === 'exp_senior' && exp <= znpAp.jobExpMax) ok = false;
+                    if (znpAp.currentMetric === 'verified' && verified !== '1') ok = false;
+                    if (znpAp.currentMetric === 'emailed' && emailed !== '1') ok = false;
+                }
+
                 card.style.display = ok ? '' : 'none';
                 if (ok) visible++;
             });
@@ -976,7 +1201,18 @@
             f.querySelector('.fo-check').textContent = '✓';
         });
         document.getElementById('apSearch').value = '';
-        znpAp.applyFilters();
+        znpAp.setMetricFilter('all');
+    });
+
+    document.querySelectorAll('.metric-item[data-metric]').forEach(function (item) {
+        item.addEventListener('click', function () {
+            znpAp.setMetricFilter(item.getAttribute('data-metric'));
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        var avWrap = document.getElementById('apAvWrap');
+        if (avWrap && !avWrap.contains(e.target)) avWrap.classList.remove('open');
     });
 
     document.querySelectorAll('#apStageTabs .stab').forEach(function (tab) {
@@ -1060,6 +1296,64 @@
 
         if (action === 'clear-selection') {
             znpAp.clearSelection();
+            return;
+        }
+
+        if (action === 'help-support') {
+            znpAp.resetHelpForm();
+            znpAp.openModal('apHelpModal');
+            return;
+        }
+
+        if (action === 'submit-help') {
+            var helpMsg = (document.getElementById('apHelpMessage') || {}).value || '';
+            var helpCat = (document.getElementById('apHelpCategory') || {}).value || '';
+            if (!helpMsg.trim()) {
+                znpAp.toast('Please describe your issue first.');
+                return;
+            }
+            btn.disabled = true;
+            znpAp.post(routes.helpSupport, {
+                category: helpCat,
+                message: helpMsg.trim()
+            }).then(function (res) {
+                znpAp.closeModal('apHelpModal');
+                znpAp.resetHelpForm();
+                znpAp.toast(res.message || 'Support request submitted.');
+            }).catch(function (err) {
+                znpAp.toast(err.message || 'Could not submit support request.');
+            }).finally(function () {
+                btn.disabled = false;
+            });
+            return;
+        }
+
+        if (action === 'toggle-av-menu') {
+            var wrap = document.getElementById('apAvWrap');
+            if (wrap) wrap.classList.toggle('open');
+            return;
+        }
+
+        if (action.indexOf('pending-') === 0) {
+            var pending = action.replace('pending-', '');
+            if (pending === 'shortlist') {
+                var sl = card.querySelector('[data-znp-action="shortlist"]');
+                if (sl) sl.click();
+            } else if (pending === 'email') {
+                znpAp.openEmailComposer('single', [card]);
+            } else if (pending === 'feedback') {
+                znpAp.activeCard = card;
+                znpAp.activeAppId = appId;
+                document.getElementById('apFbCandName').textContent = name;
+                znpAp.openModal('apFeedbackModal');
+            } else if (pending === 'profile') {
+                var profileLink = card.querySelector('a.abtn[href]');
+                if (profileLink) window.open(profileLink.href, '_blank');
+            }
+            if (btn.classList.contains('pending-btn')) {
+                btn.classList.add('done');
+                btn.textContent = '✓ Done';
+            }
             return;
         }
 
