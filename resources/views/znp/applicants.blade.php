@@ -142,10 +142,15 @@
 .znp-ap .sk-tag.match{border-color:var(--blue-100);color:var(--blue);font-weight:600;background:var(--blue-50)}
 .znp-ap .qa-wrap{background:#f8fafc;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 13px;margin-bottom:2px}
 .znp-ap .qa-head{font-size:9.5px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:9px}
-.znp-ap .qa-item{display:grid;grid-template-columns:140px 1fr;gap:8px;margin-bottom:6px}
-.znp-ap .qa-label{font-size:10.5px;font-weight:700;color:var(--t3)}
-.znp-ap .qa-answer{font-size:12px;color:var(--text);font-weight:500;line-height:1.5}
-.znp-ap .qa-answer.italic{font-style:italic;color:var(--t2)}
+.znp-ap .qa-item{display:grid;grid-template-columns:minmax(110px,140px) 1fr;gap:8px 12px;margin-bottom:6px;align-items:baseline}
+.znp-ap .qa-item:last-child{margin-bottom:0}
+.znp-ap .qa-label{font-size:11px;font-weight:700;color:var(--text)}
+.znp-ap .qa-answer{font-size:12px;color:var(--text);font-weight:600;line-height:1.5;word-break:break-word}
+.znp-ap .qa-answer.is-quote{font-weight:500}
+.znp-ap .qa-answer.is-empty{color:var(--t4);font-weight:500;font-style:italic}
+.znp-ap .qa-video-link{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-weight:600;text-decoration:none}
+.znp-ap .qa-video-link:hover{text-decoration:underline}
+.znp-ap .qa-video-link svg{width:12px;height:12px;flex-shrink:0}
 .znp-ap .act-bar{display:flex;align-items:center;padding:6px 14px;border-top:1px solid var(--border);background:var(--bg);overflow-x:auto;gap:0}
 .znp-ap .act-dot{width:8px;height:8px;border-radius:50%;background:#d1dae8;flex-shrink:0}
 .znp-ap .act-dot.done{background:var(--blue)}.znp-ap .act-dot.now{background:var(--orange)}
@@ -514,17 +519,39 @@
                                         </div>
                                     @endif
                                     @if(!empty($a['questionnaire']))
+                                        @php
+                                            $qaLabelMap = [
+                                                'years_relevant' => 'Relevant experience',
+                                                'why_hire'       => 'Why hire you?',
+                                                'video_intro'    => 'Video intro',
+                                            ];
+                                        @endphp
                                         <div class="qa-wrap">
                                             <div class="qa-head">Questionnaire Responses</div>
                                             @foreach($a['questionnaire'] as $q)
                                                 @if(!is_array($q)) @continue @endif
+                                                @php
+                                                    $qKey = (string) ($q['key'] ?? '');
+                                                    $qType = (string) ($q['type'] ?? 'text');
+                                                    $qAnswer = trim((string) ($q['answer'] ?? ''));
+                                                    $qLabel = $qaLabelMap[$qKey] ?? ($q['label'] ?? 'Question');
+                                                @endphp
                                                 <div class="qa-item">
-                                                    <span class="qa-label">{{ $q['label'] ?? ($q['key'] ?? 'Question') }}</span>
-                                                    <span class="qa-answer {{ ($q['type'] ?? '') === 'text' ? 'italic' : '' }}">
-                                                        @if(!empty($q['answer']))
-                                                            @if(($q['type'] ?? '') === 'text') "{{ $q['answer'] }}" @else {{ $q['answer'] }} @endif
+                                                    <span class="qa-label">{{ $qLabel }}</span>
+                                                    <span class="qa-answer">
+                                                        @if($qAnswer !== '')
+                                                            @if($qType === 'url')
+                                                                <a class="qa-video-link" href="{{ $qAnswer }}" target="_blank" rel="noopener noreferrer">
+                                                                    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>
+                                                                    {{ preg_replace('#^https?://(www\.)?#i', '', $qAnswer) }}
+                                                                </a>
+                                                            @elseif($qType === 'text')
+                                                                <span class="is-quote">"{{ $qAnswer }}"</span>
+                                                            @else
+                                                                {{ $qAnswer }}
+                                                            @endif
                                                         @else
-                                                            <span style="color:var(--t4);font-style:italic">Not provided</span>
+                                                            <span class="is-empty">Not provided</span>
                                                         @endif
                                                     </span>
                                                 </div>
