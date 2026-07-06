@@ -39,6 +39,16 @@
     } elseif (! empty($znpPlan['plan_name'])) {
         $planSubLabel = $znpPlan['plan_name'];
     }
+
+    $apStageTabs = [
+        'all'         => 'All',
+        'new'         => 'New',
+        'shortlisted' => 'Shortlisted',
+        'interview'   => 'Interview',
+        'offer'       => 'Offer',
+        'contractor'  => 'Contractors',
+        'rejected'    => 'Rejected',
+    ];
 @endphp
 
 @push('styles')
@@ -334,7 +344,7 @@
     <div class="metrics-bar">
         <div class="metrics-inner">
             <div class="metric-item active" data-metric="all"><div class="m-num blue">{{ $metrics['total'] }}</div><div class="m-label">Total Applied</div></div>
-            <div class="metric-item" data-metric="resumedb"><div class="m-num green">{{ $metrics['resumedb'] }}</div><div class="m-label">ResumeDB</div></div>
+            <!-- <div class="metric-item" data-metric="resumedb"><div class="m-num green">{{ $metrics['resumedb'] }}</div><div class="m-label">ResumeDB</div></div> -->
             <div class="metric-item" data-metric="within"><div class="m-num blue">{{ $metrics['within'] }}</div><div class="m-label">Within Budget</div></div>
             <div class="metric-item" data-metric="over"><div class="m-num red">{{ $metrics['over'] }}</div><div class="m-label">Over Budget</div></div>
             <div class="metric-item" data-metric="mumbai"><div class="m-num blue">{{ $metrics['mumbai'] }}</div><div class="m-label">Mumbai</div></div>
@@ -432,7 +442,7 @@
             </div>
 
             <div class="stage-tabs" id="apStageTabs">
-                @foreach(['all'=>'All','new'=>'New','shortlisted'=>'Shortlisted','interview'=>'Interview','offer'=>'Offer','contractor'=>'Contractors','resumedb'=>'ResumeDB','rejected'=>'Rejected'] as $key => $label)
+                @foreach($apStageTabs as $key => $label)
                     <div class="stab {{ $key === 'all' ? 'active' : '' }}" data-stage="{{ $key }}">{{ $label }} <span class="stab-n">{{ $stages[$key] ?? 0 }}</span></div>
                 @endforeach
             </div>

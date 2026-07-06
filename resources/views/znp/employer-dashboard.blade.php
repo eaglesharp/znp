@@ -240,22 +240,14 @@
 .znp-ed .ed-tb-left { flex: 1; min-width: 0; }
 .znp-ed .ed-tb-title { font-size: 14px; font-weight: 800; color: var(--ed-text); letter-spacing: -.3px; }
 .znp-ed .ed-tb-sub { font-size: 11.5px; color: var(--ed-blue); margin-top: 2px; font-weight: 500; }
-.znp-ed .ed-co-wrap { display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-width: 0; }
+.znp-ed .ed-co-wrap { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .znp-ed .ed-co-av {
-    width: 36px; height: 36px; border-radius: 9px; background: var(--ed-blue-50);
-    border: 1px solid var(--ed-blue-100); color: var(--ed-blue); font-size: 12px;
-    font-weight: 800; display: flex; align-items: center; justify-content: center;
-    overflow: hidden; flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%; background: var(--ed-blue);
+    color: #fff; font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: default;
 }
-.znp-ed .ed-co-av img { width: 100%; height: 100%; object-fit: contain; border-radius: 9px; padding: 2px; }
-.znp-ed .ed-co-name {
-    font-size: 13px; font-weight: 700; color: var(--ed-text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
-}
-.znp-ed .ed-co-sub {
-    font-size: 11px; color: var(--ed-t4); font-weight: 500;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
-}
+.znp-ed .ed-co-av img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; padding: 2px; background: #fff; }
 .znp-ed .ed-logout-form { margin: 0; }
 .znp-ed .ed-logout-btn {
     display: inline-flex; align-items: center; justify-content: center;
@@ -583,7 +575,6 @@
     .znp-ed .ed-stat-cell:last-child { border-bottom: none; }
     .znp-ed .ed-sum-cell { border-right: none; border-bottom: 1px solid var(--ed-border); }
     .znp-ed .ed-sum-cell:last-child { border-bottom: none; }
-    .znp-ed .ed-co-name, .znp-ed .ed-co-sub { max-width: 120px; }
     .znp-ed .ed-tb-left { flex: 1; }
 }
 
@@ -825,20 +816,11 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <div class="ed-tb-sub">Start hiring from India's exclusive pool of zero notice period talent</div>
             </div>
             <div class="ed-co-wrap">
-                <div class="ed-co-av">
-                    @if(!empty($company->logo))
-                        <img src="{{ asset('company_logos/'.$company->logo) }}" alt="{{ $displayCompanyName }}">
-                    @else
-                        {{ $companyInitials }}
-                    @endif
-                </div>
-                <div>
-                    <div class="ed-co-name">{{ $displayCompanyName }}</div>
-                    <form method="POST" action="{{ route('company.logout') }}" class="ed-logout-form">
-                        @csrf
-                        <button type="submit" class="ed-logout-btn">Logout</button>
-                    </form>
-                </div>
+                <div class="ed-co-av" title="{{ $displayCompanyName }}">{{ $companyInitials }}</div>
+                <form method="POST" action="{{ route('company.logout') }}" class="ed-logout-form">
+                    @csrf
+                    <button type="submit" class="ed-logout-btn">Logout</button>
+                </form>
             </div>
         </div>
 
