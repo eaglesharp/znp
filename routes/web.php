@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
+
  
 
 /*
@@ -62,6 +63,18 @@ Route::get('/', 'IndexController@index')->name('index');
 // });
 
 Route::get('/find-talent', 'IndexController@index');
+
+/* ── Dev-only E2E Test Runner (auto-404s outside local/staging) ── */
+Route::get('dev/e2e-runner',                       'Dev\E2ETestRunnerController@index')->name('dev.e2e.runner');
+Route::post('dev/e2e-runner/run',                  'Dev\E2ETestRunnerController@run')->name('dev.e2e.runner.run');
+Route::get('dev/e2e-runner/log/{runId}',           'Dev\E2ETestRunnerController@log')->name('dev.e2e.runner.log');
+Route::get('dev/e2e-runner/status/{runId}',        'Dev\E2ETestRunnerController@status')->name('dev.e2e.runner.status');
+Route::post('dev/e2e-runner/cancel/{runId}',       'Dev\E2ETestRunnerController@cancel')->name('dev.e2e.runner.cancel');
+/* HTML report served from tests/e2e/playwright-report/ — wildcard so
+   assets like trace/, data/, *.js, *.css all resolve through Laravel. */
+Route::get('dev/e2e-runner/report/{path?}',        'Dev\E2ETestRunnerController@report')
+    ->where('path', '.*')
+    ->name('dev.e2e.runner.report');
 
 Route::get('/jobs-by-location', 'IndexController@getJobsByLocation')->name('jobs.by.location');
 
