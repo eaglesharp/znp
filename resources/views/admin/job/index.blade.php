@@ -22,6 +22,14 @@
         <h3 class="page-title">Manage Jobs <small>Jobs</small> </h3>
         <!-- END PAGE TITLE--> 
         <!-- END PAGE HEADER-->
+        @include('flash::message')
+
+        @if (session('bulk_import_success'))
+            <div class="alert alert-success">
+                {{ session('bulk_import_success') }}
+            </div>
+        @endif
+
         <div class="row">
             <div class="col-md-12"> 
                 <!-- Begin: life time stats -->
@@ -30,6 +38,17 @@
                         <div class="caption"> <i class="icon-settings font-dark"></i> <span class="caption-subject font-dark sbold uppercase">Jobs</span> </div>
                         <div class="actions "> 
                             <h4 class="page-title"><b>Posted Jobs</b> <span>: <b>{{ count($jobs) }}</b></span> </h4>
+
+                            @if (request('company_id'))
+                                {{-- Web grid hidden for now — re-enable later
+                                <a href="{{ route('jobs.grid', ['company_id' => request('company_id')]) }}" class="btn btn-xs btn-info">
+                                    <i class="fa fa-th-list"></i> Add Jobs (Grid)
+                                </a>
+                                --}}
+                                <a href="{{ route('bulk.jobs.upload', ['company_id' => request('company_id')]) }}" class="btn btn-xs btn-success">
+                                    <i class="fa fa-upload"></i> Bulk Upload (Excel)
+                                </a>
+                            @endif
 
                             {{-- <a href="{{ route('create.job') }}" class="btn btn-xs btn-success"><i class="glyphicon glyphicon-plus"></i> Add New Job</a>  --}}
                         </div>

@@ -1,0 +1,542 @@
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - link "ZeroNoticePeriod" [ref=e4] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000
+    - link "Dashboard" [ref=e5] [cursor=pointer]:
+      - /url: http://127.0.0.1:8000/employer-dashboard-page
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9]: Post A New Job
+      - generic [ref=e10]: Your job will be visible to verified zero-notice-period candidates immediately after review.
+    - generic "Job posting progress" [ref=e11]:
+      - generic [ref=e12]:
+        - generic [ref=e13]: "1"
+        - generic [ref=e14]: Job Details
+      - generic [ref=e16]:
+        - generic [ref=e17]: "2"
+        - generic [ref=e18]: Description
+      - generic [ref=e20]:
+        - generic [ref=e21]: "3"
+        - generic [ref=e22]: Company
+      - generic [ref=e24]:
+        - generic [ref=e25]: "4"
+        - generic [ref=e26]: Perks
+      - generic [ref=e28]:
+        - generic [ref=e29]: "5"
+        - generic [ref=e30]: Profile Update
+    - generic [ref=e33]:
+      - img [ref=e35]
+      - generic [ref=e38]:
+        - generic [ref=e39]: No previous jobs yet
+        - generic [ref=e40]: Once you post your first job, you'll be able to clone its details in one click from here.
+    - generic [ref=e41]:
+      - generic [ref=e43]:
+        - img [ref=e44]
+        - text: Job Details
+      - generic [ref=e47]: Core information about the role. All fields marked * are required.
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - generic [ref=e50]:
+            - text: Job Title
+            - generic [ref=e51]: "*"
+          - textbox "e.g. Senior .NET Developer" [ref=e52]
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - text: Mode of Work
+            - generic [ref=e55]: "*"
+          - combobox [ref=e56] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "Work from Office"
+            - option "Hybrid"
+            - option "Remote / WFH"
+            - option "Temp WFH"
+      - generic [ref=e57]:
+        - generic [ref=e58]:
+          - generic [ref=e59]:
+            - text: Job Type
+            - generic [ref=e60]: "*"
+          - combobox [ref=e61] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "Full Time / Permanent"
+            - option "Contract"
+            - option "Contract to Hire"
+            - option "Internship"
+            - option "Fresher"
+            - option "Part Time"
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - text: Job Shift
+            - generic [ref=e64]: "*"
+          - combobox [ref=e65] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "General Shift (9 AM – 6 PM)"
+            - option "Rotational Shift"
+            - option "US Shift (6 PM +)"
+            - option "UK Shift (1:30 PM +)"
+            - option "APAC Shift (6 AM +)"
+            - option "6 Days / Week"
+            - option "Flexible Hours"
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - text: Minimum Salary (LPA)
+            - generic [ref=e69]: "*"
+          - spinbutton [ref=e70]
+        - generic [ref=e71]:
+          - generic [ref=e72]:
+            - text: Maximum Salary (LPA)
+            - generic [ref=e73]: "*"
+          - spinbutton [ref=e74]
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - text: Number of Openings
+            - generic [ref=e77]: "*"
+          - spinbutton [ref=e78]: "1"
+      - generic [ref=e82]:
+        - generic [ref=e83]: Keep compensation confidential
+        - generic [ref=e84]: Salary range will not be shown publicly — candidates can apply and discuss in interview.
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - generic [ref=e87]:
+            - text: Min Experience (yrs)
+            - generic [ref=e88]: "*"
+          - spinbutton [ref=e89]
+          - generic [ref=e90]: Enter in steps of 0.5 — e.g. 1, 1.5, 2, 2.5…
+        - generic [ref=e91]:
+          - generic [ref=e92]: Max Experience (yrs)
+          - spinbutton [ref=e93]
+      - generic [ref=e94]:
+        - generic [ref=e95]:
+          - generic [ref=e96]:
+            - text: Primary Work Language
+            - generic [ref=e97]: "*"
+          - combobox [ref=e98] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "English"
+            - option "Hindi"
+            - option "English & Hindi"
+            - option "Tamil"
+            - option "Telugu"
+            - option "Kannada"
+            - option "Malayalam"
+            - option "Marathi"
+            - option "Bengali"
+            - option "Gujarati"
+            - option "Other"
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - text: Posting Type
+            - generic [ref=e101]: "*"
+          - combobox [ref=e102] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "Direct Employer"
+            - option "Hiring for a Client"
+          - generic [ref=e103]: Candidates will see this on the listing.
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e106]:
+            - text: Location
+            - generic [ref=e107]: "*"
+          - listbox [ref=e108]
+          - combobox [ref=e111]:
+            - list [ref=e112]:
+              - listitem [ref=e113]:
+                - textbox "Add a city / location" [ref=e114]
+        - generic [ref=e115]:
+          - generic [ref=e116]: Locality / Area
+          - textbox "e.g. Andheri East" [ref=e117]
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - text: Skills Required
+          - generic [ref=e120]: "*"
+        - listbox [ref=e121]
+        - combobox [ref=e124]:
+          - list [ref=e125]:
+            - listitem [ref=e126]:
+              - textbox "Add a skill or technology" [ref=e127]
+        - generic [ref=e128]: Type a skill name. First skills are shown as primary.
+      - generic [ref=e129]:
+        - generic [ref=e130]:
+          - text: Mode of Interview
+          - generic [ref=e131]: "*"
+          - generic [ref=e132]: select multiple
+        - generic [ref=e133]:
+          - generic [ref=e136] [cursor=pointer]: CV Screening
+          - generic [ref=e139] [cursor=pointer]: Video Interview
+          - generic [ref=e142] [cursor=pointer]: Technical Assessment
+          - generic [ref=e145] [cursor=pointer]: HR Interview
+          - generic [ref=e148] [cursor=pointer]: Coding Test
+          - generic [ref=e151] [cursor=pointer]: Client Interview
+          - generic [ref=e154] [cursor=pointer]: Case Study Challenge
+          - generic [ref=e157] [cursor=pointer]: White Paper Challenge
+          - generic [ref=e160] [cursor=pointer]: Walk-in
+          - generic [ref=e163] [cursor=pointer]: AI Assessment
+          - generic [ref=e166] [cursor=pointer]: AI Interview
+    - generic [ref=e167]:
+      - generic [ref=e169]:
+        - img [ref=e170]
+        - text: Job Description
+      - generic [ref=e173]: Write clearly — candidates read this before deciding to apply.
+      - generic [ref=e174]:
+        - generic [ref=e175]:
+          - text: Job Description
+          - generic [ref=e176]: "*"
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - button "B" [ref=e179] [cursor=pointer]:
+              - generic [ref=e180]: B
+            - button "I" [ref=e181] [cursor=pointer]:
+              - generic [ref=e182]: I
+            - button "U" [ref=e183] [cursor=pointer]:
+              - generic [ref=e184]: U
+            - button "•≡" [ref=e186] [cursor=pointer]
+            - button "1≡" [ref=e187] [cursor=pointer]
+          - generic [ref=e188]: Write a summary of the role, key responsibilities, and what a typical day looks like…
+      - generic [ref=e189]:
+        - generic [ref=e190]:
+          - text: Candidate Eligibility / Overview
+          - generic [ref=e191]: "*"
+        - generic [ref=e192]:
+          - generic [ref=e193]:
+            - button "B" [ref=e194] [cursor=pointer]:
+              - generic [ref=e195]: B
+            - button "I" [ref=e196] [cursor=pointer]:
+              - generic [ref=e197]: I
+            - button "U" [ref=e198] [cursor=pointer]:
+              - generic [ref=e199]: U
+            - button "•≡" [ref=e201] [cursor=pointer]
+            - button "1≡" [ref=e202] [cursor=pointer]
+          - generic [ref=e203]: List qualifications, certifications, or education requirements…
+    - generic [ref=e204]:
+      - generic [ref=e206]:
+        - img [ref=e207]
+        - text: Company Information
+        - generic [ref=e210]:
+          - img [ref=e211]
+          - text: Auto-saved
+      - generic [ref=e213]: Helps candidates understand who they'll be joining. Saved to your profile for next time.
+      - generic [ref=e214]:
+        - generic [ref=e215]:
+          - text: About the Company
+          - generic [ref=e216]: "*"
+        - textbox "Describe your company — what you do, culture, team size, technology stack…" [ref=e217]
+      - generic [ref=e218]:
+        - generic [ref=e219]:
+          - generic [ref=e220]:
+            - text: Website URL
+            - generic [ref=e221]: "*"
+          - generic [ref=e222]:
+            - generic [ref=e223]: https://www.
+            - textbox "yourcompany.com" [ref=e224]
+        - generic [ref=e225]:
+          - generic [ref=e226]: Industry / Sector
+          - combobox [ref=e227] [cursor=pointer]:
+            - option "— Select —" [selected]
+            - option "Accounting/Taxation"
+            - option "Advertising/PR"
+            - option "Agriculture/Fertilizer/Pesticide"
+            - option "Apparel/Clothing"
+            - option "Architecture/Interior Design"
+            - option "Arts / Entertainment"
+            - option "AutoMobile"
+            - option "Aviation"
+            - option "Banking/Financial Services"
+            - option "BPO"
+            - option "Broadcasting"
+            - option "Business Development"
+            - option "Call Center"
+            - option "Chemicals"
+            - option "Construction/Cement/Metals"
+            - option "Consultants"
+            - option "Courier/Logistics"
+            - option "Distribution and Logistics"
+            - option "Education/Training"
+            - option "Electronics"
+            - option "Engineering"
+            - option "Event Management"
+            - option "Fashion"
+            - option "Fast Moving Consumer Goods (FMCG)"
+            - option "Food & Beverages"
+            - option "Gems &amp; Jewelery"
+            - option "Government"
+            - option "Health & Fitness"
+            - option "Healthcare/Hospital/Medical"
+            - option "Hospitality"
+            - option "Hotel Management / Restaurants"
+            - option "Importers/ Distributors/Exporters"
+            - option "Information Technology"
+            - option "Insurance / Takaful"
+            - option "Investments"
+            - option "Law Firms/Legal"
+            - option "Manufacturing"
+            - option "Media/Communications"
+            - option "Mining/Oil & Gas/Petroleum"
+            - option "N.G.O./Social Services"
+            - option "Packaging"
+            - option "Personal Care and Services"
+            - option "Pharmaceuticals/Clinical Research"
+            - option "Power/Energy"
+            - option "Project Management"
+            - option "Publishing/Printing"
+            - option "Real Estate/Property"
+            - option "Recruitment/Employment Firms"
+            - option "Retail"
+            - option "Security/Law Enforcement"
+            - option "Services"
+            - option "Shipping/Marine"
+            - option "Telecommunication/ISP"
+            - option "Textiles/Garments"
+            - option "Tiles & Ceramics"
+            - option "Travel/Tourism/Transportation"
+            - option "Warehousing"
+      - generic [ref=e228]:
+        - generic [ref=e229]: Employer Headcount
+        - generic [ref=e230]:
+          - generic [ref=e231] [cursor=pointer]: 1–10
+          - generic [ref=e232] [cursor=pointer]: 11–50
+          - generic [ref=e233] [cursor=pointer]: 51–200
+          - generic [ref=e234] [cursor=pointer]: 201–500
+          - generic [ref=e235] [cursor=pointer]: 500–1K
+          - generic [ref=e236] [cursor=pointer]: 1K–5K
+          - generic [ref=e237] [cursor=pointer]: 5K–10K
+          - generic [ref=e238] [cursor=pointer]: 10K–25K
+          - generic [ref=e239] [cursor=pointer]: 25K–50K
+          - generic [ref=e240] [cursor=pointer]: 50K–75K
+          - generic [ref=e241] [cursor=pointer]: 75K–1L
+          - generic [ref=e242] [cursor=pointer]: 1L+
+      - generic [ref=e243]:
+        - generic [ref=e244]: Company Logo
+        - generic [ref=e245]:
+          - img [ref=e247]
+          - generic [ref=e251]:
+            - button "Upload logo" [ref=e252] [cursor=pointer]
+            - generic [ref=e253]: PNG / JPG · Max 2MB · 400×400 recommended.
+      - generic [ref=e254]:
+        - generic [ref=e255]:
+          - text: Office Address (India)
+          - generic [ref=e256]: "*"
+        - textbox "e.g. 4th Floor, Prestige Tech Park, Marathahalli, Bengaluru 560037" [ref=e257]
+        - generic [ref=e258]: Shown to candidates — helps them assess commute for WFO / Hybrid roles.
+      - generic [ref=e259]:
+        - generic [ref=e260]:
+          - text: Countries of Presence
+          - generic [ref=e261]: (select all that apply)
+        - generic [ref=e263]:
+          - text: India
+          - generic [ref=e264] [cursor=pointer]: ×
+        - combobox [ref=e265] [cursor=pointer]:
+          - option "+ Add country" [selected]
+          - option "India"
+          - option "United States"
+          - option "United Kingdom"
+          - option "United Arab Emirates"
+          - option "Singapore"
+          - option "Australia"
+          - option "Canada"
+          - option "Germany"
+          - option "Netherlands"
+          - option "Malaysia"
+          - option "Saudi Arabia"
+          - option "Qatar"
+          - option "Bahrain"
+          - option "Japan"
+          - option "South Africa"
+          - option "New Zealand"
+          - option "Other"
+        - generic [ref=e266]: Helps candidates understand the company's international footprint.
+    - generic [ref=e267]:
+      - generic [ref=e269]:
+        - img [ref=e270]
+        - text: Employer Awards & Recognition
+        - generic [ref=e273]:
+          - img [ref=e274]
+          - text: Auto-saved
+      - generic [ref=e276]: Selected certifications and awards appear as badges on your job listing — builds candidate trust instantly.
+      - generic [ref=e277]:
+        - generic [ref=e279]:
+          - combobox [ref=e280] [cursor=pointer]:
+            - option "— Add an award or certification —" [selected]
+            - option "Great Place to Work® Certification"
+            - option "Top Employers Institute Certification"
+            - option "LinkedIn Top Companies"
+            - option "Economic Times Best Workplace for Women"
+            - option "Randstad Employer Brand Research (REBR) Awards"
+            - option "BW People Best Employers"
+            - option "Fortune India's Best Companies to Work For"
+            - option "The Economic Times Awards for Corporate Excellence"
+            - option "Golden Peacock Awards"
+            - option "CNBC-TV18 India Business Leader Awards (IBLA)"
+            - option "EY Entrepreneur Of The Year™ India"
+            - option "CII Industrial Innovation Awards"
+            - option "FICCI Quality Systems Excellence Awards"
+            - option "Forbes India Leadership Awards (FILA)"
+            - option "Business Today-Best CEO Awards"
+            - option "National Startup Awards (by Startup India)"
+            - option "DPIIT Startup India Recognition"
+            - option "CII-ITC Sustainability Awards"
+            - option "FICCI CSR Awards"
+            - option "India Green Awards"
+            - option "Mahatma Award (for Social Impact)"
+            - option "National CSR Awards (Ministry of Corporate Affairs)"
+            - option "The Golden Globe Tigers Awards (for CSR)"
+            - option "Greentech Environment & Safety Awards"
+            - option "ISO 9001 (Quality Management)"
+            - option "ISO 14001 (Environmental Management)"
+            - option "ISO 27001 (Information Security)"
+            - option "ISO 45001 (Occupational Health and Safety)"
+            - option "CMMI (Capability Maturity Model Integration)"
+            - option "BIS / ISI Mark (Product Quality and Safety)"
+            - option "ZED Certification (Zero Defect Zero Effect)"
+            - option "Udyam MSME Registration"
+            - option "FSSAI License (Food Safety)"
+            - option "BEE Star Rating (Energy Efficiency)"
+            - option "IMC Ramkrishna Bajaj National Quality Award"
+            - option "National Quality Awards (NQA)"
+            - option "India SME 100 Awards"
+            - option "Deloitte Technology Fast 50 India"
+            - option "Karnataka Business Awards (Regional Excellence)"
+          - button "+ Add" [ref=e281] [cursor=pointer]
+        - generic [ref=e282]:
+          - textbox "Can't find yours? Type a custom award name…" [ref=e283]
+          - button "+ Add Custom" [ref=e284] [cursor=pointer]
+    - generic [ref=e285]:
+      - generic [ref=e287]:
+        - img [ref=e288]
+        - text: Employee Perks & Benefits
+        - generic [ref=e290]:
+          - img [ref=e291]
+          - text: Auto-saved
+        - generic [ref=e293]: select all that apply
+      - generic [ref=e294]: Candidates filter by perks. The more you add, the higher your visibility with matching profiles.
+      - generic [ref=e295]: Compensation & Financial
+      - generic [ref=e296]:
+        - generic [ref=e299] [cursor=pointer]: Annual Performance Bonus
+        - generic [ref=e302] [cursor=pointer]: Variable Pay / Incentive Programs
+        - generic [ref=e305] [cursor=pointer]: Joining Bonus
+        - generic [ref=e308] [cursor=pointer]: Retention Bonus
+        - generic [ref=e311] [cursor=pointer]: Employee Referral Bonus
+        - generic [ref=e314] [cursor=pointer]: ESOP / Employee Stock Options
+        - generic [ref=e317] [cursor=pointer]: Gratuity
+        - generic [ref=e320] [cursor=pointer]: Provident Fund (PF)
+      - generic [ref=e321]: Compensation
+      - generic [ref=e322]:
+        - generic [ref=e325] [cursor=pointer]: ESOPs / Stock Options
+        - generic [ref=e328] [cursor=pointer]: Quarterly Performance Payout
+        - generic [ref=e331] [cursor=pointer]: Sales / Target Incentive
+        - generic [ref=e334] [cursor=pointer]: Retention / Loyalty Bonus
+      - generic [ref=e335]: Health & Insurance
+      - generic [ref=e336]:
+        - generic [ref=e339] [cursor=pointer]: Group Health Insurance
+        - generic [ref=e342] [cursor=pointer]: Medical Insurance for Family
+        - generic [ref=e345] [cursor=pointer]: Term Life Insurance
+        - generic [ref=e348] [cursor=pointer]: Personal Accident Insurance
+        - generic [ref=e351] [cursor=pointer]: Mental Health & Wellness Support
+        - generic [ref=e354] [cursor=pointer]: Annual Health Check-up
+      - generic [ref=e355]: Transport & Food
+      - generic [ref=e356]:
+        - generic [ref=e359] [cursor=pointer]: Transportation Provision (cab / bus)
+        - generic [ref=e362] [cursor=pointer]: Petrol / Fuel Allowance
+        - generic [ref=e365] [cursor=pointer]: Free Food at Office
+        - generic [ref=e368] [cursor=pointer]: Subsidised / Meal Allowance
+      - generic [ref=e369]: Travel & Relocation
+      - generic [ref=e370]:
+        - generic [ref=e373] [cursor=pointer]: Travel Allowance / Reimbursement
+        - generic [ref=e376] [cursor=pointer]: Relocation Benefits / Assistance
+        - generic [ref=e379] [cursor=pointer]: LTA (Leave Travel Allowance)
+        - generic [ref=e382] [cursor=pointer]: Onsite / International Travel Opportunities
+      - generic [ref=e383]: Work & Leave
+      - generic [ref=e384]:
+        - generic [ref=e387] [cursor=pointer]: Flexible Work Hours
+        - generic [ref=e390] [cursor=pointer]: Work from Home Days
+        - generic [ref=e393] [cursor=pointer]: 5-Day Work Week
+        - generic [ref=e396] [cursor=pointer]: Compensatory Off (Comp-off)
+        - generic [ref=e399] [cursor=pointer]: Maternity / Paternity Leave
+        - generic [ref=e402] [cursor=pointer]: Sabbatical Leave Policy
+      - generic [ref=e403]: Growth & Learning
+      - generic [ref=e404]:
+        - generic [ref=e407] [cursor=pointer]: Training & Development Programs
+        - generic [ref=e410] [cursor=pointer]: Certification / Upskilling Support
+        - generic [ref=e413] [cursor=pointer]: Conference & Event Sponsorship
+        - generic [ref=e416] [cursor=pointer]: Education Reimbursement
+      - generic [ref=e417]: Workplace & Culture
+      - generic [ref=e418]:
+        - generic [ref=e421] [cursor=pointer]: Equal Opportunity Employer
+        - generic [ref=e424] [cursor=pointer]: POSH Policy (Anti-Harassment)
+        - generic [ref=e427] [cursor=pointer]: Employee Recognition Programs
+        - generic [ref=e430] [cursor=pointer]: Team Outings & Engagement Events
+      - generic [ref=e431]:
+        - textbox "Add a custom benefit your company offers…" [ref=e432]
+        - button "+ Add Custom" [ref=e433] [cursor=pointer]
+    - generic [ref=e434]:
+      - generic [ref=e436]:
+        - img [ref=e437]
+        - text: Mandatory Questionnaire
+        - generic [ref=e440]: shown to every candidate before they apply
+      - generic [ref=e441]: Q1 and Q2 are presented to every applicant; the optional video link can be toggled off.
+      - generic [ref=e442]:
+        - generic [ref=e443]:
+          - generic [ref=e444]: "1"
+          - generic [ref=e445]:
+            - generic [ref=e446]: How many years of experience do you have relevant to this role?
+            - generic [ref=e447]: Candidate states specific experience for this role — distinguishes total experience from relevant.
+            - generic [ref=e448]:
+              - generic [ref=e449]: Number
+              - generic [ref=e450]: Required
+            - generic [ref=e451]:
+              - generic "Always enabled" [ref=e452]
+              - generic [ref=e454]: Always enabled — required for all applicants
+        - generic [ref=e455]:
+          - generic [ref=e456]: "2"
+          - generic [ref=e457]:
+            - generic [ref=e458]: Why should we hire you?
+            - generic [ref=e459]: Short open-text answer (max 300 characters) — a quick litmus test for motivation and communication.
+            - generic [ref=e460]:
+              - generic [ref=e461]: Text (300 chars)
+              - generic [ref=e462]: Required
+            - generic [ref=e463]:
+              - generic "Always enabled" [ref=e464]
+              - generic [ref=e466]: Always enabled — mandatory for all applicants
+        - generic [ref=e467]:
+          - generic [ref=e468]: "3"
+          - generic [ref=e469]:
+            - generic [ref=e470]: Share a link to your video introduction (Optional)
+            - generic [ref=e471]: Candidates can paste any public link (Loom, YouTube unlisted, Drive). Toggle off if you don't want this.
+            - generic [ref=e472]:
+              - generic [ref=e473]: URL / Link
+              - generic [ref=e474]: Not mandatory
+            - generic [ref=e478]: Question enabled — applicants can share a link
+      - button "Add a custom question" [ref=e480] [cursor=pointer]:
+        - img [ref=e481]
+        - text: Add a custom question
+    - generic [ref=e483]:
+      - generic [ref=e485]:
+        - img [ref=e486]
+        - text: Candidate Profile Requirements
+        - generic [ref=e489]: candidates must confirm these before applying
+      - generic [ref=e490]: Select the profile fields candidates must verify and update before submitting their application.
+      - generic [ref=e491]:
+        - generic [ref=e494] [cursor=pointer]: Current CTC
+        - generic [ref=e497] [cursor=pointer]: Expected CTC
+        - generic [ref=e500] [cursor=pointer]: Notice Period
+        - generic [ref=e503] [cursor=pointer]: Current Location
+        - generic [ref=e506] [cursor=pointer]: Preferred Work Mode
+        - generic [ref=e509] [cursor=pointer]: Total Years of Experience
+        - generic [ref=e512] [cursor=pointer]: Resume / CV (updated)
+        - generic [ref=e515] [cursor=pointer]: LinkedIn Profile URL
+        - generic [ref=e518] [cursor=pointer]: Highest Qualification
+        - generic [ref=e521] [cursor=pointer]: Preferred Job Location
+      - generic [ref=e525]:
+        - generic [ref=e526]: Strict mode — Off
+        - generic [ref=e527]: Candidates can skip required profile fields with a warning.
+    - generic [ref=e528]:
+      - generic [ref=e530]:
+        - img [ref=e531]
+        - generic [ref=e533]:
+          - generic [ref=e534]: Auto-save enabled
+          - generic [ref=e535]: Company info, awards & perks are saved for future job posts.
+      - generic [ref=e536]:
+        - button "Save as Draft" [ref=e537] [cursor=pointer]
+        - button "Preview & Post Job →" [ref=e538] [cursor=pointer]:
+          - img [ref=e539]
+          - text: Preview & Post Job →
+  - status
