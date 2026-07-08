@@ -35,7 +35,7 @@ Route::put('update-front-job/{id}', 'Job\JobPublishController@updateFrontJob')->
 
 Route::delete('delete-front-job', 'Job\JobPublishController@deleteJob')->name('delete.front.job');
 
-Route::get('my-jobs','Job\JobPublishController@myJobsZNP')->name('my-jobs');
+Route::get('my-jobs','Job\JobPublishController@myFrontJob')->name('my-jobs');
 
 Route::get('make-active-job','Job\JobPublishController@makeActiveJob')->name('make.active.job');
 

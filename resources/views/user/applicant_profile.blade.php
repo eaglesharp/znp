@@ -4,10 +4,7 @@
 
 @section('content')
 
-@php
-    $unlocked = $unlocked ?? false;
-    $collections = $collections ?? collect();
-@endphp
+
 
     <!-- Header start -->
     @include('includes.header')
@@ -822,8 +819,10 @@
                         <button type="submit" class="py-2 signin_button rounded px-2 px-sm-3 mr-1 mr-sm-3"
                             onclick="alert('Buy CV/Subscription!')">Send Email</button>
                     @else
+                        <!--@if ($unlocked)-->
                             <button type="submit" class="py-2 signin_button rounded px-2 px-sm-3 mr-1 mr-sm-3"
                                 data-toggle="modal" data-target="#emailmodal">Send Email</button>
+                        <!--@endif-->
                     @endif
 
                     {{-- <button type="submit" class="py-2 signin_button rounded px-2 px-sm-3 mr-1 mr-sm-3" onclick="sendsms({{ $user->id }})">Send SMS</button> --}}
