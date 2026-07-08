@@ -28,10 +28,6 @@ use App\Package;
 
 use App\Company;
 
-use App\ZnpPricingPlan;
-
-use App\ZnpCompanySubscription;
-
 use App\Country;
 
 use App\State;
@@ -615,25 +611,6 @@ class CompanyController extends Controller
 
 
 
-        /* ── ZNP pricing plans (new system) ──
-           Drives the "ZNP Plan" dropdown on the form so admins can grant a
-           plan to an employer manually until the Razorpay flow is live.
-           NOTE: ignores soft-stored/seeded rows whose is_active=0. */
-        $znpPlans = ZnpPricingPlan::active()->ordered()->get();
-        $znpPlanOptions = ['' => '— Select ZNP Plan —'];
-        foreach ($znpPlans as $p) {
-            $limitLabel = ((int) $p->job_posts_limit === 0)
-                ? 'Unlimited'
-                : (int) $p->job_posts_limit . ' posts';
-            $priceLabel = $p->is_custom_price
-                ? 'Custom'
-                : '₹' . number_format((float) $p->price, 0, '.', ',');
-            $znpPlanOptions[$p->id] = $p->name . ' · ' . $priceLabel
-                . ' · ' . $limitLabel . ' · ' . (int) $p->validity_days . 'd';
-        }
-
-        $znpSubscription = $company->activeZnpSubscription();
-
         return view('admin.company.edit')
 
             ->with('company', $company)
@@ -646,13 +623,7 @@ class CompanyController extends Controller
 
             ->with('packages', $packages)
 
-            ->with('package_id', $package_id)
-
-            ->with('znpPlans', $znpPlans)
-
-            ->with('znpPlanOptions', $znpPlanOptions)
-
-            ->with('znpSubscription', $znpSubscription);
+            ->with('package_id', $package_id);
 
     }
 
@@ -817,71 +788,10 @@ class CompanyController extends Controller
 
         /*         * ************************************ */
 
-        /* ── ZNP plan assignment (new system) ──
-           When the admin picks a ZNP plan from the dropdown, we cancel any
-           previously-active subscription and grant a fresh one with:
-             - posts quota snapshotted from the plan
-             - expires_at = now + plan.validity_days
-             - assignment_source = 'admin_manual' (no payment captured)
-           Picking the same plan again issues a fresh window (re-grant). */
-        if ($request->filled('znp_plan_id')) {
-            $this->grantZnpPlanToCompany(
-                $company,
-                (int) $request->input('znp_plan_id'),
-                $request->input('znp_plan_notes')
-            );
-        }
-
         flash('Company has been updated!')->success();
 
         return \Redirect::route('edit.company', array($company->id));
 
-    }
-
-
-
-    /**
-     * Cancel any active ZNP subscription on the company and grant a fresh
-     * one based on the chosen plan. Used by the manual-grant flow on the
-     * admin edit-company form (no payment captured, source = 'admin_manual').
-     *
-     * Safe to call multiple times — each call yields a new subscription row
-     * so the audit trail is preserved.
-     */
-    protected function grantZnpPlanToCompany(Company $company, int $planId, ?string $notes = null): ?ZnpCompanySubscription
-    {
-        $plan = ZnpPricingPlan::find($planId);
-        if (! $plan) {
-            return null;
-        }
-
-        /* End any currently-active subscriptions before issuing a new one. */
-        ZnpCompanySubscription::where('company_id', $company->id)
-            ->where('status', 'active')
-            ->update(['status' => 'cancelled']);
-
-        $now = Carbon::now();
-        $adminId = Auth::guard('admin')->check() ? (int) Auth::guard('admin')->user()->id : null;
-
-        return ZnpCompanySubscription::create([
-            'company_id'           => $company->id,
-            'plan_id'              => $plan->id,
-            'plan_slug'            => $plan->slug,
-            'plan_name'            => $plan->name,
-            'posts_limit'          => (int) $plan->job_posts_limit,
-            'posts_used'           => 0,
-            'validity_days'        => (int) $plan->validity_days,
-            'post_active_days'     => (int) $plan->post_active_days,
-            'starts_at'            => $now,
-            'expires_at'           => $now->copy()->addDays((int) $plan->validity_days),
-            'status'               => 'active',
-            'amount_paid'          => 0,
-            'currency'             => $plan->currency ?: 'INR',
-            'assignment_source'    => 'admin_manual',
-            'payment_ref'          => null,
-            'assigned_by_admin_id' => $adminId,
-            'notes'                => $notes,
-        ]);
     }
 
 

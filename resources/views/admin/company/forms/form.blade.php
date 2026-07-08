@@ -69,7 +69,7 @@
 
 
 
-    <div class="form-group {!! APFrmErrHelp::hasError($errors, 'company_package_id') !!}"> {!! Form::label('company_package_id', 'Package (Legacy CV/Email)', ['class' => 'bold']) !!}  
+    <div class="form-group {!! APFrmErrHelp::hasError($errors, 'company_package_id') !!}"> {!! Form::label('company_package_id', 'Package', ['class' => 'bold']) !!}  
         {!! Form::select('company_package_id', ['' => 'Select Package']+$packages, null, array('class'=>'form-control', 'id'=>'company_package_id')) !!}
         {!! APFrmErrHelp::showErrors($errors, 'company_package_id') !!} </div>
 
@@ -95,60 +95,6 @@
         <strong>{{$company->availed_email_quota}}</strong> / <strong>{{$company->email_quota}}</strong>
     </div>
     <hr/>
-    @endif
-
-    {{-- ─────────────────────────────────────────────────────────────────────
-         ZNP Job-Posting Plan (NEW)
-         Manually assign one of the new ZNP plans (Quick Job / Flex / Pro) to
-         this employer. Used until Razorpay integration is live. Picking a
-         plan here cancels any previous active subscription and starts a
-         fresh window (posts quota + validity days) on save.
-    ───────────────────────────────────────────────────────────────────── --}}
-    @if(isset($znpPlanOptions))
-    <div style="background:#f7f9fc;border:1px solid #e3e7ef;padding:14px 16px;border-radius:6px;margin:14px 0;">
-        <div style="font-weight:700;font-size:14px;color:#2d47a3;margin-bottom:10px;">
-            <i class="fa fa-bolt"></i> ZNP Job-Posting Plan
-            <span style="font-weight:400;color:#717a96;font-size:11px;margin-left:6px;">
-                (Manual grant — bypasses Razorpay / Stripe)
-            </span>
-        </div>
-
-        @if(isset($znpSubscription) && $znpSubscription)
-            <div class="form-group" style="margin-bottom:8px;">
-                <strong>Current plan:</strong>
-                <span class="label label-success">{{ $znpSubscription->plan_name }}</span>
-                &middot;
-                <strong>Posts used:</strong>
-                {{ $znpSubscription->posts_used }} / {{ $znpSubscription->posts_limit == 0 ? '∞' : $znpSubscription->posts_limit }}
-                &middot;
-                <strong>Valid till:</strong>
-                {{ $znpSubscription->expires_at ? $znpSubscription->expires_at->format('d M Y') : '—' }}
-                &middot;
-                <strong>Source:</strong>
-                <span class="badge">{{ $znpSubscription->assignment_source }}</span>
-            </div>
-        @else
-            <div class="form-group" style="margin-bottom:8px;color:#a0aabf;">
-                <em>No active ZNP plan — this employer cannot post jobs yet.</em>
-            </div>
-        @endif
-
-        <div class="form-group {!! APFrmErrHelp::hasError($errors, 'znp_plan_id') !!}">
-            {!! Form::label('znp_plan_id', 'Assign / Re-grant ZNP Plan', ['class' => 'bold']) !!}
-            {!! Form::select('znp_plan_id', $znpPlanOptions, null, ['class'=>'form-control','id'=>'znp_plan_id']) !!}
-            <span class="help-block" style="font-size:11px;color:#717a96;">
-                Selecting a plan and saving will <strong>cancel the current ZNP plan</strong>
-                and start a fresh window with this plan's posts quota and validity days.
-                Leave blank to keep the current assignment unchanged.
-            </span>
-            {!! APFrmErrHelp::showErrors($errors, 'znp_plan_id') !!}
-        </div>
-
-        <div class="form-group">
-            {!! Form::label('znp_plan_notes', 'Notes (optional, internal)', ['class' => 'bold']) !!}
-            {!! Form::text('znp_plan_notes', null, ['class'=>'form-control','id'=>'znp_plan_notes','placeholder'=>'e.g. Free trial granted by Sales — 2026-05-23']) !!}
-        </div>
-    </div>
     @endif
 
     <div class="form-group {!! APFrmErrHelp::hasError($errors, 'is_active') !!}">

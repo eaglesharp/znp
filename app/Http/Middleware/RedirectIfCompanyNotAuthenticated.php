@@ -18,12 +18,9 @@ class RedirectIfCompanyNotAuthenticated
      */
     public function handle($request, Closure $next, $guard = 'company')
     {
-        if (! Auth::guard($guard)->check()) {
+        if (!Auth::guard($guard)->check()) {
 
-            /* /login redirects to jobseeker auth in web.php — employers must use employer login. */
-
-            return redirect()->guest(route('employer.login'));
-
+            return redirect('/login');
         }
         return $next($request);
     }
