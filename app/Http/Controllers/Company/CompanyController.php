@@ -121,6 +121,8 @@ use App\ReportAbuseCompanyMessage;
 
 use App\Mail\KYCEmail;
 
+use App\PostJob;
+
 class CompanyController extends Controller
 {
 
@@ -1390,7 +1392,9 @@ class CompanyController extends Controller
 
         $profileCv = $job_application->getProfileCv();
 
-
+        $unlocked = Unlocked_users::where('company_id', Auth::guard('company')->user()->id)
+            ->where('unlocked_users_ids', $user->id)
+            ->exists();
 
         /*         * ********************************************** */
 
@@ -1413,6 +1417,8 @@ class CompanyController extends Controller
             ->with('company', $company)
 
             ->with('profileCv', $profileCv)
+
+            ->with('unlocked', $unlocked)
 
             ->with('page_title', 'Applicant Profile')
 
@@ -1864,6 +1870,2562 @@ class CompanyController extends Controller
 
 
         return view('company.company_dashboard', compact('company', 'balance', 'email_balance'));
+
+    }
+
+
+
+    /**
+
+     * ZNP standalone job-posting pricing page (matches new design HTML).
+
+     *
+
+     * @return \Illuminate\View\View
+
+     */
+
+    public function jobPricingZNP()
+
+    {
+
+        /* Pull active plans from znp_pricing_plans (ordered by display_order).
+           Each row drives one card on the pricing page; copy/price/quota/etc.
+           are all editable directly in the DB so a change there reflects on
+           the public page without a redeploy. */
+        $plans = \App\ZnpPricingPlan::active()->ordered()->get();
+
+        /* The current employer's plan (if logged in) — used to highlight
+           "Your current plan" on the matching card. */
+        $currentPlanId = null;
+        if (\Auth::guard('company')->check()) {
+            $sub = \Auth::guard('company')->user()->activeZnpSubscription();
+            $currentPlanId = $sub ? (int) $sub->plan_id : null;
+        }
+
+        return view('znp.job-pricing', compact('plans', 'currentPlanId'));
+
+    }
+
+
+
+    /* ════════════════════════════════════════════════════════════════════════
+     *  NEW ZNP "Post a Job" page (resources/views/znp/post-job.blade.php)
+     *  Route GET  /post-job-page  → postJobZNP()   (show form, prefilled)
+     *  Route POST /post-job-page  → storeJobZNP()  (save + redirect to /my-jobs)
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Render the new "Post a Job" form.
+     *
+     * Pre-fill rules (per spec):
+     *  - Company-level "Auto-saved" sections (about, industry, headcount, office
+     *    address, countries, awards, perks) come from the Company row, which is
+     *    updated each time a job is posted via storeJobZNP().
+     *  - First-time posters: those columns are empty/null; the existing fields
+     *    on the Company row (description, website, industry_id, no_of_employees,
+     *    logo) are still used as the seed values.
+     *  - Subsequent posts: the columns we wrote on the previous post are used.
+     */
+    public function postJobZNP()
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        /* ── ZNP plan gate ──
+           Employers without a plan can still open the form and save drafts.
+           Publishing is gated in storeJobZNP(). */
+        $znpPlan    = $company->znpPlanViewModel();
+        $canPublish = (bool) $znpPlan['can_post'];
+
+        /* Industry options (active + localised). */
+        $industries = Industry::lang()->active()->orderBy('industry')->get();
+
+        /* Past jobs for the "Clone from previous job" banner.
+           Drafts are excluded — they're usually empty stubs and not useful to clone. */
+        $pastJobs = PostJob::where('company_id', $company->id)
+            ->where(function ($q) {
+                $q->whereNull('is_draft')->orWhere('is_draft', 0);
+            })
+            ->latest('id')
+            ->take(20)
+            ->get();
+
+        $cloneJobsPayload = $this->znpBuildCloneJobsPayload($pastJobs);
+
+        /* Decode JSON-typed columns on Company for the view. */
+        $companyCountries = $this->znpDecodeJsonColumn($company->countries_presence, ['India']);
+        $companyAwards    = $this->znpDecodeJsonColumn($company->awards, []);
+        $companyPerks     = $this->znpDecodeJsonColumn($company->perks, []);
+
+        return view('znp.post-job', compact(
+            'company',
+            'industries',
+            'pastJobs',
+            'cloneJobsPayload',
+            'companyCountries',
+            'companyAwards',
+            'companyPerks',
+            'znpPlan',
+            'canPublish'
+        ));
+    }
+
+    /**
+     * Persist a job submitted from the new ZNP form.
+     *
+     * Strategy:
+     *  - Insert into post_jobs directly (mass-assignment with $guarded=['id']).
+     *  - Re-use the existing JobSkillManager via the Skills trait pattern.
+     *  - Snapshot the auto-saved sections onto Company so the next post pre-fills.
+     */
+    public function storeJobZNP(Request $request)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        /* Required-field validation (mirrors the HTML form's red asterisks). */
+        $isDraft = (int) $request->input('is_draft') === 1;
+
+        /* ── ZNP plan quota gate ──
+           Drafts are exempt (no quota consumed for a stub). Real publishes
+           require an active subscription with quota left. The plan_id, validity
+           window and posts_limit all live on znp_company_subscriptions. If the
+           employer has no plan / has exhausted quota / their plan window
+           expired, we bounce them to the pricing page with a friendly message. */
+        if (! $isDraft) {
+            $sub = $company->activeZnpSubscription();
+
+            if (! $sub) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'Buy now to post jobs. Choose a plan below.');
+            }
+            if (! $sub->isLive()) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'Your ' . $sub->plan_name . ' plan expired on '
+                        . optional($sub->expires_at)->format('d M Y') . '. Renew to continue posting.');
+            }
+            if (! $sub->hasQuotaLeft()) {
+                return redirect()->route('employer.job.pricing')
+                    ->with('error', 'You have used all '
+                        . $sub->posts_limit . ' job posts on your '
+                        . $sub->plan_name . ' plan. Upgrade or buy another pack to post more.');
+            }
+        }
+
+        $rules = [
+            'job_title'         => 'required|max:255',
+            'work_mode'         => 'required',
+            'job_type'          => 'required',
+            'job_shift'         => 'required',
+            'min_salary'        => 'required|numeric|min:0',
+            'max_salary'        => 'required|numeric|min:0',
+            'no_of_openings'    => 'required|integer|min:1',
+            'exp_min'           => 'required|numeric|min:0',
+            'primary_language'  => 'required',
+            'posting_type'      => 'required',
+            'keyskills'         => 'required|array|min:1',
+            'interview_modes'   => 'required|array|min:1',
+            'job_description'   => 'required',
+            'job_overview'      => 'required',
+            'about_company'     => 'required',
+            'website_address'   => 'required',
+        ];
+
+        $wm = (string) $request->input('work_mode');
+        if (! in_array($wm, ['Remote / WFH', 'Remote/WFH'], true)) {
+            $rules['location'] = 'required|array|min:1';
+        }
+
+        if ($request->input('posting_type') === 'client') {
+            $rules['client_industry'] = 'required';
+        }
+
+        if ($isDraft) {
+            $rules = ['job_title' => 'required|max:255']; /* drafts only need a title */
+        }
+
+        $request->validate($rules);
+
+        if (! $isDraft) {
+            foreach (['job_description' => 'Job description', 'job_overview' => 'Candidate eligibility', 'about_company' => 'About the company'] as $field => $label) {
+                if ($this->znpTextContainsHyperlink($request->input($field))) {
+                    return back()->withInput()->withErrors([
+                        $field => $label . ' cannot contain hyperlinks or website URLs.',
+                    ]);
+                }
+            }
+        }
+
+        /* ── Insert into post_jobs ── */
+        $job = new PostJob();
+        $job->company_id = $company->id;
+
+        /* Section 1 — Job Basics (labels from new UI → legacy DB values). */
+        $job->job_title = $request->input('job_title');
+        $job->work_mode = $this->znpNormalizeWorkMode($request->input('work_mode'));
+        $job->job_type  = $this->znpNormalizeJobType($request->input('job_type'));
+        $job->job_shift = $request->input('job_shift');
+
+        /* Contract details (visible when job_type contains "Contract"). */
+        $job->duration            = $request->input('contract_duration');
+        $job->contract_day_rate   = $request->input('contract_day_rate');
+        $job->contract_extension  = $request->input('contract_extension');
+
+        $job->min_salary = $request->input('min_salary');
+        $job->max_salary = $request->input('max_salary');
+        $job->compensation_confidential = (int) $request->input('compensation_confidential', 0);
+        $job->no_of_openings = $request->input('no_of_openings');
+
+        $job->exp_min = $request->input('exp_min');
+        $job->exp_max = $request->input('exp_max');
+        /* Keep legacy `experience` populated for back-compat with old listings. */
+        $job->experience = $request->input('exp_min') !== null
+            ? trim((string) $request->input('exp_min') . ' Years')
+            : null;
+
+        $job->primary_language = $request->input('primary_language');
+        $job->posting_type     = $request->input('posting_type');
+        $job->client_name      = $request->input('client_name');
+        $job->client_industry  = $request->input('client_industry');
+
+        $loc = $request->input('location');
+        $job->location = $loc ? serialize($loc) : null;
+        $job->locality = $request->input('locality');
+
+        /* Interview modes (comma-separated — legacy column). */
+        $interviewModes = array_map([$this, 'znpNormalizeInterviewMode'], (array) $request->input('interview_modes', []));
+        $job->interview_modes = implode(',', array_filter($interviewModes));
+
+        /* Section 2 — Description (server-side strip of foreign HTML / Word styling). */
+        $job->job_description     = $this->znpSanitizeRichHtml($request->input('job_description'));
+        $job->job_overview        = $this->znpSanitizeRichHtml($request->input('job_overview'));
+        $job->roles_responsibility = null; /* dropped from new UI; column kept nullable */
+
+        /* Section 3 snapshot (also written to companies below for auto-save). */
+        $job->about_company    = $this->znpStripHyperlinksFromText(strip_tags((string) $request->input('about_company')));
+        $job->website_address  = $request->input('website_address');
+        $job->industry         = $request->input('industry');
+        $job->headcount        = $request->input('headcount');
+        $job->office_address   = $request->input('office_address');
+        $countries             = (array) $request->input('countries_presence', []);
+        $job->countries_presence = json_encode(array_values(array_filter($countries, 'strlen')));
+
+        /* Sections 4 / 5 / 6 / 7. */
+        $awards  = array_values(array_filter((array) $request->input('awards', []), 'strlen'));
+        $perks   = array_values(array_filter((array) $request->input('perks', []), 'strlen'));
+        $profile = $this->znpDefaultProfileRequirements();
+
+        $job->awards = json_encode($awards);
+        $job->perks  = json_encode($perks);
+
+        /* Questionnaire is built server-side: 2 fixed required + optional video link. */
+        $questionnaire = [
+            ['key' => 'years_relevant', 'label' => 'How many years of experience do you have relevant to this role?', 'type' => 'number', 'required' => true,  'enabled' => true],
+            ['key' => 'why_hire',       'label' => 'Why should we hire you?',                                         'type' => 'text',   'required' => true,  'enabled' => true],
+            ['key' => 'video_intro',    'label' => 'Share a link to your video introduction',                         'type' => 'url',    'required' => false, 'enabled' => (int) $request->input('q_video_enabled', 1) === 1],
+        ];
+        $job->questionnaire = json_encode($questionnaire);
+
+        $job->profile_requirements = json_encode($profile);
+        $job->strict_mode = 0;
+        $job->is_draft    = $isDraft ? 1 : 0;
+
+        $job->save();
+
+        /* Slug + skills + full-text — same as legacy storeFrontJob. */
+        $job->slug = \Illuminate\Support\Str::slug($job->job_title, '-') . '-' . $job->id;
+        $job->update();
+
+        $this->znpStoreJobSkills($request, $job->id);
+        $this->znpUpdateFullTextSearch($job, $request);
+
+        /* ── Snapshot auto-saved fields onto the Company row ── */
+        $company->description       = $request->input('about_company');
+        $company->website           = $request->input('website_address');
+        if ($request->filled('industry_id')) {
+            $company->industry_id = $request->input('industry_id');
+        }
+        $company->no_of_employees   = $request->input('headcount');
+        $company->headcount         = $request->input('headcount');
+        $company->office_address    = $request->input('office_address');
+        $company->countries_presence = json_encode(array_values(array_filter($countries, 'strlen')));
+        $company->awards            = json_encode($awards);
+        $company->perks             = json_encode($perks);
+
+        /* Logo upload (re-uses existing ImgUploader convention). */
+        if ($request->hasFile('logo')) {
+            $image = $request->file('logo');
+            $fileName = \ImgUploader::UploadImage('company_logos', $image, $company->name, 300, 300, false);
+            $company->logo = $fileName;
+        }
+
+        $company->save();
+
+        /* Consume one post from the active ZNP subscription on a real publish.
+           Drafts are exempt (see the quota gate at the top of this method). */
+        if (! $isDraft) {
+            $company->consumeOneZnpPost();
+        }
+
+        return redirect()->route('my-jobs')->with('message', $isDraft ? 'Draft saved.' : 'Job posted successfully.');
+    }
+
+    /* ── ZNP helpers (kept private — used only by postJobZNP/storeJobZNP) ── */
+
+    /**
+     * Full job payloads for the clone banner (inline JSON — no extra route).
+     */
+    private function znpBuildCloneJobsPayload($pastJobs): array
+    {
+        $payload = [];
+        $reverseWorkMode = [
+            'Work From Office' => 'Work from Office',
+            'Remote/WFH'       => 'Remote / WFH',
+        ];
+        $reverseJobType = [
+            'Full time/Permanent' => 'Full Time / Permanent',
+            'Contract To Hire'    => 'Contract to Hire',
+        ];
+
+        foreach ($pastJobs as $pj) {
+            $loc = [];
+            if ($pj->location) {
+                $u = @unserialize($pj->location);
+                $loc = is_array($u) ? array_values($u) : [(string) $pj->location];
+            }
+
+            /* Skills need NAMES (for the Select2 chip label) and IDs (for posting back). */
+            $skills = \DB::table('manage_job_skills')
+                ->join('job_skills', 'manage_job_skills.job_skill_id', '=', 'job_skills.id')
+                ->where('manage_job_skills.job_id', $pj->id)
+                ->orderBy('manage_job_skills.id')
+                ->get(['job_skills.id', 'job_skills.job_skill as name'])
+                ->map(function ($r) {
+                    return ['id' => (int) $r->id, 'name' => trim((string) $r->name)];
+                })
+                ->all();
+
+            $payload[$pj->id] = [
+                'id'                       => $pj->id,
+                'job_title'                => (string) $pj->job_title,
+                'work_mode'                => $reverseWorkMode[$pj->work_mode] ?? $pj->work_mode,
+                'job_type'                 => $reverseJobType[$pj->job_type] ?? $pj->job_type,
+                'job_shift'                => (string) $pj->job_shift,
+                'contract_duration'        => (string) $pj->duration,
+                'contract_day_rate'        => $pj->contract_day_rate,
+                'contract_extension'       => (string) $pj->contract_extension,
+                'min_salary'               => $pj->min_salary,
+                'max_salary'               => $pj->max_salary,
+                'compensation_confidential'=> (int) $pj->compensation_confidential,
+                'no_of_openings'           => $pj->no_of_openings,
+                'exp_min'                  => $pj->exp_min,
+                'exp_max'                  => $pj->exp_max,
+                'primary_language'         => (string) $pj->primary_language,
+                'posting_type'             => (string) $pj->posting_type,
+                'client_name'              => (string) $pj->client_name,
+                'client_industry'          => (string) $pj->client_industry,
+                'location'                 => $loc,
+                'locality'                 => (string) $pj->locality,
+                'keyskills'                => $skills,
+                'interview_modes'          => $pj->interview_modes
+                    ? array_map(function ($m) {
+                        return $m === 'Video Interviews' ? 'Video Interview' : ($m === 'Walkin' ? 'Walk-in' : $m);
+                    }, explode(',', $pj->interview_modes))
+                    : [],
+                'job_description'          => (string) $pj->job_description,
+                'job_overview'             => (string) $pj->job_overview,
+                'about_company'            => (string) ($pj->about_company ?: ''),
+                'website_address'          => (string) $pj->website_address,
+                'industry'                 => (string) $pj->industry,
+                'headcount'                => (string) $pj->headcount,
+                'office_address'           => (string) $pj->office_address,
+                'countries_presence'       => $this->znpDecodeJsonColumn($pj->countries_presence, []),
+                'awards'                   => $this->znpDecodeJsonColumn($pj->awards, []),
+                'perks'                    => $this->znpDecodeJsonColumn($pj->perks, []),
+                'profile_requirements'     => $this->znpDecodeJsonColumn($pj->profile_requirements, []),
+                'strict_mode'              => (int) $pj->strict_mode,
+                'created'                  => optional($pj->created_at)->format('M j, Y') ?? '',
+            ];
+        }
+
+        return $payload;
+    }
+
+    private function znpNormalizeWorkMode(?string $mode): ?string
+    {
+        $map = [
+            'Work from Office' => 'Work From Office',
+            'Remote / WFH'     => 'Remote/WFH',
+        ];
+        return $map[$mode] ?? $mode;
+    }
+
+    private function znpNormalizeJobType(?string $type): ?string
+    {
+        $map = [
+            'Full Time / Permanent' => 'Full time/Permanent',
+            'Contract to Hire'      => 'Contract To Hire',
+            'Part Time'             => 'Part Time',
+        ];
+        return $map[$type] ?? $type;
+    }
+
+    private function znpNormalizeInterviewMode(string $mode): string
+    {
+        $map = [
+            'Video Interview' => 'Video Interviews',
+            'Walk-in'         => 'Walkin',
+        ];
+        return $map[$mode] ?? $mode;
+    }
+
+    /**
+     * Server-side defense for pasted-from-Word HTML.
+     *
+     * Even with the client-side paste sanitizer, we never trust the
+     * submitted HTML. We keep only a tiny whitelist (formatting tags +
+     * lists) and strip every attribute. Anything outside the whitelist
+     * is dropped entirely.
+     */
+    private function znpSanitizeRichHtml(?string $html): ?string
+    {
+        if ($html === null || $html === '') {
+            return $html;
+        }
+
+        /* strip_tags handles the whitelist; we then strip every attribute via regex.
+           The whitelist mirrors what the client-side _sanitizeRich keeps. */
+        $allowed = '<p><br><strong><b><em><i><u><ul><ol><li>';
+        $clean   = strip_tags($html, $allowed);
+
+        /* Remove any remaining attributes on whitelisted tags (e.g. <p style="…">). */
+        $clean = preg_replace('#<([a-z]+)\b[^>]*>#i', '<$1>', $clean) ?? $clean;
+
+        /* Collapse &nbsp; and runs of whitespace introduced by Word/Google Docs. */
+        $clean = str_replace('&nbsp;', ' ', $clean);
+        $clean = preg_replace('/\s{2,}/u', ' ', $clean) ?? $clean;
+        $clean = preg_replace('#<p>\s*</p>#i', '', $clean) ?? $clean;
+
+        return $this->znpStripHyperlinksFromText(trim($clean));
+    }
+
+    /** Standard candidate profile fields applied to every ZNP job (hidden from employers). */
+    private function znpDefaultProfileRequirements(): array
+    {
+        return ['Current CTC', 'Expected CTC', 'Notice Period'];
+    }
+
+    /** Strip hyperlinks and bare URL patterns from free-text / rich HTML. */
+    private function znpStripHyperlinksFromText(?string $text): ?string
+    {
+        if ($text === null || $text === '') {
+            return $text;
+        }
+
+        $clean = preg_replace('#<a\b[^>]*>(.*?)</a>#is', '$1', $text) ?? $text;
+        $clean = preg_replace('#\bhttps?://[^\s<>"\']+#i', '', $clean) ?? $clean;
+        $clean = preg_replace('#\bwww\.[^\s<>"\']+#i', '', $clean) ?? $clean;
+
+        return trim(preg_replace('/\s{2,}/u', ' ', $clean) ?? $clean);
+    }
+
+    /** Detect hyperlinks / bare URLs before save (used for validation errors). */
+    private function znpTextContainsHyperlink(?string $text): bool
+    {
+        if ($text === null || trim($text) === '') {
+            return false;
+        }
+
+        $plain = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        return (bool) preg_match('#<a\b|https?://|www\.#i', $text . ' ' . $plain);
+    }
+
+    /* ── Reverse maps (DB value → UI label) — used by editJobZNP ── */
+
+    private function znpDenormalizeWorkMode(?string $mode): ?string
+    {
+        $map = [
+            'Work From Office' => 'Work from Office',
+            'Remote/WFH'       => 'Remote / WFH',
+        ];
+        return $map[$mode] ?? $mode;
+    }
+
+    private function znpDenormalizeJobType(?string $type): ?string
+    {
+        $map = [
+            'Full time/Permanent' => 'Full Time / Permanent',
+            'Contract To Hire'    => 'Contract to Hire',
+        ];
+        return $map[$type] ?? $type;
+    }
+
+    private function znpDenormalizeInterviewMode(string $mode): string
+    {
+        $map = [
+            'Video Interviews' => 'Video Interview',
+            'Walkin'           => 'Walk-in',
+        ];
+        return $map[$mode] ?? $mode;
+    }
+
+    /**
+     * Build enriched applicant rows + metrics + stage counts for the ZNP Applicants page.
+     */
+    private function znpBuildApplicantsPageData(PostJob $job, Company $company): array
+    {
+        $jobSkillRows = \DB::table('manage_job_skills')
+            ->join('job_skills', 'manage_job_skills.job_skill_id', '=', 'job_skills.id')
+            ->where('manage_job_skills.job_id', $job->id)
+            ->orderBy('manage_job_skills.id')
+            ->get(['job_skills.id', 'job_skills.job_skill as name']);
+
+        $jobSkillNamesLower = $jobSkillRows
+            ->map(function ($r) {
+                return strtolower(trim((string) $r->name));
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        $jobSkillCount = max(count($jobSkillNamesLower), 1);
+
+        $applications = JobApply::with('user')
+            ->where('job_id', $job->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $userIds = $applications->pluck('user_id')->filter()->unique()->values()->all();
+        $appIds  = $applications->pluck('id')->all();
+
+        $shortlistedSet = [];
+        if (! empty($userIds)) {
+            $shortlistedSet = FavouriteApplicant::where('job_id', $job->id)
+                ->where('company_id', $company->id)
+                ->whereIn('user_id', $userIds)
+                ->pluck('user_id')
+                ->flip()
+                ->all();
+        }
+
+        $today = \Carbon\Carbon::now()->format('Y-m-d');
+        $interviewSet = [];
+        if (! empty($userIds)) {
+            $interviewSet = \App\Interview::whereIn('user_id', $userIds)
+                ->where('date', '>=', $today)
+                ->pluck('user_id')
+                ->flip()
+                ->all();
+        }
+
+        $notesByApp = [];
+        $feedbacksByApp = [];
+        $reportsByApp = [];
+        $eventsByApp = [];
+        $emailCountsByApp = [];
+        $jobsAppliedByUser = [];
+
+        if (! empty($userIds)) {
+            $jobsAppliedByUser = JobApply::whereIn('user_id', $userIds)
+                ->select('user_id', \DB::raw('count(distinct job_id) as total'))
+                ->groupBy('user_id')
+                ->pluck('total', 'user_id')
+                ->all();
+        }
+
+        if (! empty($appIds)) {
+            $notesByApp = \App\ApplicantNote::whereIn('job_apply_id', $appIds)
+                ->get()
+                ->keyBy('job_apply_id');
+
+            $feedbacksByApp = \App\ApplicantFeedback::whereIn('job_apply_id', $appIds)
+                ->orderByDesc('created_at')
+                ->get()
+                ->groupBy('job_apply_id')
+                ->map(function ($group) {
+                    return $group->first();
+                });
+
+            $reportsByApp = \App\ApplicantReport::whereIn('job_apply_id', $appIds)
+                ->orderByDesc('created_at')
+                ->get()
+                ->groupBy('job_apply_id')
+                ->map(function ($group) {
+                    return $group->first();
+                });
+
+            $eventsByApp = \App\ApplicantEvent::whereIn('job_apply_id', $appIds)
+                ->orderBy('created_at')
+                ->get()
+                ->groupBy('job_apply_id');
+
+            $emailCountsByApp = \App\ApplicantEmail::whereIn('job_apply_id', $appIds)
+                ->where('status', 'sent')
+                ->select('job_apply_id', \DB::raw('count(*) as total'))
+                ->groupBy('job_apply_id')
+                ->pluck('total', 'job_apply_id')
+                ->all();
+        }
+
+        $applicants = [];
+        foreach ($applications as $application) {
+            $user = $application->user;
+            if (! $user) {
+                continue;
+            }
+
+            $applicants[] = $this->znpEnrichApplicantRow(
+                $application,
+                $user,
+                $job,
+                $company,
+                $jobSkillNamesLower,
+                $jobSkillCount,
+                isset($shortlistedSet[$user->id]),
+                isset($interviewSet[$user->id]),
+                $notesByApp[$application->id] ?? null,
+                $feedbacksByApp[$application->id] ?? null,
+                $reportsByApp[$application->id] ?? null,
+                $eventsByApp[$application->id] ?? collect(),
+                (int) ($emailCountsByApp[$application->id] ?? 0),
+                (int) ($jobsAppliedByUser[$user->id] ?? 1)
+            );
+        }
+
+        $metrics = $this->znpBuildApplicantMetrics($applicants, $job);
+
+        return [
+            'applicants'    => $applicants,
+            'metrics'       => $metrics,
+            'stages'        => $this->znpBuildApplicantStageCounts($applicants),
+            'filterCounts'  => $this->znpBuildApplicantFilterCounts($applicants),
+            'jobListing'    => $this->znpApplicantJobListingMeta($job),
+        ];
+    }
+
+    private function znpEnrichApplicantRow(
+        JobApply $application,
+        $user,
+        PostJob $job,
+        Company $company,
+        array $jobSkillNamesLower,
+        int $jobSkillCount,
+        bool $isShortlisted,
+        bool $hasInterview,
+        $note = null,
+        $feedback = null,
+        $report = null,
+        $events = null,
+        int $emailCount = 0,
+        int $jobsAppliedCount = 1
+    ): array {
+        $summary  = \App\ProfileSummary::where('user_id', $user->id)->first();
+        $details  = ProfileDetails::where('user_id', $user->id)->first();
+        $nop      = \App\ProfileNop::where('user_id', $user->id)->first();
+        $educations = \App\ProfileEducation::where('user_id', $user->id)->get();
+
+        $experienceRaw = $summary->totalexp ?? '';
+        $expYears = 0;
+        if (preg_match('/(\d+(?:\.\d+)?)/', (string) $experienceRaw, $m)) {
+            $expYears = (int) round((float) $m[1]);
+        }
+
+        $currCtc = $details->expect_ctc_lakhs ?? null;
+        $expCtc  = $details->expect_ctc_lakhs3 ?? $details->expect_ctc_lakhs ?? null;
+        $expCtcNum = is_numeric($expCtc) ? (float) $expCtc : (preg_match('/(\d+)/', (string) $expCtc, $em) ? (float) $em[1] : 0);
+
+        [$noticeLabel, $noticeSlug, $noticeVerified] = $this->znpApplicantNoticeMeta($nop);
+
+        $workType = trim((string) ($details->work_type ?? ''));
+        $modeSlug = $this->znpApplicantWorkModeSlug($workType, $details->candidate_wfh ?? null);
+        $modeLabel = $workType !== '' ? $workType : ($modeSlug === 'remote' ? 'Remote / WFH' : ucfirst($modeSlug));
+
+        $isContract = stripos($workType, 'contract') !== false
+            || stripos((string) ($details->contract_type ?? ''), 'contract') !== false;
+
+        $storedStage = trim((string) ($application->stage ?? ''));
+        if ($storedStage !== '' && in_array($storedStage, ['rejected', 'offer', 'resumedb', 'shortlisted'], true)) {
+            $stage = $storedStage;
+        } elseif ($hasInterview) {
+            $stage = 'interview';
+        } elseif ($isShortlisted || $storedStage === 'shortlisted') {
+            $stage = 'shortlisted';
+        } else {
+            $stage = 'new';
+        }
+        if ($isContract && $stage === 'new') {
+            $stage = 'contractor';
+        }
+
+        $userSkills = \App\KeySkill::where('user_id', $user->id)->take(12)->get();
+        $skills = [];
+        $matched = 0;
+        foreach ($userSkills as $ks) {
+            $skillRow = JobSkill::find($ks->keyskill);
+            $name = trim((string) ($skillRow->job_skill ?? ''));
+            if ($name === '') {
+                continue;
+            }
+            $isMatch = in_array(strtolower($name), $jobSkillNamesLower, true);
+            if ($isMatch) {
+                $matched++;
+            }
+            $skills[] = ['name' => $name, 'match' => $isMatch];
+        }
+
+        $fit = (int) round(($matched / $jobSkillCount) * 100);
+        $fitClass = $fit >= 80 ? 'fs-high' : ($fit >= 60 ? 'fs-mid' : 'fs-low');
+        $cardClass = $isContract ? 'contract' : ($fit >= 85 ? 'top' : ($fit >= 70 ? 'good' : 'watch'));
+
+        $courseName = '';
+        $collegeName = '';
+        $highEducation = null;
+        foreach ($educations as $education) {
+            $highEducation = \App\Education::where('id', $education->degree_title)
+                ->where(function ($q) {
+                    $q->where('high_value', 1)->orWhere('high_value', 2)->orWhere('high_value', 3);
+                })
+                ->first();
+            if ($highEducation) {
+                break;
+            }
+        }
+        if ($highEducation) {
+            $final = \App\ProfileEducation::where('user_id', $user->id)
+                ->where('degree_title', $highEducation->id)
+                ->first();
+            if ($final) {
+                $institute = \App\Degree::where('id', $final->organization)->first();
+                $course    = \App\Course::where('id', $final->course)->first();
+                $courseName  = $course->course ?? '';
+                $collegeName = $institute->educations ?? '';
+            }
+        }
+
+        $questionnaire = $this->znpDecodeJsonColumn($application->questionnaire_answers, []);
+
+        $first = trim((string) ($user->first_name ?? ''));
+        $last  = trim((string) ($user->last_name ?? ''));
+        $displayName = trim($first . ' ' . $last) ?: trim((string) ($user->name ?? 'Candidate'));
+        $initials = '';
+        if ($first !== '') {
+            $initials .= strtoupper(mb_substr($first, 0, 1));
+        }
+        if ($last !== '') {
+            $initials .= strtoupper(mb_substr($last, 0, 1));
+        }
+        $initials = $initials ?: 'CN';
+
+        $locationCity = trim((string) ($user->current_city ?? ''));
+        $locationSlug = $this->znpApplicantLocationSlug($locationCity);
+
+        $activity = $this->znpBuildApplicantActivity($application, $events, $isShortlisted, $hasInterview);
+
+        $verdictLabels = [
+            'sy' => 'Strong Yes',
+            'y'  => 'Yes',
+            'm'  => 'Maybe',
+            'n'  => 'No',
+            'sn' => 'Strong No',
+        ];
+        $offerLabels = [
+            'offered' => 'Offered',
+            'joined'  => 'Joined',
+            'dropout' => 'Offer Dropout',
+        ];
+
+        $noteData = null;
+        if ($note) {
+            $noteData = [
+                'body'       => $note->body,
+                'updated_at' => $note->updated_at ? $note->updated_at->format('M j, Y g:i A') : '—',
+            ];
+        }
+
+        $feedbackData = null;
+        if ($feedback) {
+            $feedbackData = [
+                'verdict'       => $feedback->verdict,
+                'verdict_label' => $verdictLabels[$feedback->verdict] ?? $feedback->verdict,
+                'comments'      => $feedback->comments,
+                'created_at'    => $feedback->created_at ? $feedback->created_at->format('M j, Y g:i A') : '—',
+            ];
+        }
+
+        $offerStatus = $application->offer_status;
+        $offerLabel = $offerStatus ? ($offerLabels[$offerStatus] ?? $offerStatus) : null;
+        $isReported = (bool) ($application->reported_at || $report);
+
+        $withinBudget = $job->max_salary && $expCtcNum > 0
+            ? $expCtcNum <= (float) $job->max_salary
+            : true;
+
+        $educationSlug = $this->znpApplicantEducationSlug($courseName);
+        $eventList = $events instanceof \Illuminate\Support\Collection ? $events : collect($events ?: []);
+        $hasViewed = $eventList->contains('type', 'viewed');
+        $isShortlistedRow = $isShortlisted || $stage === 'shortlisted';
+        $nextAction = $this->znpApplicantNextAction(
+            $stage,
+            $isShortlistedRow,
+            $emailCount > 0,
+            $hasInterview,
+            (bool) $feedback,
+            $hasViewed
+        );
+        $emailPreviewSubject = 'Interview Opportunity — ' . $job->job_title . ' · ' . $company->name;
+        $emailPreviewBody = 'Hi ' . $displayName . ', thank you for applying. We reviewed your profile and would like to connect further.';
+
+        return [
+            'application_id'   => $application->id,
+            'user_id'          => $user->id,
+            'slug'             => 'u' . $user->id,
+            'stage'            => $stage,
+            'card_class'       => $cardClass,
+            'fit'              => $fit,
+            'fit_class'        => $fitClass,
+            'initials'         => $initials,
+            'display_name'     => $displayName,
+            'candidate_email'   => $user->email ?? '',
+            'photo_url'        => ! empty($user->image) ? asset('user_images/' . $user->image) : null,
+            'current_role'     => trim((string) ($summary->latestdesg ?? '')),
+            'current_company'  => trim((string) ($summary->latestcom ?? '')),
+            'location_display' => $locationCity,
+            'location_slug'    => $locationSlug,
+            'badges'           => array_values(array_filter([
+                $noticeVerified ? 'Notice Verified' : null,
+                $isContract ? 'Open to Contract' : null,
+            ])),
+            'exp_years'        => $expYears,
+            'exp_label'        => $expYears > 0 ? $expYears . ' yrs' : ($experienceRaw ?: '—'),
+            'curr_ctc'         => $currCtc !== null && $currCtc !== '' ? '₹' . $currCtc . ' LPA' : '—',
+            'exp_ctc'          => $expCtcNum > 0 ? '₹' . rtrim(rtrim(number_format($expCtcNum, 1), '0'), '.') . ' LPA' : '—',
+            'exp_ctc_num'      => $expCtcNum,
+            'notice_label'     => $noticeLabel,
+            'notice_slug'      => $noticeSlug,
+            'pref_mode'        => $modeLabel,
+            'mode_slug'        => $modeSlug,
+            'education'        => $courseName ?: '—',
+            'education_slug'   => $educationSlug,
+            'college'          => $collegeName ?: '—',
+            'jobs_applied_count' => $jobsAppliedCount,
+            'next_action'      => $nextAction,
+            'email_preview_subject' => $emailPreviewSubject,
+            'email_preview_body'    => $emailPreviewBody,
+            'skills'           => $skills,
+            'questionnaire'    => is_array($questionnaire) ? $questionnaire : [],
+            'applied_label'    => $application->created_at ? $application->created_at->diffForHumans(null, true) . ' ago' : 'Recently',
+            'applied_ref'      => '#' . $application->id,
+            'activity'         => $activity,
+            'has_interview'    => $hasInterview,
+            'is_shortlisted'   => $isShortlisted || $stage === 'shortlisted',
+            'is_contract'      => $isContract,
+            'type_slug'        => $isContract ? 'contract' : 'fulltime',
+            'within_budget'    => $withinBudget,
+            'verified'         => (bool) $noticeVerified,
+            'data_exp'         => $expYears,
+            'data_ctc'         => (int) round($expCtcNum),
+            'data_fit'         => $fit,
+            'note'             => $noteData,
+            'feedback'         => $feedbackData,
+            'offer_status'     => $offerStatus,
+            'offer_label'      => $offerLabel,
+            'is_reported'      => $isReported,
+            'rejected_reason'  => $application->rejected_reason,
+            'profile_url'      => route('applicant.profile', $application->id),
+            'has_resume'       => ! empty($user->resume),
+            'email_count'      => $emailCount,
+            'has_emailed'      => $emailCount > 0,
+        ];
+    }
+
+    private function znpBuildApplicantActivity(
+        JobApply $application,
+        $events,
+        bool $isShortlisted,
+        bool $hasInterview
+    ): array {
+        $eventList = $events instanceof \Illuminate\Support\Collection ? $events : collect($events ?: []);
+
+        if ($eventList->isNotEmpty()) {
+            $order = [
+                'applied'       => 10,
+                'viewed'        => 20,
+                'downloaded'    => 30,
+                'emailed'       => 35,
+                'note'          => 40,
+                'feedback'      => 50,
+                'reported'      => 60,
+                'shortlisted'   => 70,
+                'unshortlisted' => 71,
+                'offer'         => 80,
+                'rejected'      => 90,
+            ];
+
+            $eventsByType = [];
+            foreach ($eventList as $event) {
+                if ($application->stage === 'rejected' && $event->type === 'offer') {
+                    continue;
+                }
+                if ($application->stage === 'offer' && $event->type === 'rejected') {
+                    continue;
+                }
+                $eventsByType[$event->type] = $event;
+            }
+
+            uasort($eventsByType, function ($a, $b) use ($order) {
+                $ao = $order[$a->type] ?? 999;
+                $bo = $order[$b->type] ?? 999;
+
+                return $ao <=> $bo;
+            });
+
+            $compactEvents = array_slice(array_values($eventsByType), 0, 7);
+            $activity = [];
+            $lastIndex = count($compactEvents) - 1;
+            foreach ($compactEvents as $i => $event) {
+                $activity[] = [
+                    'label' => $event->label,
+                    'date'  => $event->created_at ? $event->created_at->format('M j') : '—',
+                    'state' => $i === $lastIndex ? 'now' : 'done',
+                ];
+            }
+
+            return $activity;
+        }
+
+        $activity = [['label' => 'Applied', 'date' => $application->created_at ? $application->created_at->format('M j') : '—', 'state' => 'done']];
+        if ($isShortlisted) {
+            $activity[] = ['label' => 'Shortlisted', 'date' => '—', 'state' => 'done'];
+        }
+        if ($hasInterview) {
+            $activity[] = ['label' => 'Interview', 'date' => 'Scheduled', 'state' => 'now'];
+        }
+
+        return $activity;
+    }
+
+    private function znpApplicantNoticeMeta(?\App\ProfileNop $nop): array
+    {
+        if (! $nop) {
+            return ['—', 'immediate', false];
+        }
+
+        $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
+        $noticed = $nop->nop_days ?? null;
+
+        if ((int) $noticed === 1) {
+            return ['0 days', 'immediate', true];
+        }
+
+        if ((int) $noticed === 2 && ! empty($nop->last_working_day)) {
+            $datetime1 = strtotime($todayDate);
+            $datetime2 = strtotime($nop->last_working_day);
+            if ($datetime1 !== false && $datetime2 !== false && $datetime1 < $datetime2) {
+                $days = (int) (($datetime2 - $datetime1) / 86400);
+                return [$days . ' days (Serving)', 'serving', true];
+            }
+            return ['0 days', 'immediate', true];
+        }
+
+        if ((int) $noticed === 3) {
+            return ['Buyable', 'immediate', true];
+        }
+
+        return ['Not under notice', 'immediate', false];
+    }
+
+    private function znpApplicantWorkModeSlug(?string $workType, $wfh = null): string
+    {
+        $hay = strtolower(trim((string) $workType . ' ' . (string) $wfh));
+        if (strpos($hay, 'remote') !== false || strpos($hay, 'wfh') !== false) {
+            return 'remote';
+        }
+        if (strpos($hay, 'hybrid') !== false) {
+            return 'hybrid';
+        }
+        return 'wfo';
+    }
+
+    private function znpApplicantLocationSlug(string $city): string
+    {
+        $c = strtolower(trim($city));
+        if ($c === '') {
+            return 'other';
+        }
+        $map = [
+            'mumbai'     => ['mumbai', 'andheri', 'powai', 'malad', 'bandra'],
+            'pune'       => ['pune', 'hinjewadi'],
+            'bengaluru'  => ['bengaluru', 'bangalore', 'whitefield'],
+            'hyderabad'  => ['hyderabad'],
+            'delhi'      => ['delhi', 'ncr', 'gurgaon', 'noida'],
+            'chennai'    => ['chennai'],
+        ];
+        foreach ($map as $slug => $needles) {
+            foreach ($needles as $needle) {
+                if (strpos($c, $needle) !== false) {
+                    return $slug;
+                }
+            }
+        }
+        return 'other';
+    }
+
+    private function znpBuildApplicantMetrics(array $applicants, PostJob $job): array
+    {
+        $total = count($applicants);
+        $within = 0;
+        $over = 0;
+        $mumbai = 0;
+        $otherCities = 0;
+        $expInRange = 0;
+        $expSenior = 0;
+        $verified = 0;
+        $emailed = 0;
+
+        $jobExpMin = $job->exp_min !== null ? (float) $job->exp_min : 0;
+        $jobExpMax = $job->exp_max !== null ? (float) $job->exp_max : 999;
+
+        foreach ($applicants as $a) {
+            if ($a['within_budget']) {
+                $within++;
+            } else {
+                $over++;
+            }
+            if ($a['location_slug'] === 'mumbai') {
+                $mumbai++;
+            } else {
+                $otherCities++;
+            }
+            if ($a['data_exp'] >= $jobExpMin && $a['data_exp'] <= $jobExpMax) {
+                $expInRange++;
+            } elseif ($a['data_exp'] > $jobExpMax) {
+                $expSenior++;
+            }
+            if ($a['verified']) {
+                $verified++;
+            }
+            if (! empty($a['has_emailed'])) {
+                $emailed++;
+            }
+        }
+
+        $fmtExp = function ($value) {
+            return rtrim(rtrim(number_format((float) $value, 1), '0'), '.');
+        };
+        $expInRangeLabel = ($job->exp_min !== null && $job->exp_max !== null)
+            ? 'Exp ' . $fmtExp($job->exp_min) . '–' . $fmtExp($job->exp_max) . ' yrs'
+            : 'In Exp Range';
+        $expSeniorLabel = $job->exp_max !== null
+            ? 'Exp ' . $fmtExp((float) $job->exp_max + 1) . '+ yrs'
+            : 'Senior Exp';
+
+        return [
+            'total'             => $total,
+            'resumedb'          => 0,
+            'within'            => $within,
+            'over'              => $over,
+            'mumbai'            => $mumbai,
+            'other_cities'      => $otherCities,
+            'exp_in_range'      => $expInRange,
+            'exp_senior'        => $expSenior,
+            'exp_in_range_label'=> $expInRangeLabel,
+            'exp_senior_label'  => $expSeniorLabel,
+            'verified'          => $verified,
+            'emailed'           => $emailed,
+            'shortlisted'       => collect($applicants)->where('is_shortlisted', true)->count(),
+            'interview'         => collect($applicants)->where('has_interview', true)->count(),
+        ];
+    }
+
+    private function znpBuildApplicantFilterCounts(array $applicants): array
+    {
+        $counts = [
+            'fit_high' => 0, 'fit_mid' => 0, 'fit_low' => 0,
+            'notice_immediate' => 0, 'notice_serving' => 0,
+            'loc_mumbai' => 0, 'loc_pune' => 0, 'loc_bengaluru' => 0, 'loc_hyderabad' => 0,
+            'loc_delhi' => 0, 'loc_other' => 0,
+            'mode_office' => 0, 'mode_hybrid' => 0, 'mode_remote' => 0,
+            'type_fulltime' => 0, 'type_contract' => 0,
+            'edu_btech' => 0, 'edu_mca' => 0, 'edu_bca' => 0, 'edu_other' => 0,
+            'stage_new' => 0, 'stage_shortlisted' => 0, 'stage_interview' => 0,
+        ];
+
+        foreach ($applicants as $a) {
+            $fit = (int) ($a['data_fit'] ?? 0);
+            if ($fit >= 80) {
+                $counts['fit_high']++;
+            } elseif ($fit >= 60) {
+                $counts['fit_mid']++;
+            } else {
+                $counts['fit_low']++;
+            }
+
+            $notice = $a['notice_slug'] ?? 'immediate';
+            if ($notice === 'serving') {
+                $counts['notice_serving']++;
+            } else {
+                $counts['notice_immediate']++;
+            }
+
+            $loc = $a['location_slug'] ?? 'other';
+            if ($loc === 'mumbai') {
+                $counts['loc_mumbai']++;
+            } elseif ($loc === 'pune') {
+                $counts['loc_pune']++;
+            } elseif ($loc === 'bengaluru') {
+                $counts['loc_bengaluru']++;
+            } elseif ($loc === 'hyderabad') {
+                $counts['loc_hyderabad']++;
+            } elseif ($loc === 'delhi') {
+                $counts['loc_delhi']++;
+            } else {
+                $counts['loc_other']++;
+            }
+
+            $mode = $a['mode_slug'] ?? 'office';
+            if ($mode === 'remote') {
+                $counts['mode_remote']++;
+            } elseif ($mode === 'hybrid') {
+                $counts['mode_hybrid']++;
+            } else {
+                $counts['mode_office']++;
+            }
+
+            if (($a['type_slug'] ?? '') === 'contract') {
+                $counts['type_contract']++;
+            } else {
+                $counts['type_fulltime']++;
+            }
+
+            $edu = $a['education_slug'] ?? 'other';
+            if (isset($counts['edu_' . $edu])) {
+                $counts['edu_' . $edu]++;
+            } else {
+                $counts['edu_other']++;
+            }
+
+            $stage = $a['stage'] ?? 'new';
+            if ($stage === 'shortlisted') {
+                $counts['stage_shortlisted']++;
+            } elseif ($stage === 'interview') {
+                $counts['stage_interview']++;
+            } elseif ($stage === 'new') {
+                $counts['stage_new']++;
+            }
+        }
+
+        return $counts;
+    }
+
+    private function znpApplicantJobListingMeta(PostJob $job): array
+    {
+        $created = $job->created_at ? $job->created_at->copy() : \Carbon\Carbon::now();
+        $expires = $job->expiry_date ? $job->expiry_date->copy() : $created->copy()->addDays(90);
+        $listingDays = max(1, (int) $created->diffInDays($expires));
+        $daysLeft = max(0, (int) \Carbon\Carbon::now()->startOfDay()->diffInDays($expires->copy()->startOfDay(), false));
+
+        return [
+            'days_left'    => $daysLeft,
+            'listing_days' => $listingDays,
+            'label'        => $daysLeft . ' days left · ' . $listingDays . '-day listing',
+        ];
+    }
+
+    private function znpApplicantEducationSlug(string $courseName): string
+    {
+        $c = strtolower(trim($courseName));
+        if ($c === '') {
+            return 'other';
+        }
+        if (strpos($c, 'b.tech') !== false || strpos($c, 'b.e') !== false || strpos($c, 'btech') !== false || strpos($c, 'b.e.') !== false) {
+            return 'btech';
+        }
+        if (strpos($c, 'mca') !== false || strpos($c, 'm.tech') !== false || strpos($c, 'mtech') !== false) {
+            return 'mca';
+        }
+        if (strpos($c, 'bca') !== false || strpos($c, 'b.sc') !== false || strpos($c, 'bsc') !== false) {
+            return 'bca';
+        }
+
+        return 'other';
+    }
+
+    private function znpApplicantNextAction(
+        string $stage,
+        bool $isShortlisted,
+        bool $hasEmailed,
+        bool $hasInterview,
+        bool $hasFeedback,
+        bool $hasViewed
+    ): ?array {
+        if (in_array($stage, ['rejected', 'offer', 'resumedb'], true)) {
+            return null;
+        }
+
+        if (! $isShortlisted) {
+            return ['action' => 'shortlist', 'label' => '→ Shortlist'];
+        }
+
+        if (! $hasEmailed) {
+            return ['action' => 'email', 'label' => '→ Send Email'];
+        }
+
+        if (! $hasFeedback && ($hasInterview || $isShortlisted)) {
+            return ['action' => 'feedback', 'label' => '→ Log Feedback'];
+        }
+
+        if (! $hasViewed) {
+            return ['action' => 'profile', 'label' => '→ View Profile'];
+        }
+
+        return null;
+    }
+
+    private function znpBuildApplicantStageCounts(array $applicants): array
+    {
+        $counts = [
+            'all'         => count($applicants),
+            'new'         => 0,
+            'shortlisted' => 0,
+            'interview'   => 0,
+            'offer'       => 0,
+            'contractor'  => 0,
+            'resumedb'    => 0,
+            'rejected'    => 0,
+        ];
+
+        foreach ($applicants as $a) {
+            $s = $a['stage'] ?? 'new';
+            if (isset($counts[$s])) {
+                $counts[$s]++;
+            }
+        }
+
+        return $counts;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
+     *  ZNP "Edit a Job" page (mirrors postJobZNP, drives the same blade)
+     *  Route GET  /post-job-page/{id}/edit  → editJobZNP()
+     *  Route POST /post-job-page/{id}/edit  → updateJobZNP()
+     * ════════════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Render the new "Edit Job" form.
+     *
+     * Strategy: build a complete form-input array from the existing job and
+     * flash it as "old input". This makes every `old('field', $default)` call
+     * in the shared blade resolve to the job's saved value with zero extra
+     * branching. Validation-error redirects (`->withInput()`) override this
+     * naturally on subsequent renders.
+     */
+    public function editJobZNP($id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $industries = Industry::lang()->active()->orderBy('industry')->get();
+
+        /* Decode existing JSON snapshots so we can fall back to them. */
+        $jobCountries = $this->znpDecodeJsonColumn($job->countries_presence, ['India']);
+        $jobAwards    = $this->znpDecodeJsonColumn($job->awards, []);
+        $jobPerks     = $this->znpDecodeJsonColumn($job->perks, []);
+        $jobProfile   = $this->znpDecodeJsonColumn($job->profile_requirements, []);
+        $jobQuestionnaire = $this->znpDecodeJsonColumn($job->questionnaire, []);
+
+        /* Re-hydrate location from PHP-serialized blob. */
+        $locArray = [];
+        if ($job->location) {
+            $u = @unserialize($job->location);
+            $locArray = is_array($u) ? array_values($u) : [(string) $job->location];
+        }
+
+        /* Skills with names — drives the <option> render and the Select2 chip. */
+        $prefillSkills = \DB::table('manage_job_skills')
+            ->join('job_skills', 'manage_job_skills.job_skill_id', '=', 'job_skills.id')
+            ->where('manage_job_skills.job_id', $job->id)
+            ->orderBy('manage_job_skills.id')
+            ->get(['job_skills.id', 'job_skills.job_skill as name'])
+            ->map(function ($r) {
+                return ['id' => (int) $r->id, 'name' => trim((string) $r->name)];
+            })
+            ->all();
+
+        /* Extract video-question toggle + custom questions from questionnaire JSON. */
+        $qVideoEnabled = 1;
+        $customQs = [];
+        foreach ($jobQuestionnaire as $q) {
+            if (! is_array($q)) {
+                continue;
+            }
+            $key = $q['key'] ?? '';
+            if ($key === 'video_intro') {
+                $qVideoEnabled = (int) ($q['enabled'] ?? 1);
+            } elseif (strpos($key, 'custom_') === 0) {
+                $customQs[] = [
+                    'label' => (string) ($q['label'] ?? ''),
+                    'type'  => (string) ($q['type'] ?? 'text'),
+                ];
+            }
+        }
+
+        $interviewModes = array_filter(array_map('trim', explode(',', (string) $job->interview_modes)));
+        $interviewModesUi = array_map([$this, 'znpDenormalizeInterviewMode'], $interviewModes);
+
+        /* Strip trailing .00 from decimal columns so the edit form shows "5" not "5.00". */
+        $fmtDecimal = function ($v) {
+            if ($v === null || $v === '') return null;
+            return (string) (float) $v;
+        };
+
+        /* The complete form-input snapshot — keys MUST match form field names. */
+        $formInput = [
+            'job_title'          => $job->job_title,
+            'work_mode'          => $this->znpDenormalizeWorkMode($job->work_mode),
+            'job_type'           => $this->znpDenormalizeJobType($job->job_type),
+            'job_shift'          => $job->job_shift,
+            'contract_duration'  => $job->duration,
+            'contract_day_rate'  => $job->contract_day_rate,
+            'contract_extension' => $job->contract_extension,
+            'min_salary'         => $job->min_salary,
+            'max_salary'         => $job->max_salary,
+            'compensation_confidential' => (int) $job->compensation_confidential,
+            'no_of_openings'     => $job->no_of_openings,
+            'exp_min'            => $fmtDecimal($job->exp_min),
+            'exp_max'            => $fmtDecimal($job->exp_max),
+            'primary_language'   => $job->primary_language,
+            'posting_type'       => $job->posting_type,
+            'client_name'        => $job->client_name,
+            'client_industry'    => $job->client_industry,
+            'location'           => $locArray,
+            'locality'           => $job->locality,
+            'interview_modes'    => $interviewModesUi,
+            'keyskills'          => array_map(function ($s) { return $s['id']; }, $prefillSkills),
+            'job_description'    => $job->job_description,
+            'job_overview'       => $job->job_overview,
+            /* Company snapshot — these are on both job and company; prefer job's. */
+            'about_company'      => $job->about_company ?? strip_tags($company->description ?? ''),
+            'website_address'    => $job->website_address ?? $company->website,
+            'industry_id'        => $company->industry_id,
+            'industry'           => $job->industry,
+            'headcount'          => $job->headcount ?? $company->headcount ?? $company->no_of_employees,
+            'office_address'     => $job->office_address ?? $company->office_address,
+            'countries_presence' => $jobCountries,
+            'awards'             => $jobAwards,
+            'perks'              => $jobPerks,
+            'profile_requirements' => $jobProfile,
+            'strict_mode'        => (int) $job->strict_mode,
+            'q_video_enabled'    => $qVideoEnabled,
+            'custom_questions'   => json_encode($customQs),
+        ];
+
+        session()->flashInput($formInput);
+
+        /* These three feed the existing $companyCountries/Awards/Perks fallbacks; in edit
+           mode they're irrelevant because flashed input always wins, but the blade still
+           references them so keep the contract. */
+        $companyCountries = $jobCountries;
+        $companyAwards    = $jobAwards;
+        $companyPerks     = $jobPerks;
+
+        $znpPlan    = $company->znpPlanViewModel();
+        $canPublish = (bool) $znpPlan['can_post'];
+
+        return view('znp.post-job', [
+            'mode'              => 'edit',
+            'job'               => $job,
+            'company'           => $company,
+            'industries'        => $industries,
+            'pastJobs'          => collect(), // clone banner hidden in edit mode
+            'cloneJobsPayload'  => [],
+            'companyCountries'  => $companyCountries,
+            'companyAwards'     => $companyAwards,
+            'companyPerks'      => $companyPerks,
+            'prefillSkills'     => $prefillSkills,
+            'znpPlan'           => $znpPlan,
+            'canPublish'        => $canPublish,
+        ]);
+    }
+
+    /**
+     * ZNP Applicants page — visual-only phase 1.
+     * Renders real applicants for a job the logged-in company owns.
+     * Action buttons are stubbed in the blade (toast only).
+     */
+    public function applicantsZNP($id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $pageData = $this->znpBuildApplicantsPageData($job, $company);
+
+        return view('znp.applicants', array_merge([
+            'job'     => $job,
+            'company' => $company,
+            'znpPlan' => $company->znpPlanViewModel(),
+        ], $pageData));
+    }
+
+    public function submitHelpSupportZNP(Request $request, int $id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        $validator = Validator::make($request->all(), [
+            'category' => 'nullable|string|max:255',
+            'message'  => 'required|string|max:5000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['ok' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        $category = trim((string) $request->input('category', ''));
+        $messageBody = trim((string) $request->input('message', ''));
+
+        $supportTo = config('mail.recieve_to.address', 'support@zeronoticeperiod.com');
+        $supportName = config('mail.recieve_to.name', 'ZeroNoticePeriod Support');
+        $companyEmail = filter_var($company->email, FILTER_VALIDATE_EMAIL)
+            ? $company->email
+            : config('mail.from.address');
+        $companyName = $company->name ?: 'Employer';
+
+        $mailData = [
+            'company_name'  => $companyName,
+            'company_email' => $companyEmail,
+            'company_phone' => $company->phone ?? '',
+            'job_title'     => $job->job_title,
+            'job_id'        => $job->id,
+            'category'      => $category,
+            'message_body'  => $messageBody,
+        ];
+
+        try {
+            Mail::send('emails.employer_support_request', $mailData, function ($message) use (
+                $supportTo,
+                $supportName,
+                $companyEmail,
+                $companyName,
+                $category,
+                $job
+            ) {
+                $subject = 'Employer Support: ' . ($category ?: 'General') . ' — ' . $companyName;
+                $message->from(config('mail.from.address'), config('mail.from.name', 'ZeroNoticePeriod'))
+                    ->replyTo($companyEmail, $companyName)
+                    ->to($supportTo, $supportName)
+                    ->subject($subject);
+            });
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Could not send support request. Please try again or email support directly.',
+            ], 500);
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Support request submitted. We will reply to your company email.',
+        ]);
+    }
+
+    /**
+     * Handle the edit form submission. Mirrors storeJobZNP but updates an
+     * existing row and (optionally) refreshes the company auto-save snapshot.
+     */
+    public function updateJobZNP(Request $request, $id)
+    {
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+        $job = PostJob::where('id', $id)
+            ->where('company_id', $company->id)
+            ->firstOrFail();
+
+        /* Same validation rules as create. Drafts are not supported on edit. */
+        $rules = [
+            'job_title'         => 'required|max:255',
+            'work_mode'         => 'required',
+            'job_type'          => 'required',
+            'job_shift'         => 'required',
+            'min_salary'        => 'required|numeric|min:0',
+            'max_salary'        => 'required|numeric|min:0',
+            'no_of_openings'    => 'required|integer|min:1',
+            'exp_min'           => 'required|numeric|min:0',
+            'primary_language'  => 'required',
+            'posting_type'      => 'required',
+            'keyskills'         => 'required|array|min:1',
+            'interview_modes'   => 'required|array|min:1',
+            'job_description'   => 'required',
+            'job_overview'      => 'required',
+            'about_company'     => 'required',
+            'website_address'   => 'required',
+        ];
+
+        $wm = (string) $request->input('work_mode');
+        if (! in_array($wm, ['Remote / WFH', 'Remote/WFH'], true)) {
+            $rules['location'] = 'required|array|min:1';
+        }
+
+        if ($request->input('posting_type') === 'client') {
+            $rules['client_industry'] = 'required';
+        }
+
+        $request->validate($rules);
+
+        foreach (['job_description' => 'Job description', 'job_overview' => 'Candidate eligibility', 'about_company' => 'About the company'] as $field => $label) {
+            if ($this->znpTextContainsHyperlink($request->input($field))) {
+                return back()->withInput()->withErrors([
+                    $field => $label . ' cannot contain hyperlinks or website URLs.',
+                ]);
+            }
+        }
+
+        /* ── Update post_jobs row ── */
+        $job->job_title = $request->input('job_title');
+        $job->work_mode = $this->znpNormalizeWorkMode($request->input('work_mode'));
+        $job->job_type  = $this->znpNormalizeJobType($request->input('job_type'));
+        $job->job_shift = $request->input('job_shift');
+
+        $job->duration            = $request->input('contract_duration');
+        $job->contract_day_rate   = $request->input('contract_day_rate');
+        $job->contract_extension  = $request->input('contract_extension');
+
+        $job->min_salary = $request->input('min_salary');
+        $job->max_salary = $request->input('max_salary');
+        $job->compensation_confidential = (int) $request->input('compensation_confidential', 0);
+        $job->no_of_openings = $request->input('no_of_openings');
+
+        $job->exp_min = $request->input('exp_min');
+        $job->exp_max = $request->input('exp_max');
+        $job->experience = $request->input('exp_min') !== null
+            ? trim((string) $request->input('exp_min') . ' Years')
+            : null;
+
+        $job->primary_language = $request->input('primary_language');
+        $job->posting_type     = $request->input('posting_type');
+        $job->client_name      = $request->input('client_name');
+        $job->client_industry  = $request->input('client_industry');
+
+        $loc = $request->input('location');
+        $job->location = $loc ? serialize($loc) : null;
+        $job->locality = $request->input('locality');
+
+        $interviewModes = array_map([$this, 'znpNormalizeInterviewMode'], (array) $request->input('interview_modes', []));
+        $job->interview_modes = implode(',', array_filter($interviewModes));
+
+        $job->job_description      = $this->znpSanitizeRichHtml($request->input('job_description'));
+        $job->job_overview         = $this->znpSanitizeRichHtml($request->input('job_overview'));
+        $job->roles_responsibility = null;
+
+        $job->about_company    = $this->znpStripHyperlinksFromText(strip_tags((string) $request->input('about_company')));
+        $job->website_address  = $request->input('website_address');
+        $job->industry         = $request->input('industry');
+        $job->headcount        = $request->input('headcount');
+        $job->office_address   = $request->input('office_address');
+        $countries             = (array) $request->input('countries_presence', []);
+        $job->countries_presence = json_encode(array_values(array_filter($countries, 'strlen')));
+
+        $awards  = array_values(array_filter((array) $request->input('awards', []), 'strlen'));
+        $perks   = array_values(array_filter((array) $request->input('perks', []), 'strlen'));
+        $profile = $this->znpDefaultProfileRequirements();
+
+        $job->awards = json_encode($awards);
+        $job->perks  = json_encode($perks);
+
+        $questionnaire = [
+            ['key' => 'years_relevant', 'label' => 'How many years of experience do you have relevant to this role?', 'type' => 'number', 'required' => true,  'enabled' => true],
+            ['key' => 'why_hire',       'label' => 'Why should we hire you?',                                         'type' => 'text',   'required' => true,  'enabled' => true],
+            ['key' => 'video_intro',    'label' => 'Share a link to your video introduction',                         'type' => 'url',    'required' => false, 'enabled' => (int) $request->input('q_video_enabled', 1) === 1],
+        ];
+        $job->questionnaire = json_encode($questionnaire);
+
+        $job->profile_requirements = json_encode($profile);
+        $job->strict_mode = 0;
+
+        /* Refresh slug if title changed. */
+        $job->slug = \Illuminate\Support\Str::slug($job->job_title, '-') . '-' . $job->id;
+
+        $job->save();
+
+        /* Replace skills (delete + reinsert via the same helper). */
+        \DB::table('manage_job_skills')->where('job_id', $job->id)->delete();
+        $this->znpStoreJobSkills($request, $job->id);
+        $this->znpUpdateFullTextSearch($job, $request);
+
+        /* Also refresh the company auto-save snapshot — keeps "next time" prefills current. */
+        $company->description       = $request->input('about_company');
+        $company->website           = $request->input('website_address');
+        if ($request->filled('industry_id')) {
+            $company->industry_id = $request->input('industry_id');
+        }
+        $company->no_of_employees   = $request->input('headcount');
+        $company->headcount         = $request->input('headcount');
+        $company->office_address    = $request->input('office_address');
+        $company->countries_presence = json_encode(array_values(array_filter($countries, 'strlen')));
+        $company->awards            = json_encode($awards);
+        $company->perks             = json_encode($perks);
+
+        if ($request->hasFile('logo')) {
+            $image = $request->file('logo');
+            $fileName = \ImgUploader::UploadImage('company_logos', $image, $company->name, 300, 300, false);
+            $company->logo = $fileName;
+        }
+
+        $company->save();
+
+        return redirect()->route('my-jobs')->with('message', 'Job updated successfully.');
+    }
+
+    private function znpDecodeJsonColumn($raw, array $default = [])
+    {
+        if (is_array($raw)) {
+            return $raw;
+        }
+        if (! is_string($raw) || $raw === '') {
+            return $default;
+        }
+        $decoded = json_decode($raw, true);
+        return is_array($decoded) ? $decoded : $default;
+    }
+
+    /**
+     * Replicates the legacy Skills trait logic so we don't have to wire JobTrait
+     * into this controller. Accepts both numeric IDs and free-text skill names.
+     */
+    private function znpStoreJobSkills($request, $job_id)
+    {
+        if (! $request->has('keyskills')) {
+            return;
+        }
+
+        \App\JobSkillManager::where('job_id', '=', $job_id)->delete();
+        $skills = (array) $request->input('keyskills');
+
+        foreach ($skills as $job_skill_id) {
+            $job_skill_id = is_string($job_skill_id) ? trim($job_skill_id) : $job_skill_id;
+            if ($job_skill_id === '' || $job_skill_id === null) {
+                continue;
+            }
+
+            $manager = new \App\JobSkillManager();
+            $manager->job_id = $job_id;
+
+            if (is_numeric($job_skill_id)) {
+                $manager->job_skill_id = (int) $job_skill_id;
+            } else {
+                /* New free-text skill — persist into job_skills first. */
+                $existing = JobSkill::where('job_skill', $job_skill_id)->first();
+                if ($existing) {
+                    $manager->job_skill_id = $existing->id;
+                } else {
+                    $new = new JobSkill();
+                    $new->job_skill = $job_skill_id;
+                    $new->save();
+                    $manager->job_skill_id = $new->id;
+                }
+            }
+
+            $manager->save();
+        }
+    }
+
+    /**
+     * Mirrors JobTrait::updateFullTextSearch but doesn't depend on the trait.
+     */
+    private function znpUpdateFullTextSearch($job, $request)
+    {
+        $values = $request->input('location') ? (array) $request->input('location') : [];
+        $locStr = $values ? implode(' ', $values) : '';
+
+        $str  = ' ' . $job->job_title;
+        $str .= ' ' . $job->locality;
+        $str .= ' ' . $request->input('exp_min');
+        $str .= ' ' . $job->getJobSkillsStr();
+        $str .= ' ' . $locStr;
+        $str .= ' ' . $job->job_type;
+        $str .= ' ' . $job->job_shift;
+        $str .= ' ' . $job->work_mode;
+        $str .= ' ' . $job->industry;
+        $str .= ' ' . $job->client_name;
+
+        $job->search = $str;
+        $job->update();
+    }
+
+
+
+    /**
+
+     * New-design employer dashboard (ZNP isolated layout).
+
+     *
+
+     * @return \Illuminate\View\View
+
+     */
+
+    public function employerDashboardNew()
+
+    {
+
+        $company = Company::findOrFail(Auth::guard('company')->user()->id);
+
+
+
+        $jobIds = $company->jobs()->pluck('id');
+
+        $jobsPostedCount = $company->jobs()->count();
+
+        $applicationsCount = JobApply::whereIn('job_id', $jobIds)->count();
+
+
+
+        if ($company->cvs_quota != null) {
+
+            $creditsRemaining = $company->cvs_quota - $company->availed_cvs_quota;
+
+        } else {
+
+            $creditsRemaining = 0 - $company->availed_cvs_quota;
+
+        }
+
+        $creditsRemaining = max(0, $creditsRemaining);
+
+
+
+        $packageActive = $company->package_end_date
+
+            && Carbon::parse($company->package_end_date)->isFuture();
+
+
+
+        /* ── ZNP plan view-model (new system; supersedes the legacy package_*) ──
+           One denormalised array shared with my-jobs so plan messaging stays
+           consistent across the app. See Company::znpPlanViewModel(). */
+        $znpPlan = $company->znpPlanViewModel();
+
+        /* "Upsell" picks the other plans to show as next-step options on the
+           dashboard plan card (excludes the user's current plan if any). */
+        $znpUpsellPlans = \App\ZnpPricingPlan::active()->ordered()->get()
+            ->reject(function ($p) use ($znpPlan) {
+                return $znpPlan['has_plan'] && $znpPlan['plan_slug'] === $p->slug;
+            })
+            ->values();
+
+
+
+        /* Sidebar plan card copy. Falls back to the legacy "Paid plan active"
+           label only when this employer has neither a ZNP nor a legacy plan. */
+        if ($znpPlan['has_plan']) {
+
+            $planLabel = $znpPlan['plan_name'];
+
+            $planDescription = $znpPlan['sub_line'];
+
+        } elseif ($packageActive) {
+
+            $planLabel = 'Paid plan active';
+
+            $planDescription = 'Your plan is active through ' . Carbon::parse($company->package_end_date)->format('j M Y') . '. Post jobs and unlock credits from your package.';
+
+        } else {
+
+            $planLabel = 'Free Account';
+
+            $planDescription = 'Explore ZNP — upgrade to post jobs and access contractors';
+
+        }
+
+
+
+        $recentPlatformJobs = PostJob::status()
+
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+
+            ->with('company')
+
+            ->latest()
+
+            ->take(8)
+
+            ->get();
+
+        $recentJobsScroll = $recentPlatformJobs->count() >= 4
+
+            ? $recentPlatformJobs->concat($recentPlatformJobs)
+
+            : $recentPlatformJobs;
+
+
+
+        $contactLine = $this->employerDashboardEmployerContactLine($company);
+
+
+
+        $companyDisplayName = trim((string) ($company->name ?? ''));
+
+        $contactPersonName = trim((string) ($company->ceo ?: ($company->person_name ?? '')));
+
+        $welcomeName = mb_strlen($contactPersonName) > 1
+            ? $contactPersonName
+            : ($companyDisplayName !== '' ? $companyDisplayName : 'there');
+
+
+
+        /* Live counts (same semantics as homepage) — avoids static Counter placeholders. */
+
+        $dashLiveJobsZn = PostJob::status()->count();
+
+        $dashPermanentRoles = PostJob::status()->where(function ($q) {
+
+            $q->where('job_type', 'LIKE', '%Permanent%')
+
+                ->orWhere('job_type', 'LIKE', '%Full Time%')
+
+                ->orWhere('job_type', 'LIKE', '%Full time%');
+
+        })->count();
+
+        $dashContractRoles = PostJob::status()->where('job_type', 'LIKE', '%Contract%')->count();
+
+        $dashFresherRoles = PostJob::status()->where('job_type', 'LIKE', '%Fresher%')->count();
+
+
+
+        $contractorsShowcase = $this->buildEmployerDashboardContractShowcase(4);
+
+
+
+        $resumezSpotlightCount = User::query()
+
+            ->where('hide_show', 0)
+
+            ->whereHas('profileDetails', function ($q) {
+
+                $q->where('work_type', 'Contract');
+
+            })
+
+            ->count();
+
+
+
+        return view('znp.employer-dashboard', compact(
+
+            'company',
+
+            'jobsPostedCount',
+
+            'applicationsCount',
+
+            'creditsRemaining',
+
+            'recentPlatformJobs',
+
+            'recentJobsScroll',
+
+            'contactLine',
+
+            'welcomeName',
+
+            'companyDisplayName',
+
+            'planLabel',
+
+            'planDescription',
+
+            'packageActive',
+
+            'znpPlan',
+
+            'znpUpsellPlans',
+
+            'contractorsShowcase',
+
+            'dashLiveJobsZn',
+
+            'dashPermanentRoles',
+
+            'dashContractRoles',
+
+            'dashFresherRoles',
+
+            'resumezSpotlightCount'
+
+        ));
+
+    }
+
+
+
+    /**
+
+     * City/state columns sometimes carry JSON blobs (translations row). Normalize for UI text.
+
+     */
+
+    private function employerDashboardStripStructuredNoise(string $s): string
+
+    {
+
+        $t = trim($s);
+
+        if ($t !== '' && ($t[0] === '{' || $t[0] === '[')) {
+
+            return '';
+
+        }
+
+
+
+        return $t;
+
+    }
+
+
+
+    private function employerDashboardReadableLocationPiece($mixed): string
+
+    {
+
+        $s = trim((string) $mixed);
+
+        if ($s === '') {
+
+            return '';
+
+        }
+
+
+
+        $first = substr($s, 0, 1);
+
+
+
+        if ($first === '{' || $first === '[') {
+
+            $decoded = json_decode($s, true);
+
+            if (! is_array($decoded)) {
+
+                return '';
+
+            }
+
+            if (! empty($decoded['city']) && is_string($decoded['city'])) {
+
+                return $this->employerDashboardStripStructuredNoise(trim($decoded['city']));
+
+            }
+
+
+
+            foreach (['state', 'province', 'region', 'country'] as $k) {
+
+                if (! empty($decoded[$k]) && is_string($decoded[$k])) {
+
+                    return $this->employerDashboardStripStructuredNoise(trim($decoded[$k]));
+
+                }
+
+            }
+
+
+
+            return '';
+
+        }
+
+
+
+        $maybePhp = @unserialize($s);
+
+        if ($maybePhp !== false && $s !== 'b:0;') {
+
+            if (is_array($maybePhp) && ! empty($maybePhp['city']) && is_string($maybePhp['city'])) {
+
+                return trim($maybePhp['city']);
+
+            }
+
+
+
+            return '';
+
+        }
+
+
+
+        // Last-resort scrape if the DB column still contains escaped JSON-ish text inside a varchar.
+
+        if (strpos($s, '"city"') !== false && preg_match('/"city"\s*:\s*"([^"]+)"/u', $s, $mm)) {
+
+            return trim(html_entity_decode($mm[1], ENT_QUOTES, 'UTF-8'));
+
+        }
+
+
+
+        return $this->employerDashboardStripStructuredNoise($s);
+
+    }
+
+
+
+    private function employerDashboardEmployerContactLine(Company $company): string
+
+    {
+
+        $parts = [];
+
+        foreach ([
+
+            $this->employerDashboardReadableLocationPiece(isset($company->city) ? $company->city : ''),
+
+            $this->employerDashboardReadableLocationPiece(isset($company->state) ? $company->state : ''),
+
+        ] as $frag) {
+
+            if ($frag !== '') {
+
+                $parts[$frag] = true;
+
+            }
+
+        }
+
+
+
+        return implode(', ', array_keys($parts));
+
+    }
+
+
+
+    /**
+
+     * Turn key_skills.keyskill cell into a recruiter-facing label — matches CV-search logic,
+
+     * but resolves both JobSkill PK and locale job_skill_id.
+
+     *
+
+     * @param  string  $raw
+
+     * @return string
+
+     */
+
+    private function employerDashboardResolveKeyskillDisplayLabel(string $raw): string
+
+    {
+
+        static $cache;
+
+        $cache ??= [];
+
+        $raw = trim($raw);
+
+        if ($raw === '') {
+
+            return '';
+
+        }
+
+        if (array_key_exists($raw, $cache)) {
+
+            return $cache[$raw];
+
+        }
+
+        if (! ctype_digit($raw)) {
+
+            return $cache[$raw] = $raw;
+
+        }
+
+        $id = (int) $raw;
+
+        $matcher = static function ($q) use ($id) {
+
+            $q->where('id', $id)->orWhere('job_skill_id', $id);
+
+        };
+
+        /** @var \App\JobSkill|null $jsk */
+
+        $jsk = JobSkill::query()
+
+            ->where($matcher)
+
+            ->lang()
+
+            ->first();
+
+        if (! $jsk) {
+
+            $jsk = JobSkill::query()
+
+                ->where($matcher)
+
+                ->first();
+
+        }
+
+
+
+        return $cache[$raw] = $jsk ? trim((string) $jsk->job_skill) : '';
+
+    }
+
+
+
+    /**
+
+     * Contract-role candidates shown on employer dashboard spotlight cards.
+
+     */
+
+    private function buildEmployerDashboardContractShowcase(int $limit = 4): array
+
+    {
+
+        $rows = [];
+
+        $accents = ['purple', 'teal', 'orange', 'green'];
+
+
+
+        $users = User::query()
+
+            ->where('hide_show', 0)
+
+            ->whereHas('profileDetails', function ($q) {
+
+                $q->where('work_type', 'Contract');
+
+            })
+
+            ->with([
+
+                'profileSummary',
+
+                'profileDetails',
+
+                'profileNop',
+
+                'profilekeyskill' => function ($rel) {
+
+                    $rel->limit(50);
+
+                },
+
+                'profileSkills' => function ($rel) {
+
+                    $rel->limit(36);
+
+                },
+
+            ])
+
+            ->orderByDesc('users.updated_at')
+
+            ->take(48)
+
+            ->get()
+
+            /** Prefer profiles that actually have skill rows so the spotlight matches the CV UI. */
+
+            ->sortByDesc(static function (User $u) {
+
+                return $u->profilekeyskill->count() + $u->profileSkills->count();
+
+            })
+
+            ->values();
+
+
+
+        foreach ($users as $idx => $user) {
+
+            if (count($rows) >= $limit) {
+
+                break;
+
+            }
+
+
+
+            $name = trim((string) $user->name);
+
+            $anon = $this->employerDashboardAnonymizedNameParts($name);
+
+            $summ = optional($user->profileSummary)->first();
+
+            $title = trim((string) (optional($summ)->latestdesg ?? ''));
+
+            $totExpRaw = optional($summ)->totalexp ?? '';
+
+            $totExpDisp = '';
+
+            if ($totExpRaw !== '' && $totExpRaw !== null) {
+
+                $totFloat = (float) $totExpRaw;
+
+                $totExpDisp = $totFloat == floor($totFloat) ? (string) (int) $totFloat : (string) $totFloat;
+
+            }
+
+            $roleLineParts = [];
+
+            if ($title !== '') {
+
+                $roleLineParts[] = $title;
+
+            }
+
+            if ($totExpDisp !== '') {
+
+                $roleLineParts[] = $totExpDisp . ' yrs';
+
+            }
+
+            $roleLine = implode(' · ', $roleLineParts) ?: 'Contract professional';
+
+
+
+            $pd = optional($user->profileDetails)->first();
+
+            $loc = '';
+
+            if (isset($user->current_city)) {
+
+                $loc = $this->employerDashboardReadableLocationPiece(trim((string) $user->current_city));
+
+            }
+
+            if ($loc !== '' && (strpos($loc, ',') !== false)) {
+
+                $locPieces = preg_split('/[,\/+]/', $loc, 2);
+
+                $loc = trim((string) ($locPieces[0] ?? ''));
+
+            }
+
+            $mode = $this->employerDashboardNormalizeWorkMode(($pd !== null ? $pd->candidate_wfh : null));
+
+
+
+            [$availLabel, $availColor] = $this->employerDashboardAvailabilityFromProfileNop(optional($user->profileNop)->first());
+
+            $tagLabels = [];
+
+            $pushSkillTag = static function (string $lbl) use (&$tagLabels): bool {
+
+                $lbl = trim($lbl);
+
+                if ($lbl === '' || in_array($lbl, $tagLabels, true)) {
+
+                    return false;
+
+                }
+
+                $tagLabels[] = $lbl;
+
+                return true;
+
+            };
+
+
+
+            /* Same resolution path as CV search (JobSkill rows may match id or job_skill_id). */
+
+            foreach ($user->profilekeyskill as $ksRow) {
+
+                if (count($tagLabels) >= 5) {
+
+                    break;
+
+                }
+
+
+
+                $rawKs = isset($ksRow->keyskill) ? trim((string) $ksRow->keyskill) : '';
+
+                if ($rawKs === '') {
+
+                    continue;
+
+                }
+
+
+
+                $lbl = $this->employerDashboardResolveKeyskillDisplayLabel($rawKs);
+
+                if ($lbl !== '') {
+
+                    $pushSkillTag($lbl);
+
+                }
+
+            }
+
+
+
+            foreach ($user->profileSkills as $ps) {
+
+                if (count($tagLabels) >= 5) {
+
+                    break;
+
+                }
+
+
+
+                $lbl = trim((string) $ps->getJobSkill('job_skill'));
+
+                if ($lbl !== '') {
+
+                    $pushSkillTag($lbl);
+
+                }
+
+            }
+
+
+
+            $rows[] = [
+
+                'initials' => $anon['initials'],
+
+                'name' => $anon['masked'],
+
+                'role' => $roleLine,
+
+                'availability_label' => $availLabel,
+
+                'availability_color' => $availColor,
+
+                'loc' => $loc,
+
+                'mode' => $mode,
+
+                'accent' => $accents[$idx % count($accents)],
+
+                'tags' => array_values(array_unique(array_filter($tagLabels))),
+
+            ];
+
+        }
+
+
+
+        return $rows;
+
+    }
+
+
+
+    /**
+
+     * Mask name similarly to dashboard mock-ups (prefix + *** + last char).
+
+     */
+
+    private function employerDashboardMaskNamePiece(string $piece): string
+
+    {
+
+        $piece = trim($piece);
+
+        if ($piece === '') {
+
+            return '';
+
+        }
+
+        $len = mb_strlen($piece);
+
+        if ($len === 1) {
+
+            return $piece . '***';
+
+        }
+
+        if ($len === 2) {
+
+            return mb_substr($piece, 0, 1) . '***' . mb_substr($piece, -1);
+
+        }
+
+        return mb_substr($piece, 0, 1) . '***' . mb_substr($piece, -1);
+
+    }
+
+
+
+    /**
+
+     * @return array{initials:string,masked:string}
+
+     */
+
+    private function employerDashboardAnonymizedNameParts(string $fullName): array
+
+    {
+
+        $fullName = trim($fullName);
+
+        if ($fullName === '') {
+
+            return ['initials' => 'JN', 'masked' => 'J***'];
+
+        }
+
+
+
+        $parts = preg_split('/\s+/u', $fullName);
+
+        $parts = array_values(array_filter($parts, function ($s) {
+
+            return $s !== '';
+
+        }));
+
+        if (! $parts) {
+
+            return ['initials' => 'JN', 'masked' => 'J***'];
+
+        }
+
+
+
+        $initials = '';
+
+        foreach (array_slice($parts, 0, 2) as $p) {
+
+            $initials .= mb_strtoupper(mb_substr($p, 0, 1));
+
+        }
+
+        $maskedPieces = [];
+
+        foreach ($parts as $p) {
+
+            $maskedPieces[] = $this->employerDashboardMaskNamePiece($p);
+
+        }
+
+
+
+        return [
+
+            'initials' => $initials !== '' ? $initials : 'JN',
+
+            'masked' => implode(' ', $maskedPieces),
+
+        ];
+
+    }
+
+
+
+    private function employerDashboardNormalizeWorkMode($candidateWfh): string
+
+    {
+
+        $candidateWfh = (string) $candidateWfh;
+
+        switch ($candidateWfh) {
+
+            case '1': return 'Remote';
+
+            case '2': return 'Hybrid';
+
+            case '3': return 'Work From Office';
+
+            case '4': return 'Flexible';
+
+            default:
+
+                return '';
+
+        }
+
+    }
+
+
+
+    /**
+
+     * nop_days: '1' = immediately available / not under notice UX, '2' = serving notice (use last_working_day).
+
+     *
+
+     * @return array{0:string,1:'green'|'amber'}
+
+     */
+
+    private function employerDashboardAvailabilityFromProfileNop(?\App\ProfileNop $nop): array
+
+    {
+
+        if ($nop !== null && (string) $nop->nop_days === '2') {
+
+            if (! empty($nop->last_working_day)) {
+
+                try {
+
+                    $lwd = Carbon::parse($nop->last_working_day)->startOfDay();
+
+                    if ($lwd->lte(Carbon::today())) {
+
+                        return ['⚡ Starts immediately', 'green'];
+
+                    }
+
+
+
+                    $d = Carbon::today()->diffInDays($lwd);
+
+                    $d = max(1, (int) $d);
+
+                    $lbl = ($d === 1)
+
+                        ? '⏱ Starts after 1 day'
+
+                        : ('⏱ Starts after ' . $d . ' days');
+
+
+
+                    return [$lbl, 'amber'];
+
+                } catch (\Throwable $e) {
+
+                    return ['⏱ Serving notice — date pending', 'amber'];
+
+                }
+
+            }
+
+
+
+            return ['⏱ Serving notice — date pending', 'amber'];
+
+        }
+
+
+
+        return ['⚡ Starts immediately', 'green'];
 
     }
 
@@ -5077,7 +7639,10 @@ class CompanyController extends Controller
         $company = Company::where('id', $request->company_id)->first();
 
         $company->name = $request->name;
-        $company->email = $request->email;
+        $email = $request->input('email');
+        if ($email !== null && $email !== '' && (int) $company->email_verified !== 1) {
+            $company->email = $email;
+        }
         $company->phone = $request->phone;
         $company->ceo = $request->ceo;
         $company->description = nl2br($request->description);

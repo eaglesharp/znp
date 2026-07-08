@@ -1,0 +1,114 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "ZeroNoticePeriod" [ref=e4] [cursor=pointer]:
+        - /url: http://127.0.0.1:8000
+        - generic [ref=e5]: ZeroNoticePeriod
+      - navigation
+      - generic [ref=e6]:
+        - link "Find Jobs" [ref=e7] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/jobseeker-auth
+        - link "Post Jobs" [ref=e8] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/employer-login
+  - generic [ref=e11]:
+    - generic [ref=e13]:
+      - button "Employer Sign In" [ref=e14] [cursor=pointer]
+      - button "Employer Sign Up" [ref=e15] [cursor=pointer]
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]: Email Address *
+        - generic [ref=e21]:
+          - img
+          - textbox "Email Address *" [ref=e22]:
+            - /placeholder: your.email@company.com
+      - generic [ref=e23]:
+        - generic [ref=e24]: Password *
+        - generic [ref=e25]:
+          - img
+          - textbox "Password *" [ref=e26]:
+            - /placeholder: Enter your password
+          - button "Toggle password visibility" [ref=e27] [cursor=pointer]:
+            - img [ref=e28]
+      - generic [ref=e31]:
+        - generic [ref=e32] [cursor=pointer]:
+          - checkbox "Remember me" [ref=e33]
+          - text: Remember me
+        - link "Forgot password?" [ref=e34] [cursor=pointer]:
+          - /url: http://127.0.0.1:8000/company/password/reset
+      - button "Sign In" [ref=e35] [cursor=pointer]
+      - generic [ref=e36]: Don't have an account? Create one now
+  - contentinfo [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]: ZeroNoticePeriod
+          - paragraph [ref=e42]:
+            - text: Evolve, SNN Raj Serenity, Begur - Koppa Rd,
+            - text: Yelenahalli, Bengaluru, Karnataka 560114
+          - link "hello@zeronoticeperiod.com" [ref=e43] [cursor=pointer]:
+            - /url: mailto:hello@zeronoticeperiod.com
+        - generic [ref=e44]:
+          - generic [ref=e45]: Jobs by Metros
+          - list [ref=e46]:
+            - listitem [ref=e47]:
+              - link "Jobs in Bengaluru" [ref=e48] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?location=Bengaluru
+            - listitem [ref=e49]:
+              - link "Jobs in Hyderabad" [ref=e50] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?location[]=Hyderabad
+            - listitem [ref=e51]:
+              - link "Jobs in Chennai" [ref=e52] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?location[]=Chennai
+            - listitem [ref=e53]:
+              - link "Jobs in Mumbai" [ref=e54] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?location[]=Mumbai
+            - listitem [ref=e55]:
+              - link "Jobs in Delhi" [ref=e56] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?location[]=Delhi+NCR
+        - generic [ref=e57]:
+          - generic [ref=e58]: Jobs by Work Mode
+          - list [ref=e59]:
+            - listitem [ref=e60]:
+              - link "Jobs (Hybrid)" [ref=e61] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?tag=Hybrid
+            - listitem [ref=e62]:
+              - link "Jobs (Work From Office)" [ref=e63] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?tag=Work+From+Office
+            - listitem [ref=e64]:
+              - link "Jobs (Remote/WFH)" [ref=e65] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?tag=Remote
+            - listitem [ref=e66]:
+              - link "Jobs (Temp WFH)" [ref=e67] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?mode[]=Temp+WFH
+        - generic [ref=e68]:
+          - generic [ref=e69]: Jobs by Job Type
+          - list [ref=e70]:
+            - listitem [ref=e71]:
+              - link "Jobs (Full time/Permanent)" [ref=e72] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?type[]=Permanent
+            - listitem [ref=e73]:
+              - link "Jobs (Contract)" [ref=e74] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/jobs?tag=Contract
+          - generic [ref=e75]: Links
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "Terms & Conditions" [ref=e78] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/terms-and-conditons
+            - listitem [ref=e79]:
+              - link "Privacy Policy" [ref=e80] [cursor=pointer]:
+                - /url: http://127.0.0.1:8000/privacy-policy
+      - generic [ref=e81]:
+        - generic [ref=e82]: © 2026 ZeroNoticePeriod. All rights reserved.
+        - generic [ref=e83]:
+          - link "Facebook" [ref=e84] [cursor=pointer]:
+            - /url: https://www.facebook.com/profile.php?id=100078635680624
+            - img "Facebook" [ref=e85]
+          - link "LinkedIn" [ref=e86] [cursor=pointer]:
+            - /url: https://www.linkedin.com/company/zeronoticeperiod/
+            - img "LinkedIn" [ref=e87]
+          - link "Twitter" [ref=e88] [cursor=pointer]:
+            - /url: https://twitter.com/ZNPTEAM
+            - img "Twitter" [ref=e89]
+          - link "Instagram" [ref=e90] [cursor=pointer]:
+            - /url: https://www.instagram.com/_zeronotice_/
+            - img [ref=e91]

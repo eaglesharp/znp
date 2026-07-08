@@ -24,6 +24,7 @@ use App\City;
 use App\Industry;
 use App\FavouriteCompany;
 use App\FavouriteApplicant;
+use App\Unlocked_users;
 use App\OwnershipType;
 use App\JobApply;
 use Carbon\Carbon;
@@ -316,6 +317,10 @@ class CompaniesController extends Controller
         $company = $job->getCompany();
         $profileCv = $job_application->getProfileCv();
 
+        $unlocked = Unlocked_users::where('company_id', Auth::guard('company')->user()->id)
+            ->where('unlocked_users_ids', $user->id)
+            ->exists();
+
         /*         * ********************************************** */
         $num_profile_views = $user->num_profile_views + 1;
         $user->num_profile_views = $num_profile_views;
@@ -327,6 +332,7 @@ class CompaniesController extends Controller
                         ->with('job', $job)
                         ->with('company', $company)
                         ->with('profileCv', $profileCv)
+                        ->with('unlocked', $unlocked)
                         ->with('page_title', 'Applicant Profile')
                         ->with('form_title', 'Contact Applicant');
     }
