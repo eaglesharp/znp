@@ -19,3 +19,17 @@ yarn-error.log
 *~
 error_log
 *.log
+
+# Playwright / E2E
+.playwright-mcp/
+tests/e2e/node_modules/
+tests/e2e/playwright-report/
+tests/e2e/test-results/
+tests/e2e/.env
+tests/e2e/.env.*
+!tests/e2e/.env.example
+
+# User uploaded files
+/public/company_logos/
+/public/cvs/
+/public/uploads/

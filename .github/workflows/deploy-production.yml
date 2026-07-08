@@ -1,0 +1,62 @@
+# Workflow name visible in GitHub Actions dashboard
+name: Deploy Production
+
+# Trigger deployment whenever code is pushed to main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+
+    # GitHub temporary Linux runner
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # Step 1
+      - name: 🚀 Start Production Deployment
+        run: echo "Starting production deployment..."
+
+      # Step 2
+      - name: 🔐 Connect To Production Server And Deploy
+        uses: appleboy/ssh-action@master
+
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+
+          script: |
+
+            echo "==============================="
+            echo "Connected to Production Server"
+            echo "==============================="
+
+            echo "Moving into production project..."
+            cd /home/zeronoticeperi/public_html
+
+            echo "Fetching latest code..."
+            git fetch origin
+
+            echo "Pulling latest code from GitHub main branch..."
+            git pull origin main
+
+            echo "Clearing Laravel caches..."
+            php artisan optimize:clear
+
+            echo "Running pending database migrations..."
+            php artisan migrate --force
+
+            echo "Caching configuration..."
+            php artisan config:cache
+
+            echo "Caching Blade views..."
+            php artisan view:cache
+
+            echo "Production deployment completed successfully."
+
+      # Step 3
+      - name: ✅ Deployment Finished
+        run: echo "Production deployment completed successfully."
