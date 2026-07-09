@@ -849,23 +849,14 @@
                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
                     <div style="background:var(--blue-50);border:1px solid var(--blue-100);border-radius:9px;padding:11px 14px">
                         <div style="font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:2px">Call us</div>
-                        <div style="font-size:14px;font-weight:800">+91 98765 43210</div>
+                        <div style="font-size:14px;font-weight:800">+91 90354 79715</div>
                         <div style="font-size:11px;color:var(--t3);margin-top:2px">Mon–Sat · 9 AM–7 PM</div>
                     </div>
                     <div style="background:var(--green-50);border:1px solid var(--green-100);border-radius:9px;padding:11px 14px">
                         <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:2px">Email us</div>
-                        <div style="font-size:12.5px;font-weight:700">support@zeronoticeperiod.com</div>
+                        <div style="font-size:12.5px;font-weight:700">hello@zeronoticeperiod.com</div>
                     </div>
                 </div>
-                <select class="sched-inp" id="apHelpCategory">
-                    <option value="">Select a topic…</option>
-                    <option>Candidate not responding to JD</option>
-                    <option>Interview scheduling issue</option>
-                    <option>Credit balance or billing</option>
-                    <option>Candidate profile seems inaccurate</option>
-                    <option>Technical issue with the platform</option>
-                    <option>Other</option>
-                </select>
                 <textarea class="sched-inp" id="apHelpMessage" rows="4" placeholder="Describe your issue in detail…"></textarea>
             </div>
             <div class="sched-footer">
@@ -1060,9 +1051,7 @@
         },
 
         resetHelpForm: function () {
-            var cat = document.getElementById('apHelpCategory');
             var msg = document.getElementById('apHelpMessage');
-            if (cat) cat.value = '';
             if (msg) msg.value = '';
         },
 
@@ -1464,14 +1453,12 @@
 
         if (action === 'submit-help') {
             var helpMsg = (document.getElementById('apHelpMessage') || {}).value || '';
-            var helpCat = (document.getElementById('apHelpCategory') || {}).value || '';
             if (!helpMsg.trim()) {
                 znpAp.toast('Please describe your issue first.');
                 return;
             }
             btn.disabled = true;
             znpAp.post(routes.helpSupport, {
-                category: helpCat,
                 message: helpMsg.trim()
             }).then(function (res) {
                 znpAp.closeModal('apHelpModal');
