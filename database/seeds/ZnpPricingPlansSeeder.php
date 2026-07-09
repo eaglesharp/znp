@@ -37,7 +37,7 @@ class ZnpPricingPlansSeeder extends Seeder
                 'is_featured'      => 0,
                 'variant'          => 'default',
                 'cta_label'        => 'Get Started →',
-                'cta_url'          => '/post-job-page',
+                'cta_url'          => '/post-job',
                 'price_subtext'    => 'per job post · shown across all metros · valid 30 days · + GST',
                 'billing_note'     => 'Billed monthly — pay only when you post',
                 'highlights'       => [
@@ -68,7 +68,7 @@ class ZnpPricingPlansSeeder extends Seeder
                 'is_featured'      => 1,
                 'variant'          => 'featured',
                 'cta_label'        => 'Start Hiring →',
-                'cta_url'          => '/post-job-page',
+                'cta_url'          => '/post-job',
                 'price_subtext'    => '10 job posts · ₹2,500 per post · valid 90 days · each post active 30 days · + GST',
                 'billing_note'     => 'Billed monthly — activate posts anytime within 90 days',
                 'highlights'       => [

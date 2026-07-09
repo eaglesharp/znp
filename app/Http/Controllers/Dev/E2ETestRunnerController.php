@@ -89,7 +89,7 @@ class E2ETestRunnerController extends Controller
                 'title' => 'EDIT-1 — Round-trip: create then open edit, every field pre-fills',
                 'pattern' => 'EDIT-1',
                 'group' => 'Edit a Job',
-                'what'  => 'Creates a rich job with every section filled (skills, perks, awards, profile reqs, custom questions, strict mode, video toggle off). Opens /post-job-page/{id}/edit and asserts every visible form field matches what was saved.',
+                'what'  => 'Creates a rich job with every section filled (skills, perks, awards, profile reqs, custom questions, strict mode, video toggle off). Opens /post-job/{id}/edit and asserts every visible form field matches what was saved.',
             ],
             [
                 'id'    => 'EDIT-2', 'file' => 'edit-job.spec.ts',

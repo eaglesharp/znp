@@ -1911,8 +1911,8 @@ class CompanyController extends Controller
 
     /* ════════════════════════════════════════════════════════════════════════
      *  NEW ZNP "Post a Job" page (resources/views/znp/post-job.blade.php)
-     *  Route GET  /post-job-page  → postJobZNP()   (show form, prefilled)
-     *  Route POST /post-job-page  → storeJobZNP()  (save + redirect to /my-jobs)
+     *  Route GET  /post-job  → postJobZNP()   (show form, prefilled)
+     *  Route POST /post-job  → storeJobZNP()  (save + redirect to /my-jobs)
      * ════════════════════════════════════════════════════════════════════════ */
 
     /**
@@ -3106,8 +3106,8 @@ class CompanyController extends Controller
 
     /* ════════════════════════════════════════════════════════════════════════
      *  ZNP "Edit a Job" page (mirrors postJobZNP, drives the same blade)
-     *  Route GET  /post-job-page/{id}/edit  → editJobZNP()
-     *  Route POST /post-job-page/{id}/edit  → updateJobZNP()
+     *  Route GET  /post-job/{id}/edit  → editJobZNP()
+     *  Route POST /post-job/{id}/edit  → updateJobZNP()
      * ════════════════════════════════════════════════════════════════════════ */
 
     /**

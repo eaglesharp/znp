@@ -28,7 +28,7 @@ test.describe('Step wizard', () => {
   test.beforeEach(async ({ page }) => { await login(page); });
 
   test('W1 — Step gating: empty step 1 blocks Next + shows errors', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     /* Try to advance with no fields filled. */
@@ -51,7 +51,7 @@ test.describe('Step wizard', () => {
 
   test('W2 — Free backward jump via step pill', async ({ page }) => {
     /* Fill step 1 minimally so we can advance, then jump back. */
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     await fillStep1Minimum(page);
@@ -71,7 +71,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W3 — Step 5 swaps Next for Preview & Post Job in the footer', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     /* Fast-forward to step 5 (bypass validation — testing UI only). */
@@ -90,7 +90,7 @@ test.describe('Step wizard', () => {
   test('W4 — Preview auto-jumps to the earliest failing step', async ({ page }) => {
     /* Fill steps 1–4 properly, then deliberately blank a required field on
        step 3 (about_company) and try to Preview from step 5. */
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     const s = minimalScenario('W4');
@@ -118,7 +118,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W6 — No interview-mode preselect; unticking + Next shows error', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     /* On fresh load, no interview mode should be ticked. */
@@ -144,7 +144,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W7 — Profile Requirements default empty; Next on step 5 blocks until one is ticked', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     /* Nothing preselected on a fresh page. */
@@ -188,7 +188,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W8 — Client Industry is required when Hiring for a Client', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     /* The label should carry the visual asterisk now. */
@@ -220,7 +220,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W9 — Pasted Word-styled HTML in Description is sanitised', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     /* #jobDesc lives in step 2 which is hidden by default; wait for the DOM
        attachment instead of visibility. */
     await page.waitForSelector('#jobDesc', { state: 'attached' });
@@ -252,7 +252,7 @@ test.describe('Step wizard', () => {
   });
 
   test('W5 — Indicator state cycles done / active / idle as you advance', async ({ page }) => {
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#jobTitle');
 
     const s = minimalScenario('W5');

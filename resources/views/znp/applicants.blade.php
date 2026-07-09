@@ -298,7 +298,7 @@
 
     <div class="crumb">
         <div class="crumb-inner">
-            <a href="{{ route('employer.dashboard.page') }}">My Jobs</a>
+            <a href="{{ route('my-jobs') }}">My Jobs</a>
             <span>›</span>
             <span style="color:var(--t3);font-weight:500">{{ $job->job_title }}</span>
             <span>›</span>
@@ -888,14 +888,14 @@
     var csrfToken = csrf ? csrf.getAttribute('content') : '';
 
     var routes = {
-        shortlist:  '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/shortlist',
-        note:       '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/note',
-        feedback:   '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/feedback',
-        reject:     '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/reject',
-        report:     '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/report',
-        offer:      '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/offer',
-        viewCv:     '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/view-cv',
-        downloadCv: '{{ url('post-job-page') }}/' + jobId + '/applicants/__APP__/download-cv',
+        shortlist:  '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/shortlist',
+        note:       '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/note',
+        feedback:   '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/feedback',
+        reject:     '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/reject',
+        report:     '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/report',
+        offer:      '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/offer',
+        viewCv:     '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/view-cv',
+        downloadCv: '{{ url('post-job') }}/' + jobId + '/applicants/__APP__/download-cv',
         emailTemplates: '{{ route('employer.applicant.email.templates', $job->id) }}',
         sendEmail: '{{ route('employer.applicant.email.send', $job->id) }}',
         retire:     '{{ route('employer.post.job.retire', $job->id) }}',

@@ -150,7 +150,7 @@ export async function login(page: Page): Promise<void> {
 /* ─── Form fill (one big browser-side function — easier than 30 separate clicks) ─── */
 
 export async function fillJobForm(page: Page, s: Scenario): Promise<void> {
-  await page.goto('/post-job-page');
+  await page.goto('/post-job');
   await page.waitForSelector('#jobTitle');
   await demoStep(page, `Scenario ${s.label} — opening Post-a-Job form`);
 
@@ -296,9 +296,9 @@ export async function fillJobForm(page: Page, s: Scenario): Promise<void> {
 
 /* ─── Edit-page helpers ─── */
 
-/** Opens /post-job-page/{id}/edit. */
+/** Opens /post-job/{id}/edit. */
 export async function openEditForm(page: Page, jobId: number): Promise<void> {
-  await page.goto(`/post-job-page/${jobId}/edit`);
+  await page.goto(`/post-job/${jobId}/edit`);
   await page.waitForSelector('#jobTitle');
 }
 

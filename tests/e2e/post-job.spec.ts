@@ -126,7 +126,7 @@ test.describe('Post-a-Job form', () => {
   test('D — Save as Draft (only title required)', async ({ page }) => {
     test.skip(ENV.mode === 'dryrun', 'Draft scenario writes to DB; skipped in dryrun mode.');
 
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.locator('#jobTitle').fill('Draft Only Title (E2E-D)');
     await Promise.all([
       page.waitForURL((url) => url.pathname.includes('/my-jobs')),
@@ -187,7 +187,7 @@ test.describe('Post-a-Job form', () => {
     }
 
     /* Step 2 — Open the form again, banner should now show the source job. */
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     const hasLatest = await page.evaluate(() => !!document.getElementById('cloneLatestId'));
     expect(hasLatest).toBe(true);
 

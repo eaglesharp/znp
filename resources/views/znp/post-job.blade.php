@@ -449,7 +449,7 @@
         <a class="pj-logo" href="{{ route('index') }}">
             <span class="pj-la">Zero</span><span class="pj-lb">Notice</span><span class="pj-lc">Period</span>
         </a>
-        <a href="{{ route('employer.dashboard.page') }}" class="pj-nb pj-nb-o">Dashboard</a>
+        <a href="{{ route('employer.dashboard') }}" class="pj-nb pj-nb-o">Dashboard</a>
     </nav>
 
     <form method="POST" action="{{ $formAction }}" enctype="multipart/form-data" id="znpPostJobForm" novalidate>
