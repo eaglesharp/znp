@@ -267,7 +267,7 @@
                title="{{ $plan['sub_line'] ?? '' }}">
                 {{ $plan['label'] }}
             </a>
-            <a class="btn-dash" href="{{ route('employer.dashboard.page') }}" title="Back to employer dashboard">Dashboard</a>
+            <a class="btn-dash" href="{{ route('employer.dashboard') }}" title="Back to employer dashboard">Dashboard</a>
             @if ($canPost)
                 <a class="btn-post" href="{{ route('employer.post.job.page') }}" title="Post a new job">
                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -426,7 +426,7 @@
 
             <div class="top-bar">
                 <div class="top-left">
-                    <a href="{{ route('employer.dashboard.page') }}" class="back-dashboard">← Dashboard</a>
+                    <a href="{{ route('employer.dashboard') }}" class="back-dashboard">← Dashboard</a>
                     <h1>My Job Postings</h1>
                     <p id="jobCount">
                         @if ($statusCounts['all'] === 0)
@@ -680,7 +680,7 @@ window.MJ = (function () {
     var ROUTES = {
         toggleStatus: @json(route('make.active.job')),
         postJobPage:  @json(route('employer.post.job.page')),
-        editPrefix:   '/post-job-page/',       // GET  /post-job-page/{id}/edit
+        editPrefix:   '/post-job/',       // GET  /post-job/{id}/edit
     };
     var CSRF = document.querySelector('meta[name=csrf-token]')?.content || '';
 

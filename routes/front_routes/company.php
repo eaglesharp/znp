@@ -111,34 +111,55 @@ Route::post('candidate-list-search','Company\CompanyController@candidatelistsear
 
 
 
-Route::get('employer-dashboard','Company\CompanyController@employerdashboard')->name('employer.dashboard');
+// OLD employer dashboard (legacy company_dashboard view — KYC, CV quota, etc.)
+// Route::get('employer-dashboard','Company\CompanyController@employerdashboard')->name('employer.dashboard');
+Route::get('employer-dashboard-legacy', 'Company\CompanyController@employerdashboard')->name('employer.dashboard.legacy');
 
-Route::get('employer-dashboard-page', 'Company\CompanyController@employerDashboardNew')->name('employer.dashboard.page');
+/* ── ZNP Employer Dashboard ── */
+Route::get('employer-dashboard', 'Company\CompanyController@employerDashboardNew')->name('employer.dashboard');
+
+// Route::get('employer-dashboard-page', 'Company\CompanyController@employerDashboardNew')->name('employer.dashboard.page');
 
 Route::get('employer-job-pricing', 'Company\CompanyController@jobPricingZNP')->name('employer.job.pricing');
 
-/* ── ZNP New "Post a Job" form (temp URL until UI is signed off) ── */
-Route::get('post-job-page', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
-Route::post('post-job-page', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');
+/* ── ZNP Post a Job + applicants pipeline ── */
+Route::get('post-job', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
+Route::post('post-job', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');
 
-/* New ZNP "Edit Job" page — drives the same blade with prefilled values. */
-Route::get('post-job-page/{id}/edit', 'Company\CompanyController@editJobZNP')->name('employer.post.job.edit')->where('id', '[0-9]+');
-Route::post('post-job-page/{id}/edit', 'Company\CompanyController@updateJobZNP')->name('employer.post.job.update')->where('id', '[0-9]+');
+Route::get('post-job/{id}/edit', 'Company\CompanyController@editJobZNP')->name('employer.post.job.edit')->where('id', '[0-9]+');
+Route::post('post-job/{id}/edit', 'Company\CompanyController@updateJobZNP')->name('employer.post.job.update')->where('id', '[0-9]+');
 
-/* New ZNP Applicants page — per-job applicant list. */
-Route::get('post-job-page/{id}/applicants', 'Company\CompanyController@applicantsZNP')->name('employer.post.job.applicants')->where('id', '[0-9]+');
-Route::post('post-job-page/{id}/help-support', 'Company\CompanyController@submitHelpSupportZNP')->name('employer.help.support')->where('id', '[0-9]+');
-Route::post('post-job-page/{id}/retire', 'Company\ApplicantPipelineController@retireJob')->name('employer.post.job.retire')->where('id', '[0-9]+');
-Route::post('post-job-page/{id}/applicants/{app}/shortlist', 'Company\ApplicantPipelineController@shortlist')->name('employer.applicant.shortlist')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/note', 'Company\ApplicantPipelineController@note')->name('employer.applicant.note')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/feedback', 'Company\ApplicantPipelineController@feedback')->name('employer.applicant.feedback')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/reject', 'Company\ApplicantPipelineController@reject')->name('employer.applicant.reject')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/report', 'Company\ApplicantPipelineController@report')->name('employer.applicant.report')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/offer', 'Company\ApplicantPipelineController@offer')->name('employer.applicant.offer')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/view-cv', 'Company\ApplicantPipelineController@viewCv')->name('employer.applicant.viewcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::post('post-job-page/{id}/applicants/{app}/download-cv', 'Company\ApplicantPipelineController@downloadCv')->name('employer.applicant.downloadcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
-Route::get('post-job-page/{id}/applicants-email/templates', 'Company\ApplicantPipelineController@emailTemplates')->name('employer.applicant.email.templates')->where('id', '[0-9]+');
-Route::post('post-job-page/{id}/applicants-email/send', 'Company\ApplicantPipelineController@sendEmail')->name('employer.applicant.email.send')->where('id', '[0-9]+');
+Route::get('post-job/{id}/applicants', 'Company\CompanyController@applicantsZNP')->name('employer.post.job.applicants')->where('id', '[0-9]+');
+Route::post('post-job/{id}/help-support', 'Company\CompanyController@submitHelpSupportZNP')->name('employer.help.support')->where('id', '[0-9]+');
+Route::post('post-job/{id}/retire', 'Company\ApplicantPipelineController@retireJob')->name('employer.post.job.retire')->where('id', '[0-9]+');
+Route::post('post-job/{id}/applicants/{app}/shortlist', 'Company\ApplicantPipelineController@shortlist')->name('employer.applicant.shortlist')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/note', 'Company\ApplicantPipelineController@note')->name('employer.applicant.note')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/feedback', 'Company\ApplicantPipelineController@feedback')->name('employer.applicant.feedback')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/reject', 'Company\ApplicantPipelineController@reject')->name('employer.applicant.reject')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/report', 'Company\ApplicantPipelineController@report')->name('employer.applicant.report')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/offer', 'Company\ApplicantPipelineController@offer')->name('employer.applicant.offer')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/view-cv', 'Company\ApplicantPipelineController@viewCv')->name('employer.applicant.viewcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::post('post-job/{id}/applicants/{app}/download-cv', 'Company\ApplicantPipelineController@downloadCv')->name('employer.applicant.downloadcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+Route::get('post-job/{id}/applicants-email/templates', 'Company\ApplicantPipelineController@emailTemplates')->name('employer.applicant.email.templates')->where('id', '[0-9]+');
+Route::post('post-job/{id}/applicants-email/send', 'Company\ApplicantPipelineController@sendEmail')->name('employer.applicant.email.send')->where('id', '[0-9]+');
+
+// Route::get('post-job-page', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
+// Route::post('post-job-page', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');
+// Route::get('post-job-page/{id}/edit', 'Company\CompanyController@editJobZNP')->name('employer.post.job.edit')->where('id', '[0-9]+');
+// Route::post('post-job-page/{id}/edit', 'Company\CompanyController@updateJobZNP')->name('employer.post.job.update')->where('id', '[0-9]+');
+// Route::get('post-job-page/{id}/applicants', 'Company\CompanyController@applicantsZNP')->name('employer.post.job.applicants')->where('id', '[0-9]+');
+// Route::post('post-job-page/{id}/help-support', 'Company\CompanyController@submitHelpSupportZNP')->name('employer.help.support')->where('id', '[0-9]+');
+// Route::post('post-job-page/{id}/retire', 'Company\ApplicantPipelineController@retireJob')->name('employer.post.job.retire')->where('id', '[0-9]+');
+// Route::post('post-job-page/{id}/applicants/{app}/shortlist', 'Company\ApplicantPipelineController@shortlist')->name('employer.applicant.shortlist')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/note', 'Company\ApplicantPipelineController@note')->name('employer.applicant.note')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/feedback', 'Company\ApplicantPipelineController@feedback')->name('employer.applicant.feedback')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/reject', 'Company\ApplicantPipelineController@reject')->name('employer.applicant.reject')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/report', 'Company\ApplicantPipelineController@report')->name('employer.applicant.report')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/offer', 'Company\ApplicantPipelineController@offer')->name('employer.applicant.offer')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/view-cv', 'Company\ApplicantPipelineController@viewCv')->name('employer.applicant.viewcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::post('post-job-page/{id}/applicants/{app}/download-cv', 'Company\ApplicantPipelineController@downloadCv')->name('employer.applicant.downloadcv')->where(['id' => '[0-9]+', 'app' => '[0-9]+']);
+// Route::get('post-job-page/{id}/applicants-email/templates', 'Company\ApplicantPipelineController@emailTemplates')->name('employer.applicant.email.templates')->where('id', '[0-9]+');
+// Route::post('post-job-page/{id}/applicants-email/send', 'Company\ApplicantPipelineController@sendEmail')->name('employer.applicant.email.send')->where('id', '[0-9]+');
 
 
 

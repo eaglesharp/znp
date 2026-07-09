@@ -684,7 +684,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
         </div>
 
         <nav class="ed-nav-grp" aria-label="Primary">
-            <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.dashboard.page') }}" class="ed-nav-item is-active">
+            <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.dashboard') }}" class="ed-nav-item is-active">
                 <svg class="ed-nav-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                 Dashboard
             </a>
@@ -696,7 +696,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
                 <svg id="edArrJobs" class="ed-nav-arrow" style="transform:rotate(180deg)" viewBox="0 0 24 24" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div id="edSubJobs" class="ed-nav-sub is-open">
-                <a target="_blank" rel="noopener noreferrer" href="{{ url('post-job-page') }}" class="ed-nav-sub-item">Post a Job</a>
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.post.job.page') }}" class="ed-nav-sub-item">Post a Job</a>
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('my-jobs') }}" class="ed-nav-sub-item">
                     My Job Postings
                     <span class="ed-nbadge">{{ $jobsPostedCount }}</span>
@@ -727,7 +727,7 @@ if (!function_exists('znp_ed_job_location_preview')) {
             <div id="edSubPf" class="ed-nav-sub is-open">
                 <a target="_blank" rel="noopener noreferrer" href="{{ route('company.profile') }}" class="ed-nav-sub-item">Company Profile</a>
                 <a href="#" target="_blank" rel="noopener noreferrer" class="ed-nav-sub-item">Users &amp; Reports</a>
-                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.dashboard') }}" class="ed-nav-sub-item">
+                <a target="_blank" rel="noopener noreferrer" href="{{ route('employer.dashboard.legacy') }}#Interview" class="ed-nav-sub-item">
                     KYC &amp; Verification
                     @if((int) $company->kyc_verified === 2)
                         <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-left:4px;flex-shrink:0;"></span>

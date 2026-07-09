@@ -21,7 +21,8 @@ Route::get('subscribe-alert', 'SubscriptionController@submitAlert')->name('subsc
 
 //Employer Module
 
-Route::view('post-job','company.job.post-job');
+// OLD static post-job blade (replaced by ZNP post-job form)
+// Route::view('post-job','company.job.post-job');
 
 Route::post('store-front-job', 'Job\JobPublishController@storeFrontJob')->name('store.front.job');
 
@@ -39,7 +40,8 @@ Route::get('my-jobs','Job\JobPublishController@myJobsZNP')->name('my-jobs');
 
 Route::get('make-active-job','Job\JobPublishController@makeActiveJob')->name('make.active.job');
 
-Route::get('view-applicants-list/{id}', 'Job\JobPublishController@viewApplicants')->name('view.applicants.list');
+// OLD applicants list (replaced by ZNP /post-job/{id}/applicants)
+// Route::get('view-applicants-list/{id}', 'Job\JobPublishController@viewApplicants')->name('view.applicants.list');
 Route::get('view-applicants-profile/{job_id}/{id}', 'Job\JobPublishController@viewApplicantProfile')->name('view.applicant.profile');
 
 

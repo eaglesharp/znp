@@ -61,7 +61,7 @@ test.describe('Clone-bug regressions', () => {
     const sourceId = await dbVerifyLatestJob(cid, source);
 
     /* Open the post-job page, click clone, inspect the rendered skill option labels. */
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#cloneLatestId', { state: 'attached' });
     await page.evaluate(() => (window as any).ZnpPostJob.applyClone());
 
@@ -114,7 +114,7 @@ test.describe('Clone-bug regressions', () => {
     const cid = await dbFindCompanyIdByEmail(ENV.email);
     const sourceId = await dbVerifyLatestJob(cid, source);
 
-    await page.goto('/post-job-page');
+    await page.goto('/post-job');
     await page.waitForSelector('#cloneLatestId', { state: 'attached' });
 
     /* Toggle the "Profile Requirements" pill on (default = off). */
