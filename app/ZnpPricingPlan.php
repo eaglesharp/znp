@@ -73,4 +73,41 @@ class ZnpPricingPlan extends Model
         $diff = (float) $this->original_price - (float) $this->price;
         return '₹' . number_format($diff, 0, '.', ',');
     }
+
+    /** GST-inclusive total in major currency units (e.g. INR rupees). */
+    public function totalWithGst(): float
+    {
+        $base = (float) $this->price;
+        $gst  = $base * (float) $this->gst_percent / 100;
+
+        return round($base + $gst, 2);
+    }
+
+    /** Stripe Price ID from DB column or config/env fallback. */
+    public function resolveStripePriceId(): ?string
+    {
+        if ($this->stripe_price_id) {
+            return $this->stripe_price_id;
+        }
+
+        return config("znp.stripe_prices.{$this->slug}") ?: null;
+    }
+
+    /** Whether this plan can be purchased online (not custom / talk-to-sales). */
+    public function isPurchasableOnline(): bool
+    {
+        return ! $this->is_custom_price && (float) $this->price > 0;
+    }
+
+    /** Checkout URL for paid plans; falls back to cta_url for enterprise. */
+    public function checkoutUrl(): string
+    {
+        if ($this->isPurchasableOnline()) {
+            return route('employer.znp.checkout', $this->slug);
+        }
+
+        $cta = $this->cta_url ?: 'contact-us';
+
+        return preg_match('#^https?://#', $cta) ? $cta : url($cta);
+    }
 }

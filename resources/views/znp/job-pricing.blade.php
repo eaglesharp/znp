@@ -274,10 +274,7 @@
         $isCurrent = isset($currentPlanId) && (int) $currentPlanId === (int) $plan->id;
         /* CTA button style: featured = white, enterprise = solid blue, default = outline. */
         $btnClass = $isFeatured ? 'jp-btn-white' : ($isEnterprise ? 'jp-btn-blue' : 'jp-btn-outline');
-        $ctaUrl = $plan->cta_url ?: url('post-job');
-        if ($ctaUrl && !preg_match('#^https?://#', $ctaUrl)) {
-            $ctaUrl = url($ctaUrl);
-        }
+        $ctaUrl = $plan->checkoutUrl();
     @endphp
 
     <div class="jp-plan {{ $variant }}">
