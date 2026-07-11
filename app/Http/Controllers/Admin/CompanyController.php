@@ -32,6 +32,8 @@ use App\ZnpPricingPlan;
 
 use App\ZnpCompanySubscription;
 
+use App\Services\ZnpSubscriptionService;
+
 use App\Country;
 
 use App\State;
@@ -855,33 +857,15 @@ class CompanyController extends Controller
             return null;
         }
 
-        /* End any currently-active subscriptions before issuing a new one. */
-        ZnpCompanySubscription::where('company_id', $company->id)
-            ->where('status', 'active')
-            ->update(['status' => 'cancelled']);
-
-        $now = Carbon::now();
-        $adminId = Auth::guard('admin')->check() ? (int) Auth::guard('admin')->user()->id : null;
-
-        return ZnpCompanySubscription::create([
-            'company_id'           => $company->id,
-            'plan_id'              => $plan->id,
-            'plan_slug'            => $plan->slug,
-            'plan_name'            => $plan->name,
-            'posts_limit'          => (int) $plan->job_posts_limit,
-            'posts_used'           => 0,
-            'validity_days'        => (int) $plan->validity_days,
-            'post_active_days'     => (int) $plan->post_active_days,
-            'starts_at'            => $now,
-            'expires_at'           => $now->copy()->addDays((int) $plan->validity_days),
-            'status'               => 'active',
-            'amount_paid'          => 0,
-            'currency'             => $plan->currency ?: 'INR',
-            'assignment_source'    => 'admin_manual',
-            'payment_ref'          => null,
-            'assigned_by_admin_id' => $adminId,
-            'notes'                => $notes,
-        ]);
+        return app(ZnpSubscriptionService::class)->grantPlan(
+            $company,
+            $plan,
+            'admin_manual',
+            null,
+            0,
+            Auth::guard('admin')->check() ? (int) Auth::guard('admin')->user()->id : null,
+            $notes
+        );
     }
 
 
