@@ -19,6 +19,10 @@ yarn-error.log
 *~
 error_log
 *.log
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+>>>>>>> Stashed changes
 
 # Playwright / E2E
 .playwright-mcp/
@@ -33,3 +37,8 @@ tests/e2e/.env.*
 /public/company_logos/
 /public/cvs/
 /public/uploads/
+<<<<<<< Updated upstream
+=======
+=======
+>>>>>>> main
+>>>>>>> Stashed changes

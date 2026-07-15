@@ -122,9 +122,6 @@ Route::get('employer-dashboard', 'Company\CompanyController@employerDashboardNew
 
 Route::get('employer-job-pricing', 'Company\CompanyController@jobPricingZNP')->name('employer.job.pricing');
 
-Route::get('employer/checkout/{slug}', 'ZnpStripeCheckoutController@checkout')->name('employer.znp.checkout');
-Route::get('employer/checkout/success', 'ZnpStripeCheckoutController@success')->name('employer.znp.checkout.success');
-
 /* ── ZNP Post a Job + applicants pipeline ── */
 Route::get('post-job', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
 Route::post('post-job', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');

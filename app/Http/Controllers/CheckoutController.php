@@ -8,6 +8,9 @@ use App\Company;
 use App\EmployerPayment;
 use App\EmployerPaymenthistory;
 use App\Package;
+use App\ZnpPricingPlan;
+use App\ZnpCompanySubscription;
+use App\Services\ZnpSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Razorpay\Api\Api;
 use App\User;
@@ -42,9 +45,16 @@ class CheckoutController extends Controller
     use CompanyPackageTrait;
 
     const BASE_URL = 'https://api.stripe.com';
-    // const SECRET_KEY = 'sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk';
-    // const SECRET_KEY = 'sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk';
-     const SECRET_KEY = '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';
+
+    private static function stripeSecret()
+    {
+        return config('stripe.stripe_secret') ?: config('services.stripe.secret');
+    }
+
+    private static function stripeKey()
+    {
+        return config('stripe.stripe_key') ?: config('services.stripe.key');
+    }
 
     public function paymentpage(Request $request)
     {
@@ -72,7 +82,7 @@ class CheckoutController extends Controller
 
         // dd($request->total_amount);
 
-        // Stripe::setApiKey('sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk');
+        // Stripe::setApiKey(self::stripeSecret());
 
         // $customer = Customer::create(array(
         //     'email' => $request->stripeEmail,
@@ -106,9 +116,9 @@ class CheckoutController extends Controller
 
 
 
-        $stripe = new \Stripe\StripeClient('sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk');
+        $stripe = new \Stripe\StripeClient(self::stripeSecret());
 
-        Stripe::setApiKey('sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk');
+        Stripe::setApiKey(self::stripeSecret());
 
         $customer = Customer::create(
             array(
@@ -266,7 +276,7 @@ class CheckoutController extends Controller
 
         //  dd($request->total_amount);
 
-        Stripe::setApiKey('sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk');
+        Stripe::setApiKey(self::stripeSecret());
 
         $customer = Customer::create(
             array(
@@ -430,42 +440,51 @@ class CheckoutController extends Controller
     public function employerpaymentpage(Request $request)
     {
 
-        // return dd($request->plan_id);
-
-
-        if (Auth::guard('company')->check()) {
-            // if($request->plan_id == 'Trail')
-            // {
-            //     return redirect()->to(url()->previous() . '#success-section')->with('message12', 'You are already in Trail Plan');
-
-            // }
-        } else {
+        if (! Auth::guard('company')->check()) {
             return redirect()->to(url()->previous() . '#success-section')->with('message12', 'Please Login as a Employer');
         }
 
         $company_id = Auth::guard('company')->user()->id;
-        $package = Package::where('id', $request->plan_id)->first();
         $employer = Company::where('id', $company_id)->first();
-        //  dd($package->package_price);   
-
-
 
         $employer->payment_status = 0;
         $employer->payment_activity = 0;
         $employer->save();
 
+        /* ── New ZNP job-posting plans (employer-job-pricing page) ── */
+        if ($request->filled('znp_plan')) {
+            $znpPlan = ZnpPricingPlan::active()->where('slug', $request->znp_plan)->firstOrFail();
+
+            if (! $znpPlan->isPurchasableOnline()) {
+                return redirect($znpPlan->checkoutUrl());
+            }
+
+            $total_amount = $znpPlan->totalWithGst();
+
+            Session::put('znp_checkout_plan_id', $znpPlan->id);
+            Session::put('plan', 'znp-' . $znpPlan->id);
+            Session::put('amount', $total_amount);
+
+            $package = (object) [
+                'id'            => 'znp-' . $znpPlan->id,
+                'package_title' => $znpPlan->name,
+            ];
+
+            return view('company.inc.payment', compact('package', 'total_amount', 'employer', 'znpPlan'));
+        }
+
+        /* ── Legacy packages table plans ── */
+        $package = Package::where('id', $request->plan_id)->firstOrFail();
+
         $amount = $package->package_price;
         $gst = $amount * 18 / 100;
-
         $total_amount = $gst + $amount;
 
-        // dd($gst);
-
         Session::put('plan', $request->plan_id);
-
         Session::put('amount', $total_amount);
+        Session::forget('znp_checkout_plan_id');
 
-        return view('company.inc.payment', compact('package', 'total_amount','employer'));
+        return view('company.inc.payment', compact('package', 'total_amount', 'employer'));
 
     }
 
@@ -487,7 +506,7 @@ class CheckoutController extends Controller
 
 
 
-        Stripe::setApiKey('sk_test_51MZyciSIpW7etStiQJa4WI3pMORiEMtvK0LvhrWS5AURsV9Ngr12a5ZLvVDNScalDXOtlvh2EP7ZLuMEoWH3Wjf800hVm5phlk');
+        Stripe::setApiKey(self::stripeSecret());
 
         $customer = Customer::create(
             array(
@@ -726,7 +745,7 @@ class CheckoutController extends Controller
 
         $payment_headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . self::SECRET_KEY
+            'Authorization: Bearer ' . self::stripeSecret()
         ];
 
         // sending curl request
@@ -763,7 +782,7 @@ class CheckoutController extends Controller
 
             $request_headers = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             // another curl request
@@ -833,7 +852,7 @@ class CheckoutController extends Controller
             $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
 
             $get_headers = [
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             $ch = curl_init();
@@ -1053,7 +1072,7 @@ class CheckoutController extends Controller
 
         $payment_headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . self::SECRET_KEY
+            'Authorization: Bearer ' . self::stripeSecret()
         ];
 
 
@@ -1091,7 +1110,7 @@ class CheckoutController extends Controller
 
             $request_headers = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             // another curl request
@@ -1143,7 +1162,7 @@ class CheckoutController extends Controller
             $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
 
             $get_headers = [
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             $ch = curl_init();
@@ -1335,8 +1354,11 @@ class CheckoutController extends Controller
             'exp_month' => 'required',
             'exp_year' => 'required',
             'cvc' => 'required',
-
         ]);
+
+        if (! $request->filled('znp_plan_id') && ! $request->filled('package_id')) {
+            return redirect()->back()->with('error', 'Invalid plan selected.');
+        }
 
         $input['transaction_id'] = Str::random(15);
         ; // random string for transaction id
@@ -1359,7 +1381,7 @@ class CheckoutController extends Controller
 
         $payment_headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . self::SECRET_KEY
+            'Authorization: Bearer ' . self::stripeSecret()
         ];
 
         // sending curl request
@@ -1368,17 +1390,19 @@ class CheckoutController extends Controller
 
         $payment_response = json_decode($payment_body, true);
 
-        $package = Package::where('id', $request->package_id)->first();
+        $isZnpPlan = $request->filled('znp_plan_id');
+        $responseId = null;
 
-        $orginal_amount = $package->package_price;
-
-        // dd($orginal_amount);
-
-        $total_amount = ($orginal_amount + ($orginal_amount * 18) / 100);
-
-        // dd($total_amount);
-
-
+        if ($isZnpPlan) {
+            $znpPlan = ZnpPricingPlan::findOrFail($request->znp_plan_id);
+            $total_amount = $znpPlan->totalWithGst();
+            $responseId = 'znp-' . $znpPlan->id;
+        } else {
+            $package = Package::where('id', $request->package_id)->firstOrFail();
+            $orginal_amount = $package->package_price;
+            $total_amount = ($orginal_amount + ($orginal_amount * 18) / 100);
+            $responseId = $request->package_id;
+        }
 
         if (isset($payment_response['id']) && $payment_response['id'] != null) {
 
@@ -1391,7 +1415,7 @@ class CheckoutController extends Controller
                 'payment_method' => $payment_response['id'],
                 'confirm' => 'true',
                 'capture_method' => 'automatic',
-                'return_url' => route('employerstripeResponse', $request->package_id),
+                'return_url' => route('employerstripeResponse', $responseId),
                 'payment_method_options[card][request_three_d_secure]' => 'automatic',
             ];
 
@@ -1399,7 +1423,7 @@ class CheckoutController extends Controller
 
             $request_headers = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             // another curl request
@@ -1417,12 +1441,12 @@ class CheckoutController extends Controller
                 // transaction success without 3d secure redirect
             } elseif (isset($response_data['status']) && $response_data['status'] == 'succeeded') {
 
-                return redirect()->route('employerstripeResponse', $request->package_id)->with('success', 'Payment success.');
+                return redirect()->route('employerstripeResponse', $responseId)->with('success', 'Payment success.');
 
                 // transaction declined because of error
             } elseif (isset($response_data['error']['message']) && $response_data['error']['message'] != null) {
 
-                return redirect()->route('employerstripeResponse', $request->package_id)->with('error', $response_data['error']['message']);
+                return redirect()->route('employerstripeResponse', $responseId)->with('error', $response_data['error']['message']);
 
             } else {
 
@@ -1432,14 +1456,150 @@ class CheckoutController extends Controller
             // error in creating payment method
         } elseif (isset($payment_response['error']['message']) && $payment_response['error']['message'] != null) {
 
-            return redirect()->route('employerstripeResponse', $request->package_id)->with('error', $payment_response['error']['message']);
+            return redirect()->route('employerstripeResponse', $responseId)->with('error', $payment_response['error']['message']);
 
         }
     }
 
 
+    /**
+     * Stripe return handler for new ZNP job-posting plans.
+     */
+    protected function employerZnpResponse(Request $request, int $znpPlanId)
+    {
+        $request_data = $request->all();
+        $employer = Company::where('id', Auth::guard('company')->user()->id)->first();
+        $znpPlan = ZnpPricingPlan::findOrFail($znpPlanId);
+
+        if (! isset($request_data['payment_intent']) || $request_data['payment_intent'] == null) {
+            return redirect()->back()->with('error', 'Invalid Card Details');
+        }
+
+        $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
+        $get_headers = ['Authorization: Bearer ' . self::stripeSecret()];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $get_url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $get_headers);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $get_response = curl_exec($ch);
+        curl_close($ch);
+
+        $get_data = json_decode($get_response, true);
+
+        if (! isset($get_data['status']) || $get_data['status'] !== 'succeeded') {
+            $employer->payment_status = 0;
+            $employer->save();
+
+            $error = $get_data['error']['message'] ?? 'Payment request failed.';
+
+            return view('payment-failure')->with('error', $error);
+        }
+
+        $paymentRef = $get_data['id'];
+
+        if (ZnpCompanySubscription::where('payment_ref', $paymentRef)->exists()) {
+            Session::put('employer_plan_payment', 'Employer Payment success');
+
+            return redirect('/thank-you');
+        }
+
+        $company = Auth::guard('company')->user();
+        $baseAmount = (float) $znpPlan->price;
+        $gst = $baseAmount * (float) $znpPlan->gst_percent / 100;
+        $total_amount = round($baseAmount + $gst, 2);
+        $plan = $znpPlan->name;
+
+        $subscription = app(ZnpSubscriptionService::class)->grantPlan(
+            $company,
+            $znpPlan,
+            'stripe',
+            $paymentRef,
+            $total_amount,
+            null,
+            'Stripe PaymentIntent ' . $paymentRef
+        );
+
+        $rand = Str::random(4);
+        $invoice_no = $rand . '_' . date('Y-m-d');
+
+        $pdf = PDF::loadView('invoices.employer-pdf-invoice', [
+            'name' => $employer->name,
+            'email' => $employer->email,
+            'mobile' => $employer->phone,
+            'gstin' => $employer->gstin,
+            'location' => $employer->location,
+            'invoice_no' => $invoice_no,
+            'amount' => number_format($baseAmount, 2),
+            'gst' => number_format($gst, 2),
+            'total_amount' => number_format($total_amount, 2),
+            'plan' => $plan,
+            'start_date' => optional($subscription->starts_at)->format('Y-m-d'),
+            'end_date' => optional($subscription->expires_at)->format('Y-m-d'),
+            'payment_id' => $paymentRef,
+            'user_id' => '',
+        ]);
+
+        $invoiceName = 'Invoice' . '-' . time() . '_' . date('Y-m-d') . '.pdf';
+        $pdf->save(public_path('invoices/' . $invoiceName));
+
+        EmployerPayment::create([
+            'payment_id' => $paymentRef,
+            'company_id' => $employer->id,
+            'payment_status' => 1,
+            'payment_activity' => 1,
+            'plan_id' => $znpPlan->id,
+            'amount' => $total_amount,
+            'invoice' => $invoiceName,
+            'invoice_status' => 0,
+            'invoice_no' => $invoice_no,
+        ]);
+
+        EmployerPaymenthistory::create([
+            'payment_id' => $paymentRef,
+            'amount' => $total_amount,
+            'employer_id' => $employer->id,
+            'plan' => $znpPlan->id,
+            'package_start_date' => optional($subscription->starts_at)->format('Y-m-d'),
+            'package_end_date' => optional($subscription->expires_at)->format('Y-m-d'),
+            'payment_status' => 1,
+        ]);
+
+        $employer->payment_status = 1;
+        $employer->payment_activity = 1;
+        $employer->save();
+
+        $data = [
+            'title' => $request->input('email'),
+            'subject' => 'Payment Success',
+            'plan' => $plan,
+            'gst' => $gst,
+            'original_amount' => number_format($baseAmount, 2),
+            'amount' => number_format($total_amount, 2),
+            'start_date' => optional($subscription->starts_at)->format('Y-m-d'),
+            'end_date' => optional($subscription->expires_at)->format('Y-m-d'),
+            'payment_id' => $paymentRef,
+        ];
+
+        $email = $company->email;
+        Mail::send('emails.employer_payment', $data, function ($message) use ($data, $email) {
+            $message->to($email)->from('employer@zeronoticeperiod.com')
+                ->subject($data['subject']);
+        });
+
+        Session::forget('znp_checkout_plan_id');
+        Session::put('employer_plan_payment', 'Employer Payment success');
+
+        return redirect('/thank-you');
+    }
+
+
     public function employerresponse(Request $request, $package_id)
     {
+        if (is_string($package_id) && strpos($package_id, 'znp-') === 0) {
+            return $this->employerZnpResponse($request, (int) substr($package_id, 4));
+        }
+
         $request_data = $request->all();
         $employer = Company::where('id', Auth::guard('company')->user()->id)->first();
 
@@ -1452,7 +1612,7 @@ class CheckoutController extends Controller
             $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
 
             $get_headers = [
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             $ch = curl_init();
@@ -1774,7 +1934,7 @@ class CheckoutController extends Controller
 
         $payment_headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . self::SECRET_KEY
+            'Authorization: Bearer ' . self::stripeSecret()
         ];
 
         // sending curl request
@@ -1855,7 +2015,7 @@ class CheckoutController extends Controller
 
             $request_headers = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             // another curl request
@@ -1965,7 +2125,7 @@ class CheckoutController extends Controller
 
         $payment_headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . self::SECRET_KEY
+            'Authorization: Bearer ' . self::stripeSecret()
         ];
 
         // sending curl request
@@ -2015,7 +2175,7 @@ class CheckoutController extends Controller
 
             $request_headers = [
                 'Content-Type: application/x-www-form-urlencoded',
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             // another curl request
@@ -2070,7 +2230,7 @@ class CheckoutController extends Controller
             $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
 
             $get_headers = [
-                'Authorization: Bearer ' . self::SECRET_KEY
+                'Authorization: Bearer ' . self::stripeSecret()
             ];
 
             $ch = curl_init();

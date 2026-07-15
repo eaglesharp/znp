@@ -62,7 +62,11 @@
 
                                         <input type="hidden" name="amount" value="{{ $total_amount }}">
                                         <input type="hidden" name="currency" value="INR">
-                                        <input type="hidden" name="package_id" value="{{ $package->id }}">
+                                        @if (!empty($znpPlan))
+                                            <input type="hidden" name="znp_plan_id" value="{{ $znpPlan->id }}">
+                                        @else
+                                            <input type="hidden" name="package_id" value="{{ $package->id }}">
+                                        @endif
                                         @csrf
 
 
