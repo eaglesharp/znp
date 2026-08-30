@@ -122,6 +122,11 @@ Route::get('employer-dashboard', 'Company\CompanyController@employerDashboardNew
 
 Route::get('employer-job-pricing', 'Company\CompanyController@jobPricingZNP')->name('employer.job.pricing');
 
+/* ── ZNP Stripe Checkout (hosted — required for live mode; raw card API is blocked) ── */
+// success must be registered before {slug}, otherwise "success" is matched as a plan slug
+Route::get('employer/checkout/success', 'ZnpStripeCheckoutController@success')->name('employer.znp.checkout.success');
+Route::get('employer/checkout/{slug}', 'ZnpStripeCheckoutController@checkout')->name('employer.znp.checkout');
+
 /* ── ZNP Post a Job + applicants pipeline ── */
 Route::get('post-job', 'Company\CompanyController@postJobZNP')->name('employer.post.job.page');
 Route::post('post-job', 'Company\CompanyController@storeJobZNP')->name('employer.post.job.store');

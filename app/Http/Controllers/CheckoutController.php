@@ -1453,11 +1453,11 @@ class CheckoutController extends Controller
                 return redirect()->route('employerstripeResponse')->with('error', 'Something went wrong, please try again.');
             }
 
-            // error in creating payment method
+            // error in creating payment method (do NOT send to response handler — no payment_intent)
         } elseif (isset($payment_response['error']['message']) && $payment_response['error']['message'] != null) {
+            $fallback = $isZnpPlan ? route('employer.job.pricing') : url()->previous();
 
-            return redirect()->route('employerstripeResponse', $responseId)->with('error', $payment_response['error']['message']);
-
+            return redirect($fallback)->with('error', $payment_response['error']['message']);
         }
     }
 
@@ -1471,8 +1471,13 @@ class CheckoutController extends Controller
         $employer = Company::where('id', Auth::guard('company')->user()->id)->first();
         $znpPlan = ZnpPricingPlan::findOrFail($znpPlanId);
 
+        // Stripe error was flashed onto this route without a payment_intent — surface it.
         if (! isset($request_data['payment_intent']) || $request_data['payment_intent'] == null) {
-            return redirect()->back()->with('error', 'Invalid Card Details');
+            $flashError = session('error');
+
+            return redirect()
+                ->route('employer.job.pricing')
+                ->with('error', $flashError ?: 'Payment could not be completed. Please try again.');
         }
 
         $get_url = self::BASE_URL . '/v1/payment_intents/' . $request_data['payment_intent'];
@@ -2058,6 +2063,7 @@ class CheckoutController extends Controller
 
     public function employerbuyinterview(Request $request, $user_id)
     {
+        
 
 
         if (!Auth::guard('company')->check()) {

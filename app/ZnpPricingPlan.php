@@ -99,11 +99,11 @@ class ZnpPricingPlan extends Model
         return ! $this->is_custom_price && (float) $this->price > 0;
     }
 
-    /** Checkout URL for paid plans; uses the on-site card payment page. */
+    /** Checkout URL for paid plans — Stripe Checkout (PCI-safe for live mode). */
     public function checkoutUrl(): string
     {
         if ($this->isPurchasableOnline()) {
-            return route('employer.payment', ['znp_plan' => $this->slug]);
+            return route('employer.znp.checkout', $this->slug);
         }
 
         $cta = $this->cta_url ?: 'contact-us';
